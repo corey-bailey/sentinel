@@ -95,6 +95,7 @@ import { assertEnvironmentSelectionForCompany } from "./environment-selection.js
 import { executionWorkspaceService as executionWorkspaceServiceDirect } from "../services/execution-workspaces.js";
 import { feedbackService } from "../services/feedback.js";
 import { instanceSettingsService } from "../services/instance-settings.js";
+import { assertWithinIssueCascadeCap } from "../services/heartbeat-issue-cap.js";
 import { environmentService } from "../services/environments.js";
 import { redactSensitiveText } from "../redaction.js";
 import {
@@ -3092,6 +3093,8 @@ export function issueRoutes(
     await assertIssueEnvironmentSelection(companyId, req.body.executionWorkspaceSettings?.environmentId);
 
     const actor = getActorInfo(req);
+    const cascadeCap = (await instanceSettingsService(db).getGeneral()).maxIssuesPerHeartbeatRun;
+    await assertWithinIssueCascadeCap(db, actor.runId, cascadeCap);
     const executionPolicy = applyActorMonitorScheduledBy(
       normalizeIssueExecutionPolicy(req.body.executionPolicy),
       actor.actorType,
@@ -3188,6 +3191,8 @@ export function issueRoutes(
     await assertIssueEnvironmentSelection(parent.companyId, req.body.executionWorkspaceSettings?.environmentId);
 
     const actor = getActorInfo(req);
+    const cascadeCap = (await instanceSettingsService(db).getGeneral()).maxIssuesPerHeartbeatRun;
+    await assertWithinIssueCascadeCap(db, actor.runId, cascadeCap);
     const executionPolicy = applyActorMonitorScheduledBy(
       normalizeIssueExecutionPolicy(req.body.executionPolicy),
       actor.actorType,

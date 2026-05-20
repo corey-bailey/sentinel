@@ -5,6 +5,7 @@ import {
   DEFAULT_BACKUP_RETENTION,
   DEFAULT_ISSUE_GRAPH_LIVENESS_AUTO_RECOVERY_LOOKBACK_HOURS,
   DEFAULT_MIN_CRON_CADENCE_MINUTES,
+  DEFAULT_MAX_ISSUES_PER_HEARTBEAT_RUN,
   instanceGeneralSettingsSchema,
   type InstanceGeneralSettings,
   instanceExperimentalSettingsSchema,
@@ -28,6 +29,8 @@ function normalizeGeneralSettings(raw: unknown): InstanceGeneralSettings {
       backupRetention: parsed.data.backupRetention ?? DEFAULT_BACKUP_RETENTION,
       minCronCadenceMinutes:
         parsed.data.minCronCadenceMinutes ?? DEFAULT_MIN_CRON_CADENCE_MINUTES,
+      maxIssuesPerHeartbeatRun:
+        parsed.data.maxIssuesPerHeartbeatRun ?? DEFAULT_MAX_ISSUES_PER_HEARTBEAT_RUN,
     };
   }
   return {
@@ -36,6 +39,7 @@ function normalizeGeneralSettings(raw: unknown): InstanceGeneralSettings {
     feedbackDataSharingPreference: DEFAULT_FEEDBACK_DATA_SHARING_PREFERENCE,
     backupRetention: DEFAULT_BACKUP_RETENTION,
     minCronCadenceMinutes: DEFAULT_MIN_CRON_CADENCE_MINUTES,
+    maxIssuesPerHeartbeatRun: DEFAULT_MAX_ISSUES_PER_HEARTBEAT_RUN,
   };
 }
 

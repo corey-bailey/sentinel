@@ -51,6 +51,7 @@ export const heartbeatRuns = pgTable(
     livenessState: text("liveness_state"),
     livenessReason: text("liveness_reason"),
     continuationAttempt: integer("continuation_attempt").notNull().default(0),
+    issuesCreatedCount: integer("issues_created_count").notNull().default(0),
     lastUsefulActionAt: timestamp("last_useful_action_at", { withTimezone: true }),
     nextAction: text("next_action"),
     contextSnapshot: jsonb("context_snapshot").$type<Record<string, unknown>>(),

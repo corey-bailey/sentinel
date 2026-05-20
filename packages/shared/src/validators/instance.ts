@@ -10,6 +10,8 @@ import {
   MIN_ISSUE_GRAPH_LIVENESS_AUTO_RECOVERY_LOOKBACK_HOURS,
   DEFAULT_MIN_CRON_CADENCE_MINUTES,
   MAX_MIN_CRON_CADENCE_MINUTES,
+  DEFAULT_MAX_ISSUES_PER_HEARTBEAT_RUN,
+  MAX_MAX_ISSUES_PER_HEARTBEAT_RUN,
 } from "../types/instance.js";
 import { feedbackDataSharingPreferenceSchema } from "./feedback.js";
 
@@ -39,6 +41,12 @@ export const instanceGeneralSettingsSchema = z.object({
     .min(0)
     .max(MAX_MIN_CRON_CADENCE_MINUTES)
     .default(DEFAULT_MIN_CRON_CADENCE_MINUTES),
+  maxIssuesPerHeartbeatRun: z
+    .number()
+    .int()
+    .min(0)
+    .max(MAX_MAX_ISSUES_PER_HEARTBEAT_RUN)
+    .default(DEFAULT_MAX_ISSUES_PER_HEARTBEAT_RUN),
 }).strict();
 
 export const patchInstanceGeneralSettingsSchema = instanceGeneralSettingsSchema.partial();

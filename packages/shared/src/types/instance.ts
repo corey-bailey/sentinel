@@ -6,6 +6,8 @@ export const MONTHLY_RETENTION_PRESETS = [1, 3, 6] as const;
 export const DEFAULT_ISSUE_GRAPH_LIVENESS_AUTO_RECOVERY_LOOKBACK_HOURS = 24;
 export const DEFAULT_MIN_CRON_CADENCE_MINUTES = 15;
 export const MAX_MIN_CRON_CADENCE_MINUTES = 60 * 24;
+export const DEFAULT_MAX_ISSUES_PER_HEARTBEAT_RUN = 5;
+export const MAX_MAX_ISSUES_PER_HEARTBEAT_RUN = 10_000;
 export const MIN_ISSUE_GRAPH_LIVENESS_AUTO_RECOVERY_LOOKBACK_HOURS = 1;
 export const MAX_ISSUE_GRAPH_LIVENESS_AUTO_RECOVERY_LOOKBACK_HOURS = 24 * 30;
 
@@ -27,6 +29,7 @@ export interface InstanceGeneralSettings {
   feedbackDataSharingPreference: FeedbackDataSharingPreference;
   backupRetention: BackupRetentionPolicy;
   minCronCadenceMinutes: number;
+  maxIssuesPerHeartbeatRun: number;
 }
 
 export interface InstanceExperimentalSettings {
