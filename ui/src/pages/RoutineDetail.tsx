@@ -48,7 +48,9 @@ import {
   type RoutineRunDialogSubmitData,
 } from "../components/RoutineRunVariablesDialog";
 import { RoutineVariablesEditor, RoutineVariablesHint } from "../components/RoutineVariablesEditor";
-import { ScheduleEditor, describeSchedule } from "../components/ScheduleEditor";
+import { ScheduleEditor, describeSchedule, estimateMinCadenceMinutes } from "../components/ScheduleEditor";
+
+const CRON_CADENCE_FLOOR_MINUTES = 15;
 import { RunButton } from "../components/AgentActionButtons";
 import { getRecentAssigneeIds, sortAgentsByRecency, trackRecentAssignee } from "../lib/recent-assignees";
 import { getRecentProjectIds, trackRecentProject } from "../lib/recent-projects";
@@ -219,6 +221,19 @@ function TriggerEditor({
               value={draft.cronExpression}
               onChange={(cronExpression) => setDraft((current) => ({ ...current, cronExpression }))}
             />
+            {(() => {
+              const est = estimateMinCadenceMinutes(trigger.cronExpression ?? "");
+              if (est !== null && est < CRON_CADENCE_FLOOR_MINUTES) {
+                return (
+                  <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                    Grandfathered: this trigger fires every {est}m, below the
+                    current {CRON_CADENCE_FLOOR_MINUTES}m minimum. It keeps running for now, but
+                    saving any change will require raising the cadence.
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </div>
         )}
         {trigger.kind === "webhook" && (

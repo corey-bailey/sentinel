@@ -7,7 +7,6 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 type SchedulePreset = "every_minute" | "every_hour" | "every_day" | "weekdays" | "weekly" | "monthly" | "custom";
 
 const PRESETS: { value: SchedulePreset; label: string }[] = [
-  { value: "every_minute", label: "Every minute" },
   { value: "every_hour", label: "Every hour" },
   { value: "every_day", label: "Every day" },
   { value: "weekdays", label: "Weekdays" },
@@ -138,6 +137,40 @@ function describeSchedule(cron: string): string {
   }
 }
 
+/**
+ * Best-effort minimum-cadence estimator for the common patterns users
+ * write by hand. Returns `null` when the expression is too complex to
+ * estimate confidently; the server-side check is authoritative on save.
+ */
+export function estimateMinCadenceMinutes(cron: string): number | null {
+  const parts = cron.trim().split(/\s+/);
+  if (parts.length !== 5) return null;
+  const minute = parts[0]!;
+  const hour = parts[1]!;
+  // Minute-field patterns we recognize:
+  //   *           — every minute (1)
+  //   */N         — every N minutes
+  //   N           — once per hour at minute N (60, unless hour is multi-valued)
+  if (minute === "*") return 1;
+  const stepMatch = minute.match(/^\*\/(\d+)$/);
+  if (stepMatch) {
+    const step = parseInt(stepMatch[1]!, 10);
+    if (Number.isFinite(step) && step > 0) return step;
+  }
+  // Single minute value — cadence depends on hour field.
+  if (/^\d+$/.test(minute)) {
+    if (hour === "*") return 60;
+    const hourStepMatch = hour.match(/^\*\/(\d+)$/);
+    if (hourStepMatch) {
+      const hourStep = parseInt(hourStepMatch[1]!, 10);
+      if (Number.isFinite(hourStep) && hourStep > 0) return hourStep * 60;
+    }
+  }
+  return null;
+}
+
+const CRON_CADENCE_FLOOR_MINUTES = 15;
+
 function ordinalSuffix(n: number): string {
   const s = ["th", "st", "nd", "rd"];
   const v = n % 100;
@@ -221,6 +254,19 @@ export function ScheduleEditor({
           <p className="text-xs text-muted-foreground">
             Five fields: minute hour day-of-month month day-of-week
           </p>
+          {(() => {
+            const est = estimateMinCadenceMinutes(customCron);
+            if (est !== null && est < CRON_CADENCE_FLOOR_MINUTES) {
+              return (
+                <p className="text-xs text-destructive">
+                  Fires every {est}m — below the {CRON_CADENCE_FLOOR_MINUTES}m minimum.
+                  Save will be rejected. Use a long-running service or webhook trigger
+                  for higher-frequency work.
+                </p>
+              );
+            }
+            return null;
+          })()}
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-2">

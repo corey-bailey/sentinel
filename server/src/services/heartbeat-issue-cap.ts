@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import type { Db } from "@paperclipai/db";
 import { tooManyRequests } from "../errors.js";
+import { logger } from "../middleware/logger.js";
 
 /**
  * Atomically increments `heartbeat_runs.issues_created_count` for the given
@@ -60,6 +61,10 @@ export async function assertWithinIssueCascadeCap(
   if (!runId) return;
   const newCount = await incrementHeartbeatIssueCount(db, runId, cap);
   if (newCount === null) {
+    logger.warn(
+      { runId, cap, event: "issue_cascade_cap_exceeded" },
+      "heartbeat run exceeded issue cascade cap; rejecting create with 429",
+    );
     throw tooManyRequests(
       `Issue cascade cap of ${cap} reached for this heartbeat run. ` +
         `Surface follow-up work as a single parent issue or comment, not as ` +
