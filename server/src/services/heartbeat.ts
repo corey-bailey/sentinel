@@ -147,6 +147,10 @@ import {
 } from "./recovery/model-profile-hint.js";
 import { recoveryService } from "./recovery/service.js";
 import { productivityReviewService } from "./productivity-review.js";
+import {
+  createUpstreamCircuitBreaker,
+  isCircuitBreakerTrippingErrorCode,
+} from "./upstream-circuit-breaker.js";
 import { withAgentStartLock } from "./agent-start-lock.js";
 import {
   redactCurrentUserText,
@@ -2397,6 +2401,10 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
   const budgets = budgetService(db, budgetHooks);
   const recovery = recoveryService(db, { enqueueWakeup });
   const productivityReviews = productivityReviewService(db, { enqueueWakeup });
+  // Circuit breaker for upstream (Claude/Codex/etc.) transient rate-limit
+  // storms. Gated at adapter.execute below to prevent token-burning retry
+  // loops against a rate-limited endpoint. See upstream-circuit-breaker.ts.
+  const upstreamCircuitBreaker = createUpstreamCircuitBreaker(db);
   let unsafeTextProjectionPromise: Promise<boolean> | null = null;
 
   async function releaseEnvironmentLeasesForRun(input: {
@@ -7781,31 +7789,78 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
           "local agent jwt secret missing or invalid; running without injected PAPERCLIP_API_KEY",
         );
       }
-      const adapterResult = await adapter.execute({
-        runId: run.id,
-        agent,
-        runtime: runtimeForAdapter,
-        config: runtimeConfig,
-        context,
-        runtimeCommandSpec: adapter.getRuntimeCommandSpec?.(runtimeConfig) ?? null,
-        executionTarget,
-        executionTransport: remoteExecution
-          ? { remoteExecution: remoteExecution as unknown as Record<string, unknown> }
-          : undefined,
-        onLog,
-        onMeta: onAdapterMeta,
-        onSpawn: async (meta) => {
-          await persistRunProcessMetadata(run.id, {
-            pid: meta.pid,
-            processGroupId:
-              "processGroupId" in meta && typeof meta.processGroupId === "number"
-                ? meta.processGroupId
-                : null,
-            startedAt: meta.startedAt,
-          });
-        },
-        authToken: authToken ?? undefined,
-      });
+      // Upstream circuit breaker gate. If a recent burst of `*_transient_upstream`
+      // failures has tripped the breaker for this (company, adapter), short-
+      // circuit BEFORE calling adapter.execute so no LLM token is spent. The
+      // synthesized result is finalized through the normal failure path below
+      // with errorCode `upstream_cooldown`; downstream readers tolerate
+      // optional fields being absent.
+      const cooldownSnapshot = await upstreamCircuitBreaker
+        .isInCooldown(agent.companyId, agent.adapterType)
+        .catch((err) => {
+          logger.warn(
+            { err, companyId: agent.companyId, adapterType: agent.adapterType, runId: run.id },
+            "upstream circuit breaker check failed; failing open (allowing dispatch)",
+          );
+          return null;
+        });
+      let adapterResult: AdapterExecutionResult;
+      if (cooldownSnapshot?.inCooldown) {
+        const cooldownUntilIso = cooldownSnapshot.cooldownUntil?.toISOString() ?? null;
+        logger.warn(
+          {
+            companyId: agent.companyId,
+            agentId: agent.id,
+            runId: run.id,
+            adapterType: agent.adapterType,
+            cooldownUntil: cooldownUntilIso,
+            cooldownLevel: cooldownSnapshot.cooldownLevel,
+          },
+          "upstream circuit breaker active; deferring adapter invocation",
+        );
+        adapterResult = {
+          exitCode: null,
+          signal: null,
+          timedOut: false,
+          errorMessage: `Upstream ${agent.adapterType} circuit breaker active; cooldown until ${cooldownUntilIso ?? "unknown"}`,
+          errorCode: "upstream_cooldown",
+          errorFamily: "transient_upstream",
+          retryNotBefore: cooldownUntilIso,
+          resultJson: cooldownUntilIso
+            ? {
+                errorFamily: "transient_upstream",
+                retryNotBefore: cooldownUntilIso,
+                transientRetryNotBefore: cooldownUntilIso,
+              }
+            : { errorFamily: "transient_upstream" },
+        };
+      } else {
+        adapterResult = await adapter.execute({
+          runId: run.id,
+          agent,
+          runtime: runtimeForAdapter,
+          config: runtimeConfig,
+          context,
+          runtimeCommandSpec: adapter.getRuntimeCommandSpec?.(runtimeConfig) ?? null,
+          executionTarget,
+          executionTransport: remoteExecution
+            ? { remoteExecution: remoteExecution as unknown as Record<string, unknown> }
+            : undefined,
+          onLog,
+          onMeta: onAdapterMeta,
+          onSpawn: async (meta) => {
+            await persistRunProcessMetadata(run.id, {
+              pid: meta.pid,
+              processGroupId:
+                "processGroupId" in meta && typeof meta.processGroupId === "number"
+                  ? meta.processGroupId
+                  : null,
+              startedAt: meta.startedAt,
+            });
+          },
+          authToken: authToken ?? undefined,
+        });
+      }
       const adapterManagedRuntimeServices = adapterResult.runtimeServices
         ? await persistAdapterManagedRuntimeServices({
             db,
@@ -7898,6 +7953,37 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
             : outcome === "failed"
               ? (adapterResult.errorCode ?? "adapter_failed")
               : null;
+
+      // Feed the upstream circuit breaker. A succeeded run resets it; a
+      // tripping error (claude_transient_upstream / codex_transient_upstream)
+      // increments the failure counter and escalates the cooldown ladder on
+      // threshold breach. We skip recording when we ourselves synthesized the
+      // failure from a cooldown — that'd self-amplify the breaker.
+      if (outcome === "succeeded") {
+        await upstreamCircuitBreaker
+          .recordSuccess(agent.companyId, agent.adapterType)
+          .catch((err) => {
+            logger.warn(
+              { err, runId: run.id, companyId: agent.companyId, adapterType: agent.adapterType },
+              "upstream circuit breaker recordSuccess failed",
+            );
+          });
+      } else if (
+        outcome === "failed" &&
+        runErrorCode !== "upstream_cooldown" &&
+        isCircuitBreakerTrippingErrorCode(runErrorCode)
+      ) {
+        await upstreamCircuitBreaker
+          .recordFailure(agent.companyId, agent.adapterType, {
+            errorCode: runErrorCode ?? null,
+          })
+          .catch((err) => {
+            logger.warn(
+              { err, runId: run.id, companyId: agent.companyId, adapterType: agent.adapterType },
+              "upstream circuit breaker recordFailure failed",
+            );
+          });
+      }
 
       let logSummary: { bytes: number; sha256?: string; compressed: boolean } | null = null;
       if (handle) {

@@ -1054,9 +1054,16 @@ describe("claude execute", () => {
       expect(result.exitCode).toBe(1);
       expect(result.errorCode).toBe("claude_transient_upstream");
       expect(result.errorFamily).toBe("transient_upstream");
-      expect(result.retryNotBefore ?? null).toBeNull();
-      expect(result.resultJson?.retryNotBefore ?? null).toBeNull();
-      expect(result.resultJson?.transientRetryNotBefore ?? null).toBeNull();
+      // Transient upstream without a parseable reset still emits a conservative
+      // 60s `retryNotBefore` floor so the per-run scheduler holds for at least
+      // a minute. Without this, parallel chains all retry on the base schedule
+      // and pile load onto a rate-limited endpoint.
+      expect(result.retryNotBefore).toBeTypeOf("string");
+      const retryNotBeforeMs = new Date(result.retryNotBefore as string).getTime();
+      expect(retryNotBeforeMs).toBeGreaterThan(Date.now());
+      expect(retryNotBeforeMs).toBeLessThanOrEqual(Date.now() + 65_000);
+      expect(result.resultJson?.retryNotBefore).toBe(result.retryNotBefore);
+      expect(result.resultJson?.transientRetryNotBefore).toBe(result.retryNotBefore);
     } finally {
       if (previousHome === undefined) delete process.env.HOME;
       else process.env.HOME = previousHome;

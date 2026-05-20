@@ -115,9 +115,41 @@ describe("extractClaudeRetryNotBefore", () => {
     expect(extracted?.toISOString()).toBe("2026-04-23T03:15:00.000Z");
   });
 
-  it("returns null when no reset hint is present", () => {
+  it("returns a 60s default when the upstream is throttling but no reset time is parseable", () => {
+    // The exact server-side throttle message Anthropic returns. Has no embedded
+    // reset time. Prior behavior returned null, which let the heartbeat retry
+    // fire on the base 2-minute schedule for every parallel chain — a hot loop
+    // against a rate-limited endpoint. The default floor breaks that.
+    const now = new Date("2026-05-19T20:00:00.000Z");
+    const extracted = extractClaudeRetryNotBefore(
+      {
+        errorMessage:
+          "API Error: Server is temporarily limiting requests (not your usage limit) · Rate limited",
+      },
+      now,
+    );
+    expect(extracted?.toISOString()).toBe("2026-05-19T20:01:00.000Z");
+  });
+
+  it("returns a 60s default for generic transient signals (Overloaded, 503, throttled)", () => {
+    const now = new Date("2026-05-19T20:00:00.000Z");
+    const expected = "2026-05-19T20:01:00.000Z";
     expect(
-      extractClaudeRetryNotBefore({ errorMessage: "Overloaded. Try again later." }, new Date()),
+      extractClaudeRetryNotBefore({ errorMessage: "Overloaded. Try again later." }, now)
+        ?.toISOString(),
+    ).toBe(expected);
+    expect(
+      extractClaudeRetryNotBefore({ errorMessage: "503 Service Unavailable" }, now)?.toISOString(),
+    ).toBe(expected);
+    expect(
+      extractClaudeRetryNotBefore({ errorMessage: "Throttled by upstream" }, now)?.toISOString(),
+    ).toBe(expected);
+  });
+
+  it("returns null when there is no transient signal at all", () => {
+    expect(
+      extractClaudeRetryNotBefore({ errorMessage: "Tool execution failed: bad input" }, new Date()),
     ).toBeNull();
+    expect(extractClaudeRetryNotBefore({}, new Date())).toBeNull();
   });
 });

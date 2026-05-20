@@ -352,6 +352,14 @@ function parseClaudeResetClockTime(clockText: string, now: Date, timeZoneHint?: 
   return retryAt;
 }
 
+/**
+ * Server-side transient throttle ("Server is temporarily limiting requests")
+ * carries no reset time. Hold the next attempt for this long when nothing
+ * specific is parseable but the upstream is clearly throttling — avoids the
+ * tight retry loop that hammers a rate-limited endpoint.
+ */
+export const CLAUDE_TRANSIENT_UPSTREAM_DEFAULT_RETRY_DELAY_MS = 60_000;
+
 export function extractClaudeRetryNotBefore(
   input: {
     parsed?: Record<string, unknown> | null;
@@ -363,8 +371,17 @@ export function extractClaudeRetryNotBefore(
 ): Date | null {
   const haystack = buildClaudeTransientHaystack(input);
   const match = haystack.match(CLAUDE_EXTRA_USAGE_RESET_RE);
-  if (!match) return null;
-  return parseClaudeResetClockTime(match[1] ?? "", now, match[2]);
+  if (match) {
+    return parseClaudeResetClockTime(match[1] ?? "", now, match[2]);
+  }
+  // Server-side throttle ("Rate limited", "Service unavailable", etc.) has no
+  // reset time embedded — but the heartbeat retry scheduler honors any
+  // retryNotBefore we hand back as a floor over its base schedule. Return a
+  // conservative default so the *first* retry doesn't fire instantly.
+  if (CLAUDE_TRANSIENT_UPSTREAM_RE.test(haystack)) {
+    return new Date(now.getTime() + CLAUDE_TRANSIENT_UPSTREAM_DEFAULT_RETRY_DELAY_MS);
+  }
+  return null;
 }
 
 export function isClaudeTransientUpstreamError(input: {

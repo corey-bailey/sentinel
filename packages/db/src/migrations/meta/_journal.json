@@ -610,6 +610,13 @@
       "when": 1778976000000,
       "tag": "0086_routine_env_runtime_contract",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1779241299444,
+      "tag": "0087_upstream_health_state",
+      "breakpoints": true
     }
   ]
 }
