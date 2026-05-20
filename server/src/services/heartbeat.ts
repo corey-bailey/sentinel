@@ -126,6 +126,10 @@ import {
 } from "./execution-workspace-policy.js";
 import { instanceSettingsService } from "./instance-settings.js";
 import {
+  isAgentAtConcurrencyCap as isAgentAtInstanceConcurrencyCap,
+  countRunningRunsForAgent as countRunningRunsForAgentInstance,
+} from "./agent-concurrency-cap.js";
+import {
   RECOVERY_ORIGIN_KINDS,
   FINISH_SUCCESSFUL_RUN_HANDOFF_REASON,
   SUCCESSFUL_RUN_MISSING_STATE_REASON,
@@ -5975,6 +5979,27 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         );
         return null;
       }
+    }
+
+    // Per-agent concurrent heartbeat cap. Prevents one agent from running N parallel
+    // LLM sessions (e.g. when boot recovery promotes multiple paused runs at once, or
+    // when several routine triggers align on a tick). When at cap, leave the run
+    // queued so the next tick re-attempts after some in-flight run completes.
+    const concurrencyCap = (await instanceSettingsService(db).getGeneral()).maxConcurrentRunsPerAgent;
+    if (await isAgentAtInstanceConcurrencyCap(db, run.agentId, concurrencyCap)) {
+      const runningCount = await countRunningRunsForAgentInstance(db, run.agentId);
+      logger.warn(
+        {
+          runId: run.id,
+          agentId: run.agentId,
+          companyId: run.companyId,
+          runningCount,
+          cap: concurrencyCap,
+          event: "agent_concurrency_cap_reached",
+        },
+        `agent at concurrent-run cap (${runningCount}/${concurrencyCap}); deferring queued run`,
+      );
+      return null;
     }
 
     const claimedAt = new Date();

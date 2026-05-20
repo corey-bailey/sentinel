@@ -6,6 +6,7 @@ import {
   DEFAULT_ISSUE_GRAPH_LIVENESS_AUTO_RECOVERY_LOOKBACK_HOURS,
   DEFAULT_MIN_CRON_CADENCE_MINUTES,
   DEFAULT_MAX_ISSUES_PER_HEARTBEAT_RUN,
+  DEFAULT_MAX_CONCURRENT_RUNS_PER_AGENT,
   instanceGeneralSettingsSchema,
   type InstanceGeneralSettings,
   instanceExperimentalSettingsSchema,
@@ -31,6 +32,8 @@ function normalizeGeneralSettings(raw: unknown): InstanceGeneralSettings {
         parsed.data.minCronCadenceMinutes ?? DEFAULT_MIN_CRON_CADENCE_MINUTES,
       maxIssuesPerHeartbeatRun:
         parsed.data.maxIssuesPerHeartbeatRun ?? DEFAULT_MAX_ISSUES_PER_HEARTBEAT_RUN,
+      maxConcurrentRunsPerAgent:
+        parsed.data.maxConcurrentRunsPerAgent ?? DEFAULT_MAX_CONCURRENT_RUNS_PER_AGENT,
     };
   }
   return {
@@ -40,6 +43,7 @@ function normalizeGeneralSettings(raw: unknown): InstanceGeneralSettings {
     backupRetention: DEFAULT_BACKUP_RETENTION,
     minCronCadenceMinutes: DEFAULT_MIN_CRON_CADENCE_MINUTES,
     maxIssuesPerHeartbeatRun: DEFAULT_MAX_ISSUES_PER_HEARTBEAT_RUN,
+    maxConcurrentRunsPerAgent: DEFAULT_MAX_CONCURRENT_RUNS_PER_AGENT,
   };
 }
 

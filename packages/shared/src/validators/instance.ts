@@ -12,6 +12,8 @@ import {
   MAX_MIN_CRON_CADENCE_MINUTES,
   DEFAULT_MAX_ISSUES_PER_HEARTBEAT_RUN,
   MAX_MAX_ISSUES_PER_HEARTBEAT_RUN,
+  DEFAULT_MAX_CONCURRENT_RUNS_PER_AGENT,
+  MAX_MAX_CONCURRENT_RUNS_PER_AGENT,
 } from "../types/instance.js";
 import { feedbackDataSharingPreferenceSchema } from "./feedback.js";
 
@@ -47,6 +49,12 @@ export const instanceGeneralSettingsSchema = z.object({
     .min(0)
     .max(MAX_MAX_ISSUES_PER_HEARTBEAT_RUN)
     .default(DEFAULT_MAX_ISSUES_PER_HEARTBEAT_RUN),
+  maxConcurrentRunsPerAgent: z
+    .number()
+    .int()
+    .min(0)
+    .max(MAX_MAX_CONCURRENT_RUNS_PER_AGENT)
+    .default(DEFAULT_MAX_CONCURRENT_RUNS_PER_AGENT),
 }).strict();
 
 export const patchInstanceGeneralSettingsSchema = instanceGeneralSettingsSchema.partial();

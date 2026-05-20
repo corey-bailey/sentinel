@@ -8,6 +8,8 @@ export const DEFAULT_MIN_CRON_CADENCE_MINUTES = 15;
 export const MAX_MIN_CRON_CADENCE_MINUTES = 60 * 24;
 export const DEFAULT_MAX_ISSUES_PER_HEARTBEAT_RUN = 5;
 export const MAX_MAX_ISSUES_PER_HEARTBEAT_RUN = 10_000;
+export const DEFAULT_MAX_CONCURRENT_RUNS_PER_AGENT = 2;
+export const MAX_MAX_CONCURRENT_RUNS_PER_AGENT = 100;
 export const MIN_ISSUE_GRAPH_LIVENESS_AUTO_RECOVERY_LOOKBACK_HOURS = 1;
 export const MAX_ISSUE_GRAPH_LIVENESS_AUTO_RECOVERY_LOOKBACK_HOURS = 24 * 30;
 
@@ -30,6 +32,7 @@ export interface InstanceGeneralSettings {
   backupRetention: BackupRetentionPolicy;
   minCronCadenceMinutes: number;
   maxIssuesPerHeartbeatRun: number;
+  maxConcurrentRunsPerAgent: number;
 }
 
 export interface InstanceExperimentalSettings {
