@@ -43,6 +43,7 @@ import {
   projectWorkspaces,
   routineRevisions,
   routineRuns,
+  routineTriggers,
   routines,
   workspaceOperations,
 } from "@paperclipai/db";
@@ -4152,6 +4153,8 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         assigneeUserId: issues.assigneeUserId,
         executionState: issues.executionState,
         projectId: issues.projectId,
+        originKind: issues.originKind,
+        originId: issues.originId,
       })
       .from(issues)
       .where(and(eq(issues.id, issueId), eq(issues.companyId, run.companyId)))
@@ -4175,6 +4178,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
       existingWake,
       budgetBlock,
       pauseHold,
+      activeOwningRoutine,
     ] = await Promise.all([
       issue
         ? db
@@ -4300,6 +4304,25 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
       issue
         ? treeControlSvc.getActivePauseHoldGate(issue.companyId, issue.id)
         : Promise.resolve(null),
+      // Routine-execution issues with at least one still-enabled schedule
+      // trigger have intentional in_progress state between fires — don't
+      // treat that as a missing disposition. Only meaningful when this is a
+      // routine-spawned issue with an originId pointing at the routine.
+      issue && issue.originKind === "routine_execution" && issue.originId
+        ? db
+          .select({ id: routineTriggers.id })
+          .from(routineTriggers)
+          .where(
+            and(
+              eq(routineTriggers.companyId, issue.companyId),
+              eq(routineTriggers.routineId, issue.originId),
+              eq(routineTriggers.kind, "schedule"),
+              eq(routineTriggers.enabled, true),
+            ),
+          )
+          .limit(1)
+          .then((rows) => rows[0] ?? null)
+        : Promise.resolve(null),
     ]);
 
     const decision = decideSuccessfulRunHandoff({
@@ -4317,6 +4340,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
       hasPauseHold: Boolean(pauseHold),
       budgetBlocked: Boolean(budgetBlock),
       idempotentWakeExists: Boolean(existingWake),
+      hasActiveOwningRoutine: Boolean(activeOwningRoutine),
     });
 
     if (decision.kind !== "enqueue" || !issue) return;

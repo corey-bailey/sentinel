@@ -45,7 +45,7 @@ export function isIdempotentFinishSuccessfulRunHandoffWakeStatus(status: string)
 type HeartbeatRunRow = typeof heartbeatRuns.$inferSelect;
 type IssueRow = Pick<
   typeof issues.$inferSelect,
-  "id" | "companyId" | "identifier" | "title" | "status" | "assigneeAgentId" | "assigneeUserId" | "executionState"
+  "id" | "companyId" | "identifier" | "title" | "status" | "assigneeAgentId" | "assigneeUserId" | "executionState" | "originKind" | "originId"
 >;
 type AgentRow = Pick<typeof agents.$inferSelect, "id" | "companyId" | "status">;
 type NoticeIssue = Pick<typeof issues.$inferSelect, "id" | "identifier" | "title" | "status">;
@@ -344,6 +344,13 @@ export function decideSuccessfulRunHandoff(input: {
   hasPauseHold: boolean;
   budgetBlocked: boolean;
   idempotentWakeExists: boolean;
+  /**
+   * True when the issue is `originKind='routine_execution'` AND its owning
+   * routine has at least one enabled schedule trigger. In that case the
+   * issue's `in_progress` status is intentional between routine fires — not
+   * a missing disposition. Skip the handoff.
+   */
+  hasActiveOwningRoutine?: boolean;
 }): SuccessfulRunHandoffDecision {
   const { run, issue, agent } = input;
 
@@ -364,6 +371,12 @@ export function decideSuccessfulRunHandoff(input: {
   if (issue.assigneeUserId) return { kind: "skip", reason: "issue is human-owned" };
   if (issue.status !== "in_progress") return { kind: "skip", reason: `issue status ${issue.status} is a valid disposition` };
   if (issue.executionState) return { kind: "skip", reason: "issue has execution policy state" };
+  if (issue.originKind === "routine_execution" && input.hasActiveOwningRoutine) {
+    return {
+      kind: "skip",
+      reason: "owning routine still expected to re-fire — in_progress is intentional between fires",
+    };
+  }
   if (agent.status === "paused" || agent.status === "terminated" || agent.status === "pending_approval") {
     return { kind: "skip", reason: `agent status ${agent.status} is not invokable` };
   }

@@ -100,6 +100,40 @@ describe("successful run handoff decision", () => {
     });
   });
 
+  it("does not queue for routine-execution issues whose owning routine still has an enabled schedule trigger", () => {
+    // Recurring routine task: in_progress between fires is the intended state,
+    // not a missing disposition. The routine's next fire owns the next action.
+    expect(
+      decide({
+        issue: { ...issue, originKind: "routine_execution", originId: "routine-1" } as any,
+        hasActiveOwningRoutine: true,
+      }),
+    ).toEqual({
+      kind: "skip",
+      reason: "owning routine still expected to re-fire — in_progress is intentional between fires",
+    });
+  });
+
+  it("still queues for routine-execution issues whose routine has no active triggers (orphaned)", () => {
+    // Routine was disabled or its triggers all paused — fall through to normal
+    // missing-disposition handling so a stranded in_progress issue gets recovery.
+    const decision = decide({
+      issue: { ...issue, originKind: "routine_execution", originId: "routine-1" } as any,
+      hasActiveOwningRoutine: false,
+    });
+    expect(decision.kind).toBe("enqueue");
+  });
+
+  it("still queues for non-routine issues regardless of hasActiveOwningRoutine value", () => {
+    // Manual issue with hasActiveOwningRoutine=true should still trigger handoff —
+    // the routine check only applies when originKind === 'routine_execution'.
+    const decision = decide({
+      issue: { ...issue, originKind: "manual", originId: null } as any,
+      hasActiveOwningRoutine: true,
+    });
+    expect(decision.kind).toBe("enqueue");
+  });
+
   it("does not queue when a successful run records an accepted next-action path", () => {
     expect(decide({ issue: { ...issue, status: "in_review" } as any })).toEqual({
       kind: "skip",
