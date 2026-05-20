@@ -617,6 +617,13 @@
       "when": 1779241299444,
       "tag": "0087_upstream_health_state",
       "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1779285453255,
+      "tag": "0088_heartbeat_drift_catchup",
+      "breakpoints": true
     }
   ]
 }

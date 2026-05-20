@@ -39,8 +39,9 @@ import type { Db } from "@paperclipai/db";
 import { pluginJobs, pluginJobRuns } from "@paperclipai/db";
 import type { PluginJobStore } from "./plugin-job-store.js";
 import type { PluginWorkerManager } from "./plugin-worker-manager.js";
-import { parseCron, nextCronTick, validateCron } from "./cron.js";
+import { parseCron, nextCronTick, validateCron, validateCronCadenceFloor } from "./cron.js";
 import { logger } from "../middleware/logger.js";
+import { instanceSettingsService } from "./instance-settings.js";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -578,8 +579,17 @@ export function createPluginJobScheduler(
           "invalid cron schedule — cannot compute next run",
         );
       } else {
-        const cron = parseCron(job.schedule);
-        nextRunAt = nextCronTick(cron, now);
+        const floor = (await instanceSettingsService(db).getGeneral()).minCronCadenceMinutes;
+        const cadenceError = validateCronCadenceFloor(job.schedule, floor);
+        if (cadenceError) {
+          log.warn(
+            { jobId: job.id, schedule: job.schedule, error: cadenceError },
+            "plugin job schedule violates cadence floor — skipping next-run computation",
+          );
+        } else {
+          const cron = parseCron(job.schedule);
+          nextRunAt = nextCronTick(cron, now);
+        }
       }
     }
 
@@ -609,6 +619,16 @@ export function createPluginJobScheduler(
         log.warn(
           { jobId: job.id, jobKey: job.jobKey, schedule: job.schedule, error: validationError },
           "skipping job with invalid cron schedule",
+        );
+        continue;
+      }
+
+      const floor = (await instanceSettingsService(db).getGeneral()).minCronCadenceMinutes;
+      const cadenceError = validateCronCadenceFloor(job.schedule, floor);
+      if (cadenceError) {
+        log.warn(
+          { jobId: job.id, jobKey: job.jobKey, schedule: job.schedule, error: cadenceError },
+          "skipping plugin job — schedule violates cadence floor",
         );
         continue;
       }

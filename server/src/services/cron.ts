@@ -334,6 +334,60 @@ export function nextCronTickFromExpression(
   return nextCronTick(cron, after);
 }
 
+/**
+ * Compute the smallest interval (in whole minutes) between consecutive fires
+ * of the given cron expression, walking up to `maxFires` upcoming fires.
+ *
+ * Computation is timezone-agnostic (UTC). For DST-aware timezones, the
+ * actual minimum delta is always >= the UTC value (DST transitions can only
+ * stretch gaps, never compress them), so a UTC-based floor check is a safe
+ * conservative bound.
+ *
+ * Returns `Number.POSITIVE_INFINITY` if the schedule has no upcoming fires
+ * within the search window (e.g. an impossible expression).
+ */
+export function minCadenceMinutes(
+  expression: string,
+  from: Date = new Date(),
+  maxFires: number = 100,
+): number {
+  const cron = parseCron(expression);
+  let prev = nextCronTick(cron, from);
+  if (!prev) return Number.POSITIVE_INFINITY;
+  let minDeltaMs = Number.POSITIVE_INFINITY;
+  for (let i = 1; i < maxFires; i += 1) {
+    const next = nextCronTick(cron, prev);
+    if (!next) break;
+    const delta = next.getTime() - prev.getTime();
+    if (delta < minDeltaMs) minDeltaMs = delta;
+    if (minDeltaMs <= 60_000) break;
+    prev = next;
+  }
+  return Math.floor(minDeltaMs / 60_000);
+}
+
+/**
+ * Validate that a cron expression's minimum fire cadence is at or above
+ * `floorMinutes`. Returns `null` if OK, or a user-facing error message.
+ *
+ * A `floorMinutes` of `0` or negative disables the check.
+ */
+export function validateCronCadenceFloor(
+  expression: string,
+  floorMinutes: number,
+): string | null {
+  if (!Number.isFinite(floorMinutes) || floorMinutes <= 0) return null;
+  const min = minCadenceMinutes(expression);
+  if (min < floorMinutes) {
+    return (
+      `Cron interval is ${min === Number.POSITIVE_INFINITY ? "unknown" : `${min}m`}, ` +
+      `below the minimum allowed cadence of ${floorMinutes}m. ` +
+      `Use a long-running service or webhook trigger for higher-frequency work.`
+    );
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
