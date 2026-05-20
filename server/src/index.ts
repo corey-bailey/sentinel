@@ -32,6 +32,7 @@ import {
   feedbackService,
   heartbeatService,
   instanceSettingsService,
+  purgeBelowFloorScheduleTriggers,
   reconcilePersistedRuntimeServicesOnStartup,
   routineService,
 } from "./services/index.js";
@@ -675,6 +676,19 @@ export async function startServer(): Promise<StartedServer> {
   
     // Reap orphaned running runs at startup while in-memory execution state is empty,
     // then resume any persisted queued runs that were waiting on the previous process.
+    void purgeBelowFloorScheduleTriggers(db as any)
+      .then((purge) => {
+        if (purge.disabled.length > 0) {
+          logger.warn(
+            { scanned: purge.scanned, disabledCount: purge.disabled.length, disabled: purge.disabled },
+            `startup grandfather purge disabled ${purge.disabled.length} below-floor schedule trigger(s)`,
+          );
+        }
+      })
+      .catch((err) => {
+        logger.error({ err }, "startup grandfather purge failed");
+      });
+
     void heartbeat
       .reapOrphanedRuns()
       .then(() => heartbeat.promoteDueScheduledRetries())
