@@ -36,10 +36,11 @@
   ],
   "scripts": {
     "check:migrations": "tsx src/check-migration-numbering.ts",
+    "check:drift": "rm -f src/migrations/meta/CLAUDE.md && tsx src/check-no-drift.ts",
     "build": "pnpm run check:migrations && tsc && cp -r src/migrations dist/migrations",
     "clean": "rm -rf dist",
     "typecheck": "pnpm run check:migrations && tsc --noEmit",
-    "generate": "pnpm run check:migrations && tsc -p tsconfig.json && drizzle-kit generate",
+    "generate": "pnpm run check:migrations && tsc -p tsconfig.json && rm -f src/migrations/meta/CLAUDE.md && drizzle-kit generate && tsx src/check-migration-scope.ts",
     "migrate": "pnpm run check:migrations && tsx src/migrate.ts",
     "seed": "tsx src/seed.ts"
   },

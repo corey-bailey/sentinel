@@ -1,9 +1,39 @@
 # Schema Drift Between `packages/db/src/schema/*` and Applied Migrations
 
-Status: Draft
+Status: **Resolved — was stale on arrival (2026-05-20)**
 Owner: Backend / DB
 Date: 2026-05-19
 Surfaced by: `db02efcb` (`fix(heartbeat): break upstream rate-limit retry storms`)
+
+## Resolution (2026-05-20)
+
+A four-agent audit of this plan found that every "drift" it cited was already
+reconciled before the plan was written:
+
+- **Secrets cluster** (`company_secrets`, `company_secret_versions`,
+  `company_secret_bindings`, `company_secret_provider_configs`,
+  `secret_access_events`) — all migrated in `0082_dry_vision.sql` and
+  `0083_company_secret_provider_configs.sql`, including the
+  `company_secrets.key NOT NULL` backfill (0082 L34–49).
+- **`issue_recovery_actions`** — already created by `0084_issue_recovery_actions.sql`;
+  the drizzle-kit diff was a false positive from partial-index `WHERE` clause
+  normalization.
+- **`documents` trgm indexes** — already created by
+  `0079_company_search_document_indexes.sql`. `pg_trgm` extension enabled in
+  `0051_young_korg.sql`.
+
+Running `drizzle-kit generate` against `master` post-0085 reports
+`No schema changes, nothing to migrate`. No new migration was needed.
+
+The plan's underlying concern — that drizzle-kit emitting a giant
+catch-up diff is dangerous — was valid. The mitigation (a generate-scope
+guard) landed as `packages/db/src/check-migration-scope.ts`, with a
+CI-side drift detector at `packages/db/src/check-no-drift.ts`
+(`pnpm check:drift`). See those files for the actual implementation.
+
+The plan's body below is preserved for context only — **do not act on it**.
+
+---
 
 ## Summary
 

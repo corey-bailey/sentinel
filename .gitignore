@@ -49,6 +49,12 @@ diagnostics/
 # Doc maintenance cursor
 .doc-review-cursor
 
+# claude-mem auto-generated context files
+**/CLAUDE.md
+
+# DB migration scope scaffold (consumed by check-migration-scope.ts)
+packages/db/src/migrations/.next-scope.txt
+
 # Playwright
 tests/e2e/test-results/
 tests/e2e/playwright-report/
