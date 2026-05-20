@@ -4,6 +4,8 @@ export const DAILY_RETENTION_PRESETS = [3, 7, 14] as const;
 export const WEEKLY_RETENTION_PRESETS = [1, 2, 4] as const;
 export const MONTHLY_RETENTION_PRESETS = [1, 3, 6] as const;
 export const DEFAULT_ISSUE_GRAPH_LIVENESS_AUTO_RECOVERY_LOOKBACK_HOURS = 24;
+export const DEFAULT_MIN_CRON_CADENCE_MINUTES = 15;
+export const MAX_MIN_CRON_CADENCE_MINUTES = 60 * 24;
 export const MIN_ISSUE_GRAPH_LIVENESS_AUTO_RECOVERY_LOOKBACK_HOURS = 1;
 export const MAX_ISSUE_GRAPH_LIVENESS_AUTO_RECOVERY_LOOKBACK_HOURS = 24 * 30;
 
@@ -24,6 +26,7 @@ export interface InstanceGeneralSettings {
   keyboardShortcuts: boolean;
   feedbackDataSharingPreference: FeedbackDataSharingPreference;
   backupRetention: BackupRetentionPolicy;
+  minCronCadenceMinutes: number;
 }
 
 export interface InstanceExperimentalSettings {

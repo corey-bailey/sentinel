@@ -54,7 +54,8 @@ import { getConfiguredSecretProvider } from "../secrets/configured-provider.js";
 import { issueService } from "./issues.js";
 import { secretService } from "./secrets.js";
 import { getSecretProvider } from "../secrets/provider-registry.js";
-import { parseCron, validateCron } from "./cron.js";
+import { parseCron, validateCron, validateCronCadenceFloor } from "./cron.js";
+import { instanceSettingsService } from "./instance-settings.js";
 import { heartbeatService } from "./heartbeat.js";
 import { queueIssueAssignmentWakeup, type IssueAssignmentWakeupDeps } from "./issue-assignment-wakeup.js";
 import { logActivity } from "./activity-log.js";
@@ -1742,6 +1743,9 @@ export function routineService(
         assertTimeZone(timeZone);
         const error = validateCron(input.cronExpression);
         if (error) throw unprocessable(error);
+        const floor = (await instanceSettingsService(db).getGeneral()).minCronCadenceMinutes;
+        const cadenceError = validateCronCadenceFloor(input.cronExpression, floor);
+        if (cadenceError) throw unprocessable(cadenceError);
         nextRunAt = nextCronTickInTimeZone(input.cronExpression, timeZone, new Date());
       }
 
@@ -1813,6 +1817,9 @@ export function routineService(
           if (patch.cronExpression == null) throw unprocessable("Scheduled triggers require cronExpression");
           const error = validateCron(patch.cronExpression);
           if (error) throw unprocessable(error);
+          const floor = (await instanceSettingsService(db).getGeneral()).minCronCadenceMinutes;
+          const cadenceError = validateCronCadenceFloor(patch.cronExpression, floor);
+          if (cadenceError) throw unprocessable(cadenceError);
           cronExpression = patch.cronExpression;
         }
         if (patch.timezone !== undefined) {
