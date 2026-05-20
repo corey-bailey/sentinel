@@ -92,7 +92,7 @@ describeEmbeddedPostgres("budget token-metric observation", () => {
     expect(observed).toBe(20);
   });
 
-  it("sums input_tokens including cached_input_tokens", async () => {
+  it("sums input_tokens weighting cached_input_tokens at 0.1x", async () => {
     const { companyId, agentId } = await seedScope(db);
     await seedCostEvent(db, companyId, agentId, {
       inputTokens: 1000, cachedInputTokens: 500, outputTokens: 200, costCents: 12,
@@ -104,8 +104,8 @@ describeEmbeddedPostgres("budget token-metric observation", () => {
       companyId, scopeType: "agent", scopeId: agentId,
       windowKind: "calendar_month_utc", metric: "input_tokens",
     });
-    // 1000+500 + 100+0 = 1600
-    expect(observed).toBe(1600);
+    // (1000 + 0.1*500) + (100 + 0.1*0) = 1150
+    expect(observed).toBe(1150);
   });
 
   it("sums output_tokens only from output column", async () => {
@@ -123,7 +123,7 @@ describeEmbeddedPostgres("budget token-metric observation", () => {
     expect(observed).toBe(250);
   });
 
-  it("sums total_tokens = input + cached + output", async () => {
+  it("sums total_tokens weighting cached_input_tokens at 0.1x", async () => {
     const { companyId, agentId } = await seedScope(db);
     await seedCostEvent(db, companyId, agentId, {
       inputTokens: 1000, cachedInputTokens: 500, outputTokens: 200, costCents: 12,
@@ -135,8 +135,22 @@ describeEmbeddedPostgres("budget token-metric observation", () => {
       companyId, scopeType: "agent", scopeId: agentId,
       windowKind: "calendar_month_utc", metric: "total_tokens",
     });
-    // 1000+500+200 + 100+0+50 = 1850
-    expect(observed).toBe(1850);
+    // (1000 + 0.1*500 + 200) + (100 + 0.1*0 + 50) = 1400
+    expect(observed).toBe(1400);
+  });
+
+  it("rounds fractional totals to whole integers", async () => {
+    const { companyId, agentId } = await seedScope(db);
+    // 0.1*5 = 0.5 -> rounds to 1 once combined with no other tokens.
+    await seedCostEvent(db, companyId, agentId, {
+      inputTokens: 0, cachedInputTokens: 5, outputTokens: 0, costCents: 0,
+    });
+    const observed = await computeObservedAmount(db, {
+      companyId, scopeType: "agent", scopeId: agentId,
+      windowKind: "calendar_month_utc", metric: "total_tokens",
+    });
+    expect(observed).toBe(1);
+    expect(Number.isInteger(observed)).toBe(true);
   });
 
   it("returns 0 for unknown metrics", async () => {

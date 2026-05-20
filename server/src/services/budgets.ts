@@ -143,22 +143,24 @@ export async function computeObservedAmount(
   db: Db,
   policy: Pick<PolicyRow, "companyId" | "scopeType" | "scopeId" | "windowKind" | "metric">,
 ) {
-  // Pick the sum target based on the policy's metric. `total_tokens` is the
-  // sum of input + cached_input + output so a single budget can govern raw
-  // token spend regardless of which side is heavier.
+  // Cached input reads are priced at ~10% of fresh input on Anthropic and
+  // similar providers. Counting them 1:1 made every cache-heavy iterative
+  // agent trip token caps even though real cost stayed flat. Weight them at
+  // 0.1× so token-budget policies approximate actual API spend curves.
+  const CACHED_WEIGHT = sql`0.1`;
   let sumExpr;
   switch (policy.metric) {
     case "billed_cents":
       sumExpr = sql<number>`coalesce(sum(${costEvents.costCents}), 0)::double precision`;
       break;
     case "input_tokens":
-      sumExpr = sql<number>`coalesce(sum(${costEvents.inputTokens} + ${costEvents.cachedInputTokens}), 0)::double precision`;
+      sumExpr = sql<number>`coalesce(sum(${costEvents.inputTokens} + ${CACHED_WEIGHT} * ${costEvents.cachedInputTokens}), 0)::double precision`;
       break;
     case "output_tokens":
       sumExpr = sql<number>`coalesce(sum(${costEvents.outputTokens}), 0)::double precision`;
       break;
     case "total_tokens":
-      sumExpr = sql<number>`coalesce(sum(${costEvents.inputTokens} + ${costEvents.cachedInputTokens} + ${costEvents.outputTokens}), 0)::double precision`;
+      sumExpr = sql<number>`coalesce(sum(${costEvents.inputTokens} + ${CACHED_WEIGHT} * ${costEvents.cachedInputTokens} + ${costEvents.outputTokens}), 0)::double precision`;
       break;
     default:
       return 0;
@@ -178,7 +180,7 @@ export async function computeObservedAmount(
     .from(costEvents)
     .where(and(...conditions));
 
-  return Number(row?.total ?? 0);
+  return Math.round(Number(row?.total ?? 0));
 }
 
 function buildApprovalPayload(input: {
