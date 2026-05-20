@@ -1746,6 +1746,31 @@ export function routineService(
         const floor = (await instanceSettingsService(db).getGeneral()).minCronCadenceMinutes;
         const cadenceError = validateCronCadenceFloor(input.cronExpression, floor);
         if (cadenceError) throw unprocessable(cadenceError);
+
+        // Duplicate-schedule pre-check: friendly 409 before the DB unique index
+        // would also block. Scope: same routine, same cron, same timezone, enabled.
+        const existingDuplicate = await db
+          .select({ id: routineTriggers.id, label: routineTriggers.label })
+          .from(routineTriggers)
+          .where(
+            and(
+              eq(routineTriggers.routineId, routine.id),
+              eq(routineTriggers.kind, "schedule"),
+              eq(routineTriggers.enabled, true),
+              eq(routineTriggers.cronExpression, input.cronExpression),
+              eq(routineTriggers.timezone, timeZone),
+            ),
+          )
+          .limit(1)
+          .then((rows) => rows[0]);
+        if (existingDuplicate) {
+          throw conflict(
+            `This routine already has an enabled schedule trigger with cron "${input.cronExpression}" in ${timeZone}. ` +
+              `Disable or remove the existing trigger before creating a new one with identical timing.`,
+            { errorCode: "duplicate_schedule_trigger", existingTriggerId: existingDuplicate.id },
+          );
+        }
+
         nextRunAt = nextCronTickInTimeZone(input.cronExpression, timeZone, new Date());
       }
 

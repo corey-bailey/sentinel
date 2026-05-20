@@ -10,6 +10,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { agents } from "./agents.js";
 import { companies } from "./companies.js";
 import { companySecrets } from "./company_secrets.js";
@@ -119,6 +120,9 @@ export const routineTriggers = pgTable(
     nextRunIdx: index("routine_triggers_next_run_idx").on(table.nextRunAt),
     publicIdIdx: index("routine_triggers_public_id_idx").on(table.publicId),
     publicIdUq: uniqueIndex("routine_triggers_public_id_uq").on(table.publicId),
+    scheduleDedupeUq: uniqueIndex("routine_triggers_schedule_dedupe_uq")
+      .on(table.routineId, table.kind, table.cronExpression, table.timezone)
+      .where(sql`${table.enabled} = true AND ${table.kind} = 'schedule'`),
   }),
 );
 
