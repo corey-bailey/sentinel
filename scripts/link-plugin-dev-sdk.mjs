@@ -8,7 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, "..");
 const packageDir = process.cwd();
 const sdkDir = join(repoRoot, "packages", "plugins", "sdk");
-const scopeDir = join(packageDir, "node_modules", "@paperclipai");
+const scopeDir = join(packageDir, "node_modules", "@sentinel");
 const linkTarget = join(scopeDir, "plugin-sdk");
 
 if (!existsSync(join(packageDir, "package.json"))) {
@@ -30,6 +30,10 @@ try {
 }
 
 const relativeSdkDir = relative(scopeDir, sdkDir);
-symlinkSync(relativeSdkDir, linkTarget, "dir");
+try {
+  symlinkSync(relativeSdkDir, linkTarget, "dir");
+} catch (e) {
+  if (e.code !== "EEXIST") throw e;
+}
 
 console.log(`  ✓ Linked local @sentinel/plugin-sdk for ${packageDir}`);
