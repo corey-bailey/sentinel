@@ -12,6 +12,11 @@ import {
   Repeat,
   GitBranch,
   Settings,
+  ShieldCheck,
+  Play,
+  AlertTriangle,
+  BarChart3,
+  ClipboardList,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { NavLink } from "@/lib/router";
@@ -23,6 +28,7 @@ import { useDialogActions } from "../context/DialogContext";
 import { useCompany } from "../context/CompanyContext";
 import { heartbeatsApi } from "../api/heartbeats";
 import { instanceSettingsApi } from "../api/instanceSettings";
+import { regressionsApi } from "../api/sentinel";
 import { queryKeys } from "../lib/queryKeys";
 import { useInboxBadge } from "../hooks/useInboxBadge";
 import { Button } from "@/components/ui/button";
@@ -46,6 +52,14 @@ export function Sidebar() {
   });
   const liveRunCount = liveRuns?.length ?? 0;
   const showWorkspacesLink = experimentalSettings?.enableIsolatedWorkspaces === true;
+
+  const { data: regressions } = useQuery({
+    queryKey: queryKeys.regressions.list(selectedCompanyId!),
+    queryFn: () => regressionsApi.list(selectedCompanyId!),
+    enabled: !!selectedCompanyId,
+    refetchInterval: 30_000,
+  });
+  const openRegressionCount = (regressions ?? []).filter((r) => r.status === "open").length;
 
   const pluginContext = {
     companyId: selectedCompanyId,
@@ -118,6 +132,21 @@ export function Sidebar() {
         <SidebarProjects />
 
         <SidebarAgents />
+
+        <SidebarSection label="Sentinel">
+          <SidebarNavItem to="/sentinel/dashboard" label="Overview" icon={ShieldCheck} />
+          <SidebarNavItem to="/sentinel/test-runs" label="Test Runs" icon={Play} />
+          <SidebarNavItem
+            to="/sentinel/regressions"
+            label="Regressions"
+            icon={AlertTriangle}
+            badge={openRegressionCount}
+            badgeTone={openRegressionCount > 0 ? "danger" : "default"}
+            alert={openRegressionCount > 0}
+          />
+          <SidebarNavItem to="/sentinel/baselines" label="Baselines" icon={BarChart3} />
+          <SidebarNavItem to="/sentinel/requirements" label="Requirements" icon={ClipboardList} />
+        </SidebarSection>
 
         <SidebarSection label="Company">
           <SidebarNavItem to="/org" label="Org" icon={Network} />
