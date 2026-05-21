@@ -77,3 +77,11 @@ export { pluginDatabaseNamespaces, pluginMigrations } from "./plugin_database.js
 export { pluginJobs, pluginJobRuns } from "./plugin_jobs.js";
 export { pluginWebhookDeliveries } from "./plugin_webhooks.js";
 export { pluginLogs } from "./plugin_logs.js";
+export { requirements, type SLATargetRecord } from "./requirements.js";
+export { testPlans, type LoadProfile } from "./test_plans.js";
+export { testAssets } from "./test_assets.js";
+export { testRuns } from "./test_runs.js";
+export { testRunIssues } from "./test_run_issues.js";
+export { metricSeries } from "./metric_series.js";
+export { baselines } from "./baselines.js";
+export { regressions } from "./regressions.js";
