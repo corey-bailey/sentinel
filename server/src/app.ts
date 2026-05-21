@@ -21,6 +21,7 @@ import { environmentRoutes } from "./routes/environments.js";
 import { executionWorkspaceRoutes } from "./routes/execution-workspaces.js";
 import { goalRoutes } from "./routes/goals.js";
 import { requirementRoutes } from "./routes/requirements.js";
+import { testPlanRoutes } from "./routes/test-plans.js";
 import { triggerRoutes } from "./routes/triggers.js";
 import { testRunRoutes } from "./routes/test-runs.js";
 import { baselineRoutes } from "./routes/baselines.js";
@@ -208,6 +209,7 @@ export async function createApp(
   api.use(executionWorkspaceRoutes(db));
   api.use(goalRoutes(db));
   api.use(requirementRoutes(db));
+  api.use(testPlanRoutes(db));
   api.use(triggerRoutes(db));
   api.use(testRunRoutes(db));
   api.use(baselineRoutes(db));
