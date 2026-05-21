@@ -2,7 +2,7 @@
  * Core types for the Paperclip plugin worker-side SDK.
  *
  * These types define the stable public API surface that plugin workers import
- * from `@paperclipai/plugin-sdk`.  The host provides a concrete implementation
+ * from `@sentinel/plugin-sdk`.  The host provides a concrete implementation
  * of `PluginContext` to the plugin at initialisation time.
  *
  * @see PLUGIN_SPEC.md §14 — SDK Surface
@@ -39,10 +39,10 @@ import type {
   RoutineRun,
   Agent,
   Goal,
-} from "@paperclipai/shared";
+} from "@sentinel/shared";
 
 // ---------------------------------------------------------------------------
-// Re-exports from @paperclipai/shared (plugin authors import from one place)
+// Re-exports from @sentinel/shared (plugin authors import from one place)
 // ---------------------------------------------------------------------------
 
 export type {
@@ -120,7 +120,7 @@ export type {
   IssueSurfaceVisibility,
   Agent,
   Goal,
-} from "@paperclipai/shared";
+} from "@sentinel/shared";
 
 // ---------------------------------------------------------------------------
 // Scope key — identifies where plugin state is stored
@@ -481,7 +481,7 @@ export interface PluginLocalFolderListing {
 
 export interface PluginLocalFoldersClient {
   /** Manifest-declared local folders for this plugin. */
-  declarations(): import("@paperclipai/shared").PluginLocalFolderDeclaration[];
+  declarations(): import("@sentinel/shared").PluginLocalFolderDeclaration[];
   /** Persist a company-scoped local folder path after validating it. */
   configure(input: PluginLocalFolderConfigureInput): Promise<PluginLocalFolderStatus>;
   /** Check the stored folder readiness for a company and folder key. */
@@ -1600,7 +1600,7 @@ export interface PluginGoalsClient {
  * ctx.streams.close("chat");
  * ```
  *
- * @see usePluginStream in `@paperclipai/plugin-sdk/ui`
+ * @see usePluginStream in `@sentinel/plugin-sdk/ui`
  */
 export interface PluginStreamsClient {
   /**
@@ -1637,7 +1637,7 @@ export interface PluginStreamsClient {
  *
  * @example
  * ```ts
- * import { definePlugin } from "@paperclipai/plugin-sdk";
+ * import { definePlugin } from "@sentinel/plugin-sdk";
  *
  * export default definePlugin({
  *   async setup(ctx) {

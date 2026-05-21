@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { CompanySecret, EnvBinding, SecretVersionSelector } from "@paperclipai/shared";
+import type { CompanySecret, EnvBinding, SecretVersionSelector } from "@sentinel/shared";
 import { AlertCircle, X } from "lucide-react";
 import { cn } from "../lib/utils";
 

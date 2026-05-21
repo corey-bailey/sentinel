@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@sentinel/db";
 import {
   agents,
   pluginManagedResources,
@@ -7,7 +7,7 @@ import {
   projects,
   routines,
   routineTriggers,
-} from "@paperclipai/db";
+} from "@sentinel/db";
 import type {
   CreateRoutineTrigger,
   PluginManagedResourceRef,
@@ -16,8 +16,8 @@ import type {
   Routine,
   RoutineManagedByPlugin,
   RoutineStatus,
-} from "@paperclipai/shared";
-import { ROUTINE_STATUSES } from "@paperclipai/shared";
+} from "@sentinel/shared";
+import { ROUTINE_STATUSES } from "@sentinel/shared";
 import { notFound, unprocessable } from "../errors.js";
 import { logActivity } from "./activity-log.js";
 import { routineService } from "./routines.js";
@@ -28,7 +28,7 @@ const MANAGED_ROUTINE_RESOURCE_KIND = "routine";
 interface PluginManagedRoutineServiceOptions {
   pluginId: string;
   pluginKey: string;
-  manifest?: import("@paperclipai/shared").PaperclipPluginManifestV1 | null;
+  manifest?: import("@sentinel/shared").PaperclipPluginManifestV1 | null;
   pluginWorkerManager?: PluginWorkerManager;
 }
 

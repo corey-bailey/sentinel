@@ -1,4 +1,4 @@
-import type { AdapterModelProfileDefinition } from "@paperclipai/adapter-utils";
+import type { AdapterModelProfileDefinition } from "@sentinel/adapter-utils";
 
 export const type = "codex_local";
 export const label = "Codex (local)";

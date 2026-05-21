@@ -3,7 +3,7 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { buildProjectMentionHref, buildRoutineMentionHref, buildSkillMentionHref } from "@paperclipai/shared";
+import { buildProjectMentionHref, buildRoutineMentionHref, buildSkillMentionHref } from "@sentinel/shared";
 import {
   computeMentionMenuPosition,
   findClosestAutocompleteAnchor,

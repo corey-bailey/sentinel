@@ -4,7 +4,7 @@ import {
   companies,
   createDb,
   upstreamHealthState,
-} from "@paperclipai/db";
+} from "@sentinel/db";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,

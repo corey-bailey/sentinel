@@ -9,7 +9,7 @@ import type {
   RemoteSecretImportCandidate,
   RemoteSecretImportPreviewResult,
   RemoteSecretImportResult,
-} from "@paperclipai/shared";
+} from "@sentinel/shared";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "../../api/client";
 

@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
-import { routineTriggers } from "@paperclipai/db";
+import type { Db } from "@sentinel/db";
+import { routineTriggers } from "@sentinel/db";
 import { logger } from "../middleware/logger.js";
 import { instanceSettingsService } from "./instance-settings.js";
 import { minCadenceMinutes } from "./cron.js";

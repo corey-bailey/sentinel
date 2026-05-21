@@ -6,7 +6,7 @@ import {
   companies,
   costEvents,
   createDb,
-} from "@paperclipai/db";
+} from "@sentinel/db";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,

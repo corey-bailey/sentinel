@@ -39,8 +39,8 @@ import type {
   Agent,
   Goal,
   PluginLocalFolderDeclaration,
-} from "@paperclipai/shared";
-export type { PluginLauncherRenderContextSnapshot } from "@paperclipai/shared";
+} from "@sentinel/shared";
+export type { PluginLauncherRenderContextSnapshot } from "@sentinel/shared";
 
 import type {
   PluginEvent,

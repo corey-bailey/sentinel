@@ -15,7 +15,7 @@ import {
   projects,
   routines,
   routineTriggers,
-} from "@paperclipai/db";
+} from "@sentinel/db";
 import {
   copyGitHooksToWorktreeGitDir,
   copySeededSecretsKey,

@@ -1,5 +1,5 @@
 import { and, eq, sql } from "drizzle-orm";
-import { upstreamHealthState, type Db } from "@paperclipai/db";
+import { upstreamHealthState, type Db } from "@sentinel/db";
 
 /**
  * Per-(company, adapter) circuit breaker for upstream transient failures.

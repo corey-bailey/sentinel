@@ -1,4 +1,4 @@
-import type { AdapterModel } from "@paperclipai/adapter-utils";
+import type { AdapterModel } from "@sentinel/adapter-utils";
 
 export const type = "acpx_local";
 export const label = "ACPX (local)";

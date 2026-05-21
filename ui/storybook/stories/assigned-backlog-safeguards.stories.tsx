@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactNode } from "react";
 import { CircleDot, Flag, MoreHorizontal, Paperclip } from "lucide-react";
-import type { IssueRelationIssueSummary } from "@paperclipai/shared";
+import type { IssueRelationIssueSummary } from "@sentinel/shared";
 import { IssueAssignedBacklogNotice } from "@/components/IssueAssignedBacklogNotice";
 import { IssueBlockedNotice } from "@/components/IssueBlockedNotice";
 import { IssueRow } from "@/components/IssueRow";

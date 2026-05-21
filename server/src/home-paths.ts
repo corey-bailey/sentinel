@@ -13,7 +13,7 @@ import {
   resolvePaperclipHomeDir,
   resolvePaperclipInstanceId,
   resolvePaperclipInstanceRoot,
-} from "@paperclipai/shared/home-paths";
+} from "@sentinel/shared/home-paths";
 
 export {
   expandHomePrefix,

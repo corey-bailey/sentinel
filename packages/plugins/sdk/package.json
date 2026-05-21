@@ -1,5 +1,5 @@
 {
-  "name": "@paperclipai/plugin-sdk",
+  "name": "@sentinel/plugin-sdk",
   "version": "1.0.0",
   "description": "Stable public API for Paperclip plugins — worker-side context and UI bridge hooks",
   "license": "MIT",
@@ -101,14 +101,14 @@
     "dist"
   ],
   "scripts": {
-    "build": "pnpm --filter @paperclipai/shared build && tsc",
+    "build": "pnpm --filter @sentinel/shared build && tsc",
     "clean": "rm -rf dist",
     "ensure-build-deps": "node ../../../scripts/ensure-plugin-build-deps.mjs",
-    "typecheck": "pnpm --filter @paperclipai/shared build && tsc --noEmit",
+    "typecheck": "pnpm --filter @sentinel/shared build && tsc --noEmit",
     "dev:server": "tsx src/dev-cli.ts"
   },
   "dependencies": {
-    "@paperclipai/shared": "workspace:*",
+    "@sentinel/shared": "workspace:*",
     "zod": "^3.24.2"
   },
   "devDependencies": {

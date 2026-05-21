@@ -13,7 +13,7 @@ import {
   heartbeatRuns,
   issues,
   projects,
-} from "@paperclipai/db";
+} from "@sentinel/db";
 import { costService } from "../services/costs.ts";
 import { financeService } from "../services/finance.ts";
 import {

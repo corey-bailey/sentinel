@@ -1,11 +1,11 @@
 import { createHash } from "node:crypto";
 import os from "node:os";
-import type { AdapterModel } from "@paperclipai/adapter-utils";
+import type { AdapterModel } from "@sentinel/adapter-utils";
 import {
   asString,
   ensurePathInEnv,
   runChildProcess,
-} from "@paperclipai/adapter-utils/server-utils";
+} from "@sentinel/adapter-utils/server-utils";
 import { isValidOpenCodeModelId } from "../index.js";
 
 const MODELS_CACHE_TTL_MS = 60_000;

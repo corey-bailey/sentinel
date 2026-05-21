@@ -1,7 +1,7 @@
 /**
  * Shared UI component declarations for plugin frontends.
  *
- * These components are exported from `@paperclipai/plugin-sdk/ui` and are
+ * These components are exported from `@sentinel/plugin-sdk/ui` and are
  * provided by the host at runtime.  They match the host's design tokens and
  * visual language, reducing the boilerplate needed to build consistent plugin UIs.
  *
@@ -13,7 +13,7 @@
  * only the type declarations; the runtime implementations are injected via the
  * host module registry.
  *
- * @see PLUGIN_SPEC.md §19.6 — Shared Components In `@paperclipai/plugin-sdk/ui`
+ * @see PLUGIN_SPEC.md §19.6 — Shared Components In `@sentinel/plugin-sdk/ui`
  */
 
 import type React from "react";
@@ -563,7 +563,7 @@ export const ErrorBoundary = createSdkUiComponent<ErrorBoundaryProps>("ErrorBoun
  *
  * @example
  * ```tsx
- * import { FileTree, type FileTreeNode } from "@paperclipai/plugin-sdk/ui";
+ * import { FileTree, type FileTreeNode } from "@sentinel/plugin-sdk/ui";
  *
  * const nodes: FileTreeNode[] = [
  *   { name: "README.md", path: "README.md", kind: "file", children: [] },

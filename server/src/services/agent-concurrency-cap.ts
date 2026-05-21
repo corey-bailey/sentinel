@@ -1,6 +1,6 @@
 import { and, count, eq } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
-import { heartbeatRuns } from "@paperclipai/db";
+import type { Db } from "@sentinel/db";
+import { heartbeatRuns } from "@sentinel/db";
 
 /**
  * Count the heartbeat runs currently in status='running' for the given agent.

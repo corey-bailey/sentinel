@@ -26,7 +26,7 @@ import {
   issueTreeHolds,
   issueWorkProducts,
   issues,
-} from "@paperclipai/db";
+} from "@sentinel/db";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,
@@ -50,9 +50,9 @@ vi.mock("../telemetry.ts", () => ({
   getTelemetryClient: () => mockTelemetryClient,
 }));
 
-vi.mock("@paperclipai/shared/telemetry", async () => {
-  const actual = await vi.importActual<typeof import("@paperclipai/shared/telemetry")>(
-    "@paperclipai/shared/telemetry",
+vi.mock("@sentinel/shared/telemetry", async () => {
+  const actual = await vi.importActual<typeof import("@sentinel/shared/telemetry")>(
+    "@sentinel/shared/telemetry",
   );
   return {
     ...actual,
@@ -2949,5 +2949,108 @@ describeEmbeddedPostgres("heartbeat orphaned process recovery", () => {
 
     const runs = await db.select().from(heartbeatRuns).where(eq(heartbeatRuns.id, runId));
     expect(runs).toHaveLength(1);
+  });
+
+  async function seedBlockedIssueFixture(opts?: { withBlocker?: boolean }) {
+    const companyId = randomUUID();
+    const agentId = randomUUID();
+    const issueId = randomUUID();
+    const blockerIssueId = randomUUID();
+    const issuePrefix = `B${companyId.replace(/-/g, "").slice(0, 6).toUpperCase()}`;
+    await db.insert(companies).values({
+      id: companyId,
+      name: "Paperclip",
+      issuePrefix,
+      requireBoardApprovalForNewAgents: false,
+    });
+    await db.insert(agents).values({
+      id: agentId,
+      companyId,
+      name: "CodexCoder",
+      role: "engineer",
+      status: "idle",
+      adapterType: "codex_local",
+      adapterConfig: {},
+      runtimeConfig: {},
+      permissions: {},
+    });
+    await db.insert(issues).values({
+      id: issueId,
+      companyId,
+      title: "Parked work",
+      status: "blocked",
+      priority: "high",
+      assigneeAgentId: agentId,
+      issueNumber: 1,
+      identifier: `${issuePrefix}-1`,
+    });
+    if (opts?.withBlocker) {
+      await db.insert(issues).values({
+        id: blockerIssueId,
+        companyId,
+        title: "Real blocker",
+        status: "todo",
+        priority: "high",
+        assigneeAgentId: agentId,
+        issueNumber: 2,
+        identifier: `${issuePrefix}-2`,
+      });
+      await db.insert(issueRelations).values({
+        companyId,
+        issueId: blockerIssueId,
+        relatedIssueId: issueId,
+        type: "blocks",
+        createdByAgentId: agentId,
+      });
+    }
+    return { companyId, agentId, issueId };
+  }
+
+  it("auto-corrects a stale blocked issue with no first-class blocker to todo", async () => {
+    const { issueId } = await seedBlockedIssueFixture();
+    const heartbeat = heartbeatService(db);
+
+    // Evaluate as if 1 hour in the future so the issue is stale past the 30-min grace.
+    const result = await heartbeat.reconcileBlockedIssuesWithoutBlockers({
+      now: new Date(Date.now() + 60 * 60 * 1000),
+    });
+
+    expect(result.corrected).toBe(1);
+    expect(result.issueIds).toContain(issueId);
+
+    const issue = await db.select().from(issues).where(eq(issues.id, issueId)).then((rows) => rows[0] ?? null);
+    expect(issue?.status).toBe("todo");
+
+    const comments = await db.select().from(issueComments).where(eq(issueComments.issueId, issueId));
+    expect(comments).toHaveLength(1);
+    expect(comments[0]?.body).toContain("Auto-corrected: blocked with no blocker");
+    expect(comments[0]?.authorType).toBe("system");
+  });
+
+  it("leaves a blocked issue with a real blocker relation untouched", async () => {
+    const { issueId } = await seedBlockedIssueFixture({ withBlocker: true });
+    const heartbeat = heartbeatService(db);
+
+    const result = await heartbeat.reconcileBlockedIssuesWithoutBlockers({
+      now: new Date(Date.now() + 60 * 60 * 1000),
+    });
+
+    expect(result.corrected).toBe(0);
+
+    const issue = await db.select().from(issues).where(eq(issues.id, issueId)).then((rows) => rows[0] ?? null);
+    expect(issue?.status).toBe("blocked");
+  });
+
+  it("respects the grace period for a recently-updated blocked issue", async () => {
+    const { issueId } = await seedBlockedIssueFixture();
+    const heartbeat = heartbeatService(db);
+
+    // Evaluate at the real present — the freshly inserted issue is inside the grace window.
+    const result = await heartbeat.reconcileBlockedIssuesWithoutBlockers();
+
+    expect(result.corrected).toBe(0);
+
+    const issue = await db.select().from(issues).where(eq(issues.id, issueId)).then((rows) => rows[0] ?? null);
+    expect(issue?.status).toBe("blocked");
   });
 });

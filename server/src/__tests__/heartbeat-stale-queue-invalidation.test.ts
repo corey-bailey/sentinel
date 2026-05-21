@@ -18,8 +18,8 @@ import {
   issueRelations,
   issueTreeHolds,
   issues,
-} from "@paperclipai/db";
-import { ISSUE_CONTINUATION_SUMMARY_DOCUMENT_KEY } from "@paperclipai/shared";
+} from "@sentinel/db";
+import { ISSUE_CONTINUATION_SUMMARY_DOCUMENT_KEY } from "@sentinel/shared";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,

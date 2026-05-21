@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import type { PaperclipPluginManifestV1 } from "@paperclipai/plugin-sdk";
+import type { PaperclipPluginManifestV1 } from "@sentinel/plugin-sdk";
 import { DEFAULT_AGENT_INSTRUCTION_FILES, DEFAULT_AGENT_INSTRUCTIONS } from "./templates.js";
 
 export const PLUGIN_ID = "paperclipai.plugin-llm-wiki";

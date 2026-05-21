@@ -1,4 +1,4 @@
-import type { Issue } from "@paperclipai/shared";
+import type { Issue } from "@sentinel/shared";
 
 type IssueDetailSource = "issues" | "inbox";
 

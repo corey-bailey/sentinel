@@ -74,7 +74,7 @@ import type {
   RoutineEnvConfig,
   RoutineTrigger,
   RoutineVariable,
-} from "@paperclipai/shared";
+} from "@sentinel/shared";
 
 const concurrencyPolicies = ["coalesce_if_active", "always_enqueue", "skip_if_active"];
 const catchUpPolicies = ["skip_missed", "enqueue_missed_with_cap"];

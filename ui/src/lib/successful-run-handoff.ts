@@ -1,4 +1,4 @@
-import type { ActivityEvent, Issue, SuccessfulRunHandoffState } from "@paperclipai/shared";
+import type { ActivityEvent, Issue, SuccessfulRunHandoffState } from "@sentinel/shared";
 
 export const SUCCESSFUL_RUN_HANDOFF_REQUIRED_ACTION = "issue.successful_run_handoff_required";
 export const SUCCESSFUL_RUN_HANDOFF_RESOLVED_ACTION = "issue.successful_run_handoff_resolved";

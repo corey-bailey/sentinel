@@ -1,14 +1,14 @@
-import type { CLIAdapterModule } from "@paperclipai/adapter-utils";
-import { printAcpxStreamEvent } from "@paperclipai/adapter-acpx-local/cli";
-import { printClaudeStreamEvent } from "@paperclipai/adapter-claude-local/cli";
-import { printCodexStreamEvent } from "@paperclipai/adapter-codex-local/cli";
-import { printCursorStreamEvent } from "@paperclipai/adapter-cursor-local/cli";
-import { printCursorCloudEvent } from "@paperclipai/adapter-cursor-cloud/cli";
-import { printGeminiStreamEvent } from "@paperclipai/adapter-gemini-local/cli";
-import { printGrokStreamEvent } from "@paperclipai/adapter-grok-local/cli";
-import { printOpenCodeStreamEvent } from "@paperclipai/adapter-opencode-local/cli";
-import { printPiStreamEvent } from "@paperclipai/adapter-pi-local/cli";
-import { printOpenClawGatewayStreamEvent } from "@paperclipai/adapter-openclaw-gateway/cli";
+import type { CLIAdapterModule } from "@sentinel/adapter-utils";
+import { printAcpxStreamEvent } from "@sentinel/adapter-acpx-local/cli";
+import { printClaudeStreamEvent } from "@sentinel/adapter-claude-local/cli";
+import { printCodexStreamEvent } from "@sentinel/adapter-codex-local/cli";
+import { printCursorStreamEvent } from "@sentinel/adapter-cursor-local/cli";
+import { printCursorCloudEvent } from "@sentinel/adapter-cursor-cloud/cli";
+import { printGeminiStreamEvent } from "@sentinel/adapter-gemini-local/cli";
+import { printGrokStreamEvent } from "@sentinel/adapter-grok-local/cli";
+import { printOpenCodeStreamEvent } from "@sentinel/adapter-opencode-local/cli";
+import { printPiStreamEvent } from "@sentinel/adapter-pi-local/cli";
+import { printOpenClawGatewayStreamEvent } from "@sentinel/adapter-openclaw-gateway/cli";
 import { processCLIAdapter } from "./process/index.js";
 import { httpCLIAdapter } from "./http/index.js";
 

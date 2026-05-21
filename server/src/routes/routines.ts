@@ -1,5 +1,5 @@
 import { Router, type Request } from "express";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@sentinel/db";
 import {
   createRoutineSchema,
   createRoutineTriggerSchema,
@@ -7,8 +7,8 @@ import {
   runRoutineSchema,
   updateRoutineSchema,
   updateRoutineTriggerSchema,
-} from "@paperclipai/shared";
-import { trackRoutineCreated } from "@paperclipai/shared/telemetry";
+} from "@sentinel/shared";
+import { trackRoutineCreated } from "@sentinel/shared/telemetry";
 import { validate } from "../middleware/validate.js";
 import { accessService, logActivity, routineService } from "../services/index.js";
 import { assertCompanyAccess, getActorInfo } from "./authz.js";

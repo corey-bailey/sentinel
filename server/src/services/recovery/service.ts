@@ -1,12 +1,12 @@
-import { and, asc, desc, eq, gt, gte, inArray, isNull, notInArray, sql } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
+import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, notInArray, sql } from "drizzle-orm";
+import type { Db } from "@sentinel/db";
 import {
   DEFAULT_ISSUE_GRAPH_LIVENESS_AUTO_RECOVERY_LOOKBACK_HOURS,
   MAX_ISSUE_GRAPH_LIVENESS_AUTO_RECOVERY_LOOKBACK_HOURS,
   MIN_ISSUE_GRAPH_LIVENESS_AUTO_RECOVERY_LOOKBACK_HOURS,
   type IssueGraphLivenessAutoRecoveryPreview,
   type IssueGraphLivenessAutoRecoveryPreviewItem,
-} from "@paperclipai/shared";
+} from "@sentinel/shared";
 import {
   agents,
   agentWakeupRequests,
@@ -22,7 +22,7 @@ import {
   issueRelations,
   issueThreadInteractions,
   issues,
-} from "@paperclipai/db";
+} from "@sentinel/db";
 import { parseObject, asBoolean, asNumber } from "../../adapters/utils.js";
 import { runningProcesses } from "../../adapters/index.js";
 import { forbidden, notFound } from "../../errors.js";
@@ -670,6 +670,93 @@ export function recoveryService(db: Db, deps: { enqueueWakeup: RecoveryWakeup })
     }
 
     return { assigned, skipped, issueIds };
+  }
+
+  // An issue parked in `blocked` with no first-class blocker relation (empty
+  // blockedByIssueIds) is invisible to every heartbeat — the orchestration loop
+  // skips `blocked`, so the work freezes forever. This reconciles that drift by
+  // moving such issues back to `todo` once they have been stale past a grace
+  // period, leaving a system comment that explains how to express a real blocker.
+  async function reconcileBlockedIssuesWithoutBlockers(opts?: {
+    gracePeriodMs?: number;
+    now?: Date;
+  }) {
+    const gracePeriodMs = Math.max(0, opts?.gracePeriodMs ?? 30 * 60 * 1000);
+    const now = opts?.now ?? new Date();
+    const cutoff = new Date(now.getTime() - gracePeriodMs);
+
+    const candidates = await db
+      .select()
+      .from(issues)
+      .where(
+        and(
+          eq(issues.status, "blocked"),
+          isNull(issues.hiddenAt),
+          isNull(issues.assigneeUserId),
+          sql`${issues.assigneeAgentId} is not null`,
+          lt(issues.updatedAt, cutoff),
+          sql`not exists (
+            select 1
+            from ${issueRelations}
+            where ${issueRelations.type} = 'blocks'
+              and ${issueRelations.relatedIssueId} = ${issues.id}
+          )`,
+        ),
+      );
+
+    const result = { corrected: 0, skipped: 0, issueIds: [] as string[] };
+
+    for (const issue of candidates) {
+      // System-generated recovery issues manage their own lifecycle — never
+      // auto-correct their status.
+      if (isRecoveryOriginIssue(issue)) {
+        result.skipped += 1;
+        continue;
+      }
+
+      const updated = await issuesSvc.update(issue.id, { status: "todo" });
+      if (!updated) {
+        result.skipped += 1;
+        continue;
+      }
+
+      await issuesSvc.addComment(
+        issue.id,
+        [
+          "## Auto-corrected: blocked with no blocker",
+          "",
+          "This issue was `blocked` but had no first-class blocker relation (empty `blockedByIssueIds`) for longer than the grace period, so no heartbeat could pick it up.",
+          "",
+          "- Paperclip moved it back to `todo` so work can resume.",
+          "- If this issue is genuinely blocked, set `blockedByIssueIds` to the issue(s) it depends on. A free-text \"blocked by\" comment does not count and will be auto-corrected again.",
+        ].join("\n"),
+        {},
+        { authorType: "system" },
+      );
+
+      await logActivity(db, {
+        companyId: issue.companyId,
+        actorType: "system",
+        actorId: "system",
+        agentId: null,
+        runId: null,
+        action: "issue.updated",
+        entityType: "issue",
+        entityId: issue.id,
+        details: {
+          identifier: issue.identifier,
+          status: "todo",
+          previousStatus: "blocked",
+          source: "recovery.reconcile_blocked_without_blocker",
+          blockedDurationMs: Math.max(0, now.getTime() - issue.updatedAt.getTime()),
+        },
+      });
+
+      result.corrected += 1;
+      result.issueIds.push(issue.id);
+    }
+
+    return result;
   }
 
   async function getCompanyIssuePrefix(companyId: string) {
@@ -3452,6 +3539,7 @@ export function recoveryService(db: Db, deps: { enqueueWakeup: RecoveryWakeup })
     reconcileStrandedAssignedIssues,
     buildIssueGraphLivenessAutoRecoveryPreview,
     reconcileIssueGraphLiveness,
+    reconcileBlockedIssuesWithoutBlockers,
     readRecoveryTimerIntervalMs,
   };
 }

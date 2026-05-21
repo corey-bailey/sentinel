@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn, formatDateTime } from "@/lib/utils";
 import { formatMonitorOffset } from "@/lib/issue-monitor";
 import { formatRetryReason } from "@/lib/runRetryState";
-import type { IssueScheduledRetry } from "@paperclipai/shared";
+import type { IssueScheduledRetry } from "@sentinel/shared";
 import { useRetryNowMutation, type RetryNowError } from "../hooks/useRetryNowMutation";
 
 const MAX_TURN_CONTINUATION = "max_turns_continuation";

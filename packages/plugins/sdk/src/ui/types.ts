@@ -1,7 +1,7 @@
 /**
  * Paperclip plugin UI SDK — types for plugin frontend components.
  *
- * Plugin UI bundles import from `@paperclipai/plugin-sdk/ui`.  This subpath
+ * Plugin UI bundles import from `@sentinel/plugin-sdk/ui`.  This subpath
  * provides the bridge hooks, component prop interfaces, and error types that
  * plugin React components use to communicate with the host.
  *
@@ -22,7 +22,7 @@ import type {
   PluginBridgeErrorCode,
   PluginLauncherBounds,
   PluginLauncherRenderEnvironment,
-} from "@paperclipai/shared";
+} from "@sentinel/shared";
 import type {
   PluginLauncherRenderContextSnapshot,
   PluginModalBoundsRequest,
@@ -34,7 +34,7 @@ export type {
   PluginBridgeErrorCode,
   PluginLauncherBounds,
   PluginLauncherRenderEnvironment,
-} from "@paperclipai/shared";
+} from "@sentinel/shared";
 export type {
   PluginLauncherRenderContextSnapshot,
   PluginModalBoundsRequest,

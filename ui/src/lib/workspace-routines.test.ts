@@ -1,4 +1,4 @@
-import type { RoutineListItem } from "@paperclipai/shared";
+import type { RoutineListItem } from "@sentinel/shared";
 import { describe, expect, it } from "vitest";
 import {
   getWorkspaceSpecificRoutineVariableNames,

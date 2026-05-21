@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import type { Db } from "@paperclipai/db";
+import type { Db } from "@sentinel/db";
 import { tooManyRequests } from "../errors.js";
 import { logger } from "../middleware/logger.js";
 

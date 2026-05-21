@@ -18,7 +18,7 @@ import {
   type PluginRouteSidebarProps,
   type PluginSettingsPageProps,
   type PluginSidebarProps,
-} from "@paperclipai/plugin-sdk/ui";
+} from "@sentinel/plugin-sdk/ui";
 import { useCallback, useEffect, useMemo, useRef, useState, type AnchorHTMLAttributes, type CSSProperties, type ReactElement, type ReactNode } from "react";
 import { readIngestOperationIssueId, uploadIssueAttachmentFile } from "./issue-attachments.js";
 

@@ -29,7 +29,7 @@ import {
   routineRuns,
   routines,
   secretAccessEvents,
-} from "@paperclipai/db";
+} from "@sentinel/db";
 import {
   getEmbeddedPostgresTestSupport,
   startEmbeddedPostgresTestDatabase,

@@ -17,7 +17,7 @@
 import {
   DEFAULT_COMPANY_ATTACHMENT_MAX_BYTES,
   MAX_COMPANY_ATTACHMENT_MAX_BYTES,
-} from "@paperclipai/shared";
+} from "@sentinel/shared";
 
 export const DEFAULT_ALLOWED_TYPES: readonly string[] = [
   "image/png",

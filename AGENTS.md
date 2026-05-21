@@ -4,8 +4,12 @@ Guidance for human and AI contributors working in this repository.
 
 ## 1. Purpose
 
-Paperclip is a control plane for AI-agent companies.
-The current implementation target is V1 and is defined in `doc/SPEC-implementation.md`.
+Sentinel is an autonomous agentic performance and functional testing platform.
+It is forked from Paperclip (a control plane for AI-agent companies) and domain-specialized for testing.
+
+Core domain: Requirements → TestPlans → TestAssets → TestRuns → MetricSeries → Baselines → Regressions.
+Design spec: `docs/superpowers/specs/2026-05-21-perf-agent-design.md`
+Upstream reference: `git remote paperclip-upstream`
 
 ## 2. Read This First
 

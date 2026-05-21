@@ -1,4 +1,4 @@
-import { inferBindModeFromHost } from "@paperclipai/shared";
+import { inferBindModeFromHost } from "@sentinel/shared";
 import type { PaperclipConfig } from "../config/schema.js";
 import type { CheckResult } from "./index.js";
 

@@ -245,7 +245,7 @@ export function registerPluginCommands(program: Command): void {
       .option("--display-name <name>", "Manifest display name")
       .option("--description <description>", "Manifest description")
       .option("--author <author>", "Manifest author")
-      .option("--sdk-path <path>", "Local @paperclipai/plugin-sdk package path")
+      .option("--sdk-path <path>", "Local @sentinel/plugin-sdk package path")
       .action((packageName: string, opts: PluginInitOptions) => {
         try {
           const result = runPluginInitCommand(packageName, opts);

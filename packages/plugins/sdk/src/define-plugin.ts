@@ -11,7 +11,7 @@
  * @example
  * ```ts
  * // dist/worker.ts
- * import { definePlugin } from "@paperclipai/plugin-sdk";
+ * import { definePlugin } from "@sentinel/plugin-sdk";
  *
  * export default definePlugin({
  *   async setup(ctx) {
@@ -320,7 +320,7 @@ export interface PaperclipPlugin {
  *
  * @example
  * ```ts
- * import { definePlugin } from "@paperclipai/plugin-sdk";
+ * import { definePlugin } from "@sentinel/plugin-sdk";
  *
  * export default definePlugin({
  *   async setup(ctx) {
