@@ -175,7 +175,7 @@ Eight pages under `/:companyPrefix/sentinel/*`, reachable from the **Sentinel** 
 | Test Plans | `/sentinel/test-plans` | Plans with engine badges and file patterns |
 | Test Assets | `/sentinel/test-assets` | Scripts with coverage status and inline preview |
 
-The Regressions sidebar item shows a live red badge with the open regression count, polling every 30 seconds.
+Seven pages have dedicated sidebar nav items (Overview, Test Plans, Test Runs, Test Assets, Regressions, Baselines, Requirements). The Regressions item shows a live red badge with the open regression count, polling every 30 seconds. Run detail is accessible from the Test Runs list.
 
 <br/>
 

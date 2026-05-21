@@ -17,6 +17,8 @@ import {
   AlertTriangle,
   BarChart3,
   ClipboardList,
+  Layers,
+  FileCode,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { NavLink } from "@/lib/router";
@@ -135,7 +137,9 @@ export function Sidebar() {
 
         <SidebarSection label="Sentinel">
           <SidebarNavItem to="/sentinel/dashboard" label="Overview" icon={ShieldCheck} />
+          <SidebarNavItem to="/sentinel/test-plans" label="Test Plans" icon={Layers} />
           <SidebarNavItem to="/sentinel/test-runs" label="Test Runs" icon={Play} />
+          <SidebarNavItem to="/sentinel/test-assets" label="Test Assets" icon={FileCode} />
           <SidebarNavItem
             to="/sentinel/regressions"
             label="Regressions"
