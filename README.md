@@ -221,10 +221,20 @@ Requires a running Sentinel instance. The E2E suite seeds all test data via the 
 
 ### Test coverage
 
-149 Sentinel-specific unit and integration tests across:
+164 Sentinel-specific unit and integration tests across:
+- `server/src/__tests__/sla-evaluator.test.ts`
+- `server/src/__tests__/metric-aggregator.test.ts`
+- `server/src/__tests__/baseline-comparator.test.ts`
+- `server/src/__tests__/test-plan-validator.test.ts`
+- `server/src/__tests__/k6-adapter.test.ts`
+- `server/src/__tests__/playwright-adapter.test.ts`
+- `server/src/__tests__/pytest-adapter.test.ts`
+- `server/src/__tests__/mocha-adapter.test.ts`
+- `server/src/__tests__/dynatrace-adapter.test.ts`
 - `server/src/__tests__/requirements-routes.test.ts`
 - `server/src/__tests__/trigger-routes.test.ts`
 - `server/src/__tests__/test-run-routes.test.ts`
+- `server/src/__tests__/test-plan-routes.test.ts`
 - `server/src/__tests__/baseline-routes.test.ts`
 - `server/src/__tests__/regression-routes.test.ts`
 - `server/src/__tests__/test-asset-routes.test.ts`
