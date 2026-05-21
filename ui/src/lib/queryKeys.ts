@@ -194,4 +194,31 @@ export const queryKeys = {
   adapters: {
     all: ["adapters"] as const,
   },
+  // sentinel testing platform
+  requirements: {
+    list: (companyId: string) => ["requirements", companyId] as const,
+    detail: (id: string) => ["requirements", "detail", id] as const,
+  },
+  testPlans: {
+    list: (companyId: string) => ["test-plans", companyId] as const,
+    detail: (id: string) => ["test-plans", "detail", id] as const,
+  },
+  testAssets: {
+    list: (companyId: string, testPlanId?: string) =>
+      ["test-assets", companyId, testPlanId ?? "all"] as const,
+    coverage: (companyId: string, testPlanId: string) =>
+      ["test-assets", "coverage", companyId, testPlanId] as const,
+  },
+  testRuns: {
+    list: (companyId: string, testPlanId?: string) =>
+      ["test-runs", companyId, testPlanId ?? "all"] as const,
+    detail: (id: string) => ["test-runs", "detail", id] as const,
+  },
+  baselines: {
+    list: (companyId: string, testPlanId?: string) =>
+      ["baselines", companyId, testPlanId ?? "all"] as const,
+  },
+  regressions: {
+    list: (companyId: string) => ["regressions", companyId] as const,
+  },
 };

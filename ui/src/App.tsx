@@ -54,6 +54,14 @@ import { CliAuthPage } from "./pages/CliAuth";
 import { InviteLandingPage } from "./pages/InviteLanding";
 import { JoinRequestQueue } from "./pages/JoinRequestQueue";
 import { NotFoundPage } from "./pages/NotFound";
+import { SentinelDashboard } from "./pages/SentinelDashboard";
+import { Requirements } from "./pages/Requirements";
+import { TestPlans } from "./pages/TestPlans";
+import { TestAssets } from "./pages/TestAssets";
+import { TestRunList } from "./pages/TestRunList";
+import { TestRunDetail } from "./pages/TestRunDetail";
+import { Baselines } from "./pages/Baselines";
+import { Regressions } from "./pages/Regressions";
 import { useCompany } from "./context/CompanyContext";
 import { useDialogActions } from "./context/DialogContext";
 import { loadLastInboxTab } from "./lib/inbox";
@@ -137,6 +145,16 @@ function boardRoutes() {
       <Route path="design-guide" element={<DesignGuide />} />
       <Route path="instance/settings/adapters" element={<AdapterManager />} />
       <Route path=":pluginRoutePath/*" element={<PluginPage />} />
+      {/* Sentinel testing platform */}
+      <Route path="sentinel" element={<Navigate to="sentinel/dashboard" replace />} />
+      <Route path="sentinel/dashboard" element={<SentinelDashboard />} />
+      <Route path="sentinel/requirements" element={<Requirements />} />
+      <Route path="sentinel/test-plans" element={<TestPlans />} />
+      <Route path="sentinel/test-assets" element={<TestAssets />} />
+      <Route path="sentinel/test-runs" element={<TestRunList />} />
+      <Route path="sentinel/test-runs/:runId" element={<TestRunDetail />} />
+      <Route path="sentinel/baselines" element={<Baselines />} />
+      <Route path="sentinel/regressions" element={<Regressions />} />
       <Route path="*" element={<NotFoundPage scope="board" />} />
     </>
   );
