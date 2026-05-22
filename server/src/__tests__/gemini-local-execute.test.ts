@@ -8,11 +8,11 @@ async function writeFakeGeminiCommand(commandPath: string): Promise<void> {
   const script = `#!/usr/bin/env node
 const fs = require("node:fs");
 
-const capturePath = process.env.PAPERCLIP_TEST_CAPTURE_PATH;
+const capturePath = process.env.SENTINEL_TEST_CAPTURE_PATH;
 const payload = {
   argv: process.argv.slice(2),
-  paperclipEnvKeys: Object.keys(process.env)
-    .filter((key) => key.startsWith("PAPERCLIP_"))
+  sentinelEnvKeys: Object.keys(process.env)
+    .filter((key) => key.startsWith("SENTINEL_"))
     .sort(),
 };
 if (capturePath) {
@@ -70,7 +70,7 @@ process.exit(${exit});
 
 type CapturePayload = {
   argv: string[];
-  paperclipEnvKeys: string[];
+  sentinelEnvKeys: string[];
 };
 
 describe("gemini execute", () => {
@@ -107,7 +107,7 @@ describe("gemini execute", () => {
           cwd: workspace,
           model: "gemini-2.5-pro",
           env: {
-            PAPERCLIP_TEST_CAPTURE_PATH: capturePath,
+            SENTINEL_TEST_CAPTURE_PATH: capturePath,
           },
           promptTemplate: "Follow the paperclip heartbeat.",
         },
@@ -132,17 +132,17 @@ describe("gemini execute", () => {
       const promptArg = promptFlagIndex >= 0 ? capture.argv[promptFlagIndex + 1] : "";
       expect(promptArg).toContain("Follow the paperclip heartbeat.");
       expect(promptArg).toContain("Paperclip runtime note:");
-      expect(capture.paperclipEnvKeys).toEqual(
+      expect(capture.sentinelEnvKeys).toEqual(
         expect.arrayContaining([
-          "PAPERCLIP_AGENT_ID",
-          "PAPERCLIP_API_KEY",
-          "PAPERCLIP_API_URL",
-          "PAPERCLIP_COMPANY_ID",
-          "PAPERCLIP_RUN_ID",
+          "SENTINEL_AGENT_ID",
+          "SENTINEL_API_KEY",
+          "SENTINEL_API_URL",
+          "SENTINEL_COMPANY_ID",
+          "SENTINEL_RUN_ID",
         ]),
       );
       expect(invocationPrompt).toContain("Paperclip runtime note:");
-      expect(invocationPrompt).toContain("PAPERCLIP_API_URL");
+      expect(invocationPrompt).toContain("SENTINEL_API_URL");
       expect(invocationPrompt).toContain("Paperclip API access note:");
       expect(invocationPrompt).toContain("run_shell_command");
       expect(result.question).toBeNull();
@@ -175,7 +175,7 @@ describe("gemini execute", () => {
         config: {
           command: commandPath,
           cwd: workspace,
-          env: { PAPERCLIP_TEST_CAPTURE_PATH: capturePath },
+          env: { SENTINEL_TEST_CAPTURE_PATH: capturePath },
         },
         context: {},
         authToken: "t",
@@ -368,7 +368,7 @@ describe("gemini execute", () => {
           cwd: workspace,
           model: "gemini-2.5-pro",
           env: {
-            PAPERCLIP_TEST_CAPTURE_PATH: capturePath,
+            SENTINEL_TEST_CAPTURE_PATH: capturePath,
           },
           promptTemplate: "Follow the paperclip heartbeat.",
         },

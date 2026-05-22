@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createEmbeddedPostgresLogBuffer, formatEmbeddedPostgresError } from "./embedded-postgres-error.js";
+import { createEmbeddedPostgresLogBuffer, formatEmbeddedPostgresError } from "./embedded-sentinel-postgres-error.js";
 
 describe("formatEmbeddedPostgresError", () => {
   it("adds a shared-memory hint when initdb logs expose the real cause", () => {

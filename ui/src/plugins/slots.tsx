@@ -229,7 +229,7 @@ function buildPluginUiUrl(contribution: PluginUiContribution): string {
  * fighting import map timing constraints, we:
  * 1. Fetch the module source text
  * 2. Rewrite bare specifier imports to use blob URLs that re-export from the
- *    host's global bridge registry (`globalThis.__paperclipPluginBridge__`)
+ *    host's global bridge registry (`globalThis.__sentinelPluginBridge__`)
  * 3. Import the rewritten module via a blob URL
  *
  * This approach is compatible with all modern browsers and avoids import map
@@ -254,7 +254,7 @@ function createReactShimSource(reactModule: object): string {
     .join("\n");
 
   return `
-        const R = globalThis.__paperclipPluginBridge__?.react;
+        const R = globalThis.__sentinelPluginBridge__?.react;
         if (!R) {
           throw new Error("Paperclip plugin React runtime is not initialized.");
         }
@@ -273,7 +273,7 @@ function getShimBlobUrl(specifier: "react" | "react-dom" | "react-dom/client" | 
       break;
     case "react/jsx-runtime":
       source = `
-        const R = globalThis.__paperclipPluginBridge__?.react;
+        const R = globalThis.__sentinelPluginBridge__?.react;
         const withKey = ${applyJsxRuntimeKey.toString()};
         export const jsx = (type, props, key) => R.createElement(type, withKey(props, key));
         export const jsxs = (type, props, key) => R.createElement(type, withKey(props, key));
@@ -283,7 +283,7 @@ function getShimBlobUrl(specifier: "react" | "react-dom" | "react-dom/client" | 
     case "react-dom":
     case "react-dom/client":
       source = `
-        const RD = globalThis.__paperclipPluginBridge__?.reactDom;
+        const RD = globalThis.__sentinelPluginBridge__?.reactDom;
         export default RD;
         const { createRoot, hydrateRoot, createPortal, flushSync } = RD ?? {};
         export { createRoot, hydrateRoot, createPortal, flushSync };
@@ -291,7 +291,7 @@ function getShimBlobUrl(specifier: "react" | "react-dom" | "react-dom/client" | 
       break;
     case "sdk-ui":
       source = `
-        const SDK = globalThis.__paperclipPluginBridge__?.sdkUi ?? {};
+        const SDK = globalThis.__sentinelPluginBridge__?.sdkUi ?? {};
         function missing(name) {
           return function MissingPaperclipSdkUiComponent() {
             throw new Error('Paperclip plugin UI runtime is not initialized for "' + name + '". Ensure the host loaded the plugin bridge before rendering this UI module.');
@@ -376,7 +376,7 @@ function rewriteBareSpecifiers(source: string): string {
 async function importPluginModule(url: string): Promise<Record<string, unknown>> {
   // Check if the bridge registry is available. If not, fall back to direct
   // import (which will fail on bare specifiers but won't crash the loader).
-  if (!globalThis.__paperclipPluginBridge__) {
+  if (!globalThis.__sentinelPluginBridge__) {
     console.warn("[plugin-loader] Bridge registry not initialized, falling back to direct import");
     return import(/* @vite-ignore */ url);
   }
@@ -411,7 +411,7 @@ async function importPluginModule(url: string): Promise<Record<string, unknown>>
  * component registry.
  *
  * This replaces the previous approach where plugin bundles had to
- * self-register via `window.paperclipPlugins.registerReactComponent()`.
+ * self-register via `window.sentinelPlugins.registerReactComponent()`.
  * Now the host is responsible for importing the module and binding
  * exports to the correct `pluginKey:exportName` registry keys.
  *

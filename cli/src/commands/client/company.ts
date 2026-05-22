@@ -201,15 +201,15 @@ function normalizePortablePath(filePath: string): string {
 function shouldIncludePortableFile(filePath: string): boolean {
   const baseName = path.basename(filePath);
   const isMarkdown = baseName.endsWith(".md");
-  const isPaperclipYaml = baseName === ".paperclip.yaml" || baseName === ".paperclip.yml";
+  const isPaperclipYaml = baseName === ".sentinel.yaml" || baseName === ".sentinel.yml";
   const contentType = binaryContentTypeByExtension[path.extname(baseName).toLowerCase()];
   return isMarkdown || isPaperclipYaml || Boolean(contentType);
 }
 
 function findPortableExtensionPath(files: Record<string, CompanyPortabilityFileEntry>): string | null {
-  if (files[".paperclip.yaml"] !== undefined) return ".paperclip.yaml";
-  if (files[".paperclip.yml"] !== undefined) return ".paperclip.yml";
-  return Object.keys(files).find((entry) => entry.endsWith("/.paperclip.yaml") || entry.endsWith("/.paperclip.yml")) ?? null;
+  if (files[".sentinel.yaml"] !== undefined) return ".sentinel.yaml";
+  if (files[".sentinel.yml"] !== undefined) return ".sentinel.yml";
+  return Object.keys(files).find((entry) => entry.endsWith("/.sentinel.yaml") || entry.endsWith("/.sentinel.yml")) ?? null;
 }
 
 function collectFilesUnderDirectory(
@@ -1247,7 +1247,7 @@ export function registerCompanyCommands(program: Command): void {
               out: path.resolve(opts.out!),
               rootPath: exported.rootPath,
               filesWritten: Object.keys(exported.files).length,
-              paperclipExtensionPath: exported.paperclipExtensionPath,
+              sentinelExtensionPath: exported.sentinelExtensionPath,
               warningCount: exported.warnings.length,
             },
             { json: ctx.json },

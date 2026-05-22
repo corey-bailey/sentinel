@@ -12,7 +12,7 @@ async function makeTempDir(prefix: string): Promise<string> {
 }
 
 describe("opencode local skill sync", () => {
-  const paperclipKey = "paperclipai/paperclip/paperclip";
+  const paperclipKey = "sentinelai/paperclip/paperclip";
   const cleanupDirs = new Set<string>();
 
   afterEach(async () => {
@@ -32,7 +32,7 @@ describe("opencode local skill sync", () => {
         env: {
           HOME: home,
         },
-        paperclipSkillSync: {
+        sentinelSkillSync: {
           desiredSkills: [paperclipKey],
         },
       },
@@ -62,7 +62,7 @@ describe("opencode local skill sync", () => {
         env: {
           HOME: home,
         },
-        paperclipSkillSync: {
+        sentinelSkillSync: {
           desiredSkills: [paperclipKey],
         },
       },
@@ -76,7 +76,7 @@ describe("opencode local skill sync", () => {
         env: {
           HOME: home,
         },
-        paperclipSkillSync: {
+        sentinelSkillSync: {
           desiredSkills: [],
         },
       },

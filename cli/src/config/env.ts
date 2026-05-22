@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 import { config as loadDotenv, parse as parseEnvFileContents } from "dotenv";
 import { resolveConfigPath } from "./store.js";
 
-const JWT_SECRET_ENV_KEY = "PAPERCLIP_AGENT_JWT_SECRET";
+const JWT_SECRET_ENV_KEY = "SENTINEL_AGENT_JWT_SECRET";
 function resolveEnvFilePath(configPath?: string) {
   return path.resolve(path.dirname(resolveConfigPath(configPath)), ".env");
 }
@@ -39,7 +39,7 @@ function renderEnvFile(entries: Record<string, string>) {
   return lines.join("\n");
 }
 
-export function resolvePaperclipEnvFile(configPath?: string): string {
+export function resolveSentinelEnvFile(configPath?: string): string {
   return resolveEnvFilePath(configPath);
 }
 
@@ -96,7 +96,7 @@ export function writeAgentJwtEnv(secret: string, filePath = resolveEnvFilePath()
   mergePaperclipEnvEntries({ [JWT_SECRET_ENV_KEY]: secret }, filePath);
 }
 
-export function readPaperclipEnvEntries(filePath = resolveEnvFilePath()): Record<string, string> {
+export function readSentinelEnvEntries(filePath = resolveEnvFilePath()): Record<string, string> {
   if (!fs.existsSync(filePath)) return {};
   return parseEnvFile(fs.readFileSync(filePath, "utf-8"));
 }
@@ -113,7 +113,7 @@ export function mergePaperclipEnvEntries(
   entries: Record<string, string>,
   filePath = resolveEnvFilePath(),
 ): Record<string, string> {
-  const current = readPaperclipEnvEntries(filePath);
+  const current = readSentinelEnvEntries(filePath);
   const next = {
     ...current,
     ...Object.fromEntries(

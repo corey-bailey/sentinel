@@ -66,7 +66,7 @@ Paperclip now treats **bind** as a separate concern from auth:
 Default onboarding remains interactive and flagless:
 
 ```sh
-pnpm paperclipai onboard
+pnpm sentinelai onboard
 ```
 
 Server prompt behavior:
@@ -83,9 +83,9 @@ Server prompt behavior:
 Examples:
 
 ```sh
-pnpm paperclipai onboard --yes
-pnpm paperclipai onboard --yes --bind lan
-pnpm paperclipai run --bind tailnet
+pnpm sentinelai onboard --yes
+pnpm sentinelai onboard --yes --bind lan
+pnpm sentinelai run --bind tailnet
 ```
 
 `configure --section server` follows the same interactive behavior.
@@ -95,7 +95,7 @@ pnpm paperclipai run --bind tailnet
 Default doctor remains flagless:
 
 ```sh
-pnpm paperclipai doctor
+pnpm sentinelai doctor
 ```
 
 Doctor reads configured mode/exposure and applies mode-aware checks. Optional override flags are secondary.

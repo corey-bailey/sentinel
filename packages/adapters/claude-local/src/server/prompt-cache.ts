@@ -5,7 +5,7 @@ import { createHash, type Hash } from "node:crypto";
 import type { AdapterExecutionContext } from "@sentinel/adapter-utils";
 import {
   ensurePaperclipSkillSymlink,
-  resolvePaperclipInstanceRootForAdapter,
+  resolveSentinelInstanceRootForAdapter,
   type PaperclipSkillEntry,
 } from "@sentinel/adapter-utils/server-utils";
 
@@ -26,9 +26,9 @@ function resolveManagedClaudePromptCacheRoot(
   env: NodeJS.ProcessEnv,
   companyId: string,
 ): string {
-  const instanceRoot = resolvePaperclipInstanceRootForAdapter({
-    homeDir: nonEmpty(env.PAPERCLIP_HOME) ?? undefined,
-    instanceId: nonEmpty(env.PAPERCLIP_INSTANCE_ID) ?? undefined,
+  const instanceRoot = resolveSentinelInstanceRootForAdapter({
+    homeDir: nonEmpty(env.SENTINEL_HOME) ?? undefined,
+    instanceId: nonEmpty(env.SENTINEL_INSTANCE_ID) ?? undefined,
     env,
   });
   return path.resolve(

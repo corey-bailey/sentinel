@@ -30,7 +30,7 @@ import { buildPluginWorkerEnv, pluginLoader } from "../services/plugin-loader.js
 const embeddedPostgresSupport = await getEmbeddedPostgresTestSupport();
 const describeEmbeddedPostgres = embeddedPostgresSupport.supported ? describe : describe.skip;
 const multiMigrationPluginKey = "paperclip.dbfixture";
-const llmWikiPluginKey = "paperclipai.plugin-llm-wiki";
+const llmWikiPluginKey = "sentinelai.plugin-llm-wiki";
 
 if (!embeddedPostgresSupport.supported) {
   console.warn(
@@ -161,8 +161,8 @@ describe("buildPluginWorkerEnv", () => {
     });
 
     expect(env).toEqual({
-      PAPERCLIP_DEPLOYMENT_MODE: "authenticated",
-      PAPERCLIP_DEPLOYMENT_EXPOSURE: "public",
+      SENTINEL_DEPLOYMENT_MODE: "authenticated",
+      SENTINEL_DEPLOYMENT_EXPOSURE: "public",
       ANTHROPIC_API_KEY: "anthropic-token",
       OPENAI_API_KEY: "openai-token",
     });
@@ -178,8 +178,8 @@ describe("buildPluginWorkerEnv", () => {
     });
 
     expect(env).toEqual({
-      PAPERCLIP_DEPLOYMENT_MODE: "authenticated",
-      PAPERCLIP_DEPLOYMENT_EXPOSURE: "public",
+      SENTINEL_DEPLOYMENT_MODE: "authenticated",
+      SENTINEL_DEPLOYMENT_EXPOSURE: "public",
     });
   });
 });
@@ -257,7 +257,7 @@ describeEmbeddedPostgres("plugin database namespaces", () => {
         name: pluginManifest.id,
         version: pluginManifest.version,
         type: "module",
-        paperclipPlugin: { manifest: "./manifest.js" },
+        sentinelPlugin: { manifest: "./manifest.js" },
       }),
       "utf8",
     );
@@ -587,8 +587,8 @@ describeEmbeddedPostgres("plugin database namespaces", () => {
       expect.objectContaining({
         databaseNamespace: namespace,
         env: {
-          PAPERCLIP_DEPLOYMENT_MODE: "authenticated",
-          PAPERCLIP_DEPLOYMENT_EXPOSURE: "public",
+          SENTINEL_DEPLOYMENT_MODE: "authenticated",
+          SENTINEL_DEPLOYMENT_EXPOSURE: "public",
         },
         manifest: expect.objectContaining({
           database: expect.objectContaining({ coreReadTables: ["companies"] }),

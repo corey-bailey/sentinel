@@ -13,7 +13,7 @@ import {
   resolveDefaultBackupDir,
   resolveDefaultEmbeddedPostgresDir,
   resolveDefaultLogsDir,
-  resolvePaperclipInstanceId,
+  resolveSentinelInstanceId,
 } from "../config/home.js";
 import { printPaperclipCliBanner } from "../utils/banner.js";
 
@@ -29,7 +29,7 @@ const SECTION_LABELS: Record<Section, string> = {
 };
 
 function defaultConfig(): PaperclipConfig {
-  const instanceId = resolvePaperclipInstanceId();
+  const instanceId = resolveSentinelInstanceId();
   return {
     $meta: {
       version: 1,
@@ -81,7 +81,7 @@ export async function configure(opts: {
   const configPath = resolveConfigPath(opts.config);
 
   if (!configExists(opts.config)) {
-    p.log.error("No config file found. Run `paperclipai onboard` first.");
+    p.log.error("No config file found. Run `sentinelai onboard` first.");
     p.outro("");
     return;
   }
@@ -168,7 +168,7 @@ export async function configure(opts: {
           } else if (keyResult.status === "skipped_provider") {
             p.log.message(pc.dim("Skipping local key file management for non-local provider"));
           } else {
-            p.log.message(pc.dim("Skipping local key file management because PAPERCLIP_SECRETS_MASTER_KEY is set"));
+            p.log.message(pc.dim("Skipping local key file management because SENTINEL_SECRETS_MASTER_KEY is set"));
           }
         }
         break;

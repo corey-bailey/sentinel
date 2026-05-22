@@ -59,7 +59,7 @@ credentials must not be stored in Paperclip `company_secrets`.
 The equivalent CLI check is:
 
 ```sh
-pnpm paperclipai secrets doctor --company-id {companyId}
+pnpm sentinelai secrets doctor --company-id {companyId}
 ```
 
 ## Provider Vaults
@@ -406,7 +406,7 @@ as declarations in the package manifest. Exports omit secret values, secret IDs,
 provider references, and encrypted provider material. Use:
 
 ```sh
-pnpm paperclipai secrets declarations --company-id {companyId}
+pnpm sentinelai secrets declarations --company-id {companyId}
 ```
 
 to inspect the declarations that an export would emit before moving a package.

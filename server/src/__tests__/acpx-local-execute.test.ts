@@ -604,7 +604,7 @@ describe("acpx_local execute", () => {
           stateDir: path.join(root, "state"),
           promptTemplate: "Do the assigned work.",
           paperclipRuntimeSkills: [skill],
-          paperclipSkillSync: {
+          sentinelSkillSync: {
             desiredSkills: [skill.key],
           },
         },
@@ -650,7 +650,7 @@ describe("acpx_local execute", () => {
           stateDir: path.join(root, "state"),
           promptTemplate: "Do the assigned work.",
           paperclipRuntimeSkills: [skill],
-          paperclipSkillSync: {
+          sentinelSkillSync: {
             desiredSkills: [skill.key],
           },
         },
@@ -697,7 +697,7 @@ describe("acpx_local execute", () => {
           promptTemplate: "Do the assigned work.",
           env: { CODEX_HOME: codexHome },
           paperclipRuntimeSkills: [skill],
-          paperclipSkillSync: {
+          sentinelSkillSync: {
             desiredSkills: [skill.key],
           },
         },
@@ -744,7 +744,7 @@ describe("acpx_local execute", () => {
           stateDir: path.join(root, "state"),
           promptTemplate: "Do the assigned work.",
           paperclipRuntimeSkills: [skill],
-          paperclipSkillSync: {
+          sentinelSkillSync: {
             desiredSkills: [skill.key],
           },
         },

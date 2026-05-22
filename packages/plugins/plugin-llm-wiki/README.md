@@ -45,9 +45,9 @@ pnpm test
 From the Paperclip repo root:
 
 ```bash
-pnpm --filter @paperclipai/plugin-llm-wiki typecheck
-pnpm --filter @paperclipai/plugin-llm-wiki test
-pnpm --filter @paperclipai/plugin-llm-wiki build
+pnpm --filter @sentinelai/plugin-llm-wiki typecheck
+pnpm --filter @sentinelai/plugin-llm-wiki test
+pnpm --filter @sentinelai/plugin-llm-wiki build
 ```
 
 ## Alpha Verification
@@ -56,9 +56,9 @@ Run these commands from the Paperclip repo root before handing off alpha plugin
 changes:
 
 ```bash
-pnpm --filter @paperclipai/plugin-llm-wiki typecheck
-pnpm --filter @paperclipai/plugin-llm-wiki test
-pnpm --filter @paperclipai/plugin-llm-wiki build
+pnpm --filter @sentinelai/plugin-llm-wiki typecheck
+pnpm --filter @sentinelai/plugin-llm-wiki test
+pnpm --filter @sentinelai/plugin-llm-wiki build
 ```
 
 The focused Vitest suite covers:
@@ -87,19 +87,19 @@ Remaining alpha gaps:
 ```bash
 curl -X POST http://127.0.0.1:3100/api/plugins/install \
   -H "Content-Type: application/json" \
-  -d '{"packageName":"/Users/dotta/paperclip/.paperclip/worktrees/PAP-3179-design-a-llm-wiki-plugin/packages/plugins/plugin-llm-wiki","isLocalPath":true}'
+  -d '{"packageName":"/Users/dotta/paperclip/.sentinel/worktrees/PAP-3179-design-a-llm-wiki-plugin/packages/plugins/plugin-llm-wiki","isLocalPath":true}'
 ```
 
 ## Build Options
 
-- `pnpm build` uses esbuild presets from `@paperclipai/plugin-sdk/bundlers`.
+- `pnpm build` uses esbuild presets from `@sentinelai/plugin-sdk/bundlers`.
 - `pnpm build:rollup` uses rollup presets from the same SDK.
 
 After changing manifest-loaded assets such as skills, agent instructions, or
 templates, recompile the local plugin before re-enabling it:
 
 ```bash
-pnpm --filter @paperclipai/plugin-llm-wiki build
+pnpm --filter @sentinelai/plugin-llm-wiki build
 ```
 
 The package-local `dist/` directory is ignored by git, but local Paperclip

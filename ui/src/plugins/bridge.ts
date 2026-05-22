@@ -166,7 +166,7 @@ export type PluginBridgeContextValue = {
  * resolve the current plugin without ambient mutable globals.
  *
  * Because plugin bundles share the host's React instance (via the bridge
- * registry on `globalThis.__paperclipPluginBridge__`), context propagation
+ * registry on `globalThis.__sentinelPluginBridge__`), context propagation
  * works correctly across the host/plugin boundary.
  */
 export const PluginBridgeContext =

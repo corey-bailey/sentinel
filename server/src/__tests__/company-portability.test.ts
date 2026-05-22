@@ -123,7 +123,7 @@ function asTextFile(entry: CompanyPortabilityFileEntry | undefined) {
 }
 
 describe("company portability", () => {
-  const paperclipKey = "paperclipai/paperclip/paperclip";
+  const paperclipKey = "sentinelai/paperclip/paperclip";
   const companyPlaybookKey = "company/company-1/company-playbook";
 
   beforeEach(() => {
@@ -169,7 +169,7 @@ describe("company portability", () => {
         adapterType: "claude_local",
         adapterConfig: {
           promptTemplate: "You are ClaudeCoder.",
-          paperclipSkillSync: {
+          sentinelSkillSync: {
             desiredSkills: [paperclipKey],
           },
           instructionsFilePath: "/tmp/ignored.md",
@@ -296,7 +296,7 @@ describe("company portability", () => {
         description: "Paperclip coordination skill",
         markdown: "---\nname: paperclip\ndescription: Paperclip coordination skill\n---\n\n# Paperclip\n",
         sourceType: "github",
-        sourceLocator: "https://github.com/paperclipai/paperclip/tree/master/skills/paperclip",
+        sourceLocator: "https://github.com/sentinelai/paperclip/tree/master/skills/paperclip",
         sourceRef: "0123456789abcdef0123456789abcdef01234567",
         trustLevel: "markdown_only",
         compatibility: "compatible",
@@ -306,7 +306,7 @@ describe("company portability", () => {
         ],
         metadata: {
           sourceKind: "github",
-          owner: "paperclipai",
+          owner: "sentinelai",
           repo: "paperclip",
           ref: "0123456789abcdef0123456789abcdef01234567",
           trackingRef: "master",
@@ -402,10 +402,10 @@ describe("company portability", () => {
 
   it("parses canonical GitHub import URLs with explicit ref and package path", () => {
     expect(
-      parseGitHubSourceUrl("https://github.com/paperclipai/companies?ref=feature%2Fdemo&path=gstack"),
+      parseGitHubSourceUrl("https://github.com/sentinelai/companies?ref=feature%2Fdemo&path=gstack"),
     ).toEqual({
       hostname: "github.com",
-      owner: "paperclipai",
+      owner: "sentinelai",
       repo: "companies",
       ref: "feature/demo",
       basePath: "gstack",
@@ -416,11 +416,11 @@ describe("company portability", () => {
   it("parses canonical GitHub import URLs with explicit companyPath", () => {
     expect(
       parseGitHubSourceUrl(
-        "https://github.com/paperclipai/companies?ref=abc123&companyPath=gstack%2FCOMPANY.md",
+        "https://github.com/sentinelai/companies?ref=abc123&companyPath=gstack%2FCOMPANY.md",
       ),
     ).toEqual({
       hostname: "github.com",
-      owner: "paperclipai",
+      owner: "sentinelai",
       repo: "companies",
       ref: "abc123",
       basePath: "gstack",
@@ -446,13 +446,13 @@ describe("company portability", () => {
     expect(asTextFile(exported.files["agents/claudecoder/AGENTS.md"])).toContain("skills:");
     expect(asTextFile(exported.files["agents/claudecoder/AGENTS.md"])).toContain(`- "${paperclipKey}"`);
     expect(asTextFile(exported.files["agents/cmo/AGENTS.md"])).not.toContain("skills:");
-    expect(asTextFile(exported.files["skills/paperclipai/paperclip/paperclip/SKILL.md"])).toContain("metadata:");
-    expect(asTextFile(exported.files["skills/paperclipai/paperclip/paperclip/SKILL.md"])).toContain('kind: "github-dir"');
-    expect(exported.files["skills/paperclipai/paperclip/paperclip/references/api.md"]).toBeUndefined();
+    expect(asTextFile(exported.files["skills/sentinelai/paperclip/paperclip/SKILL.md"])).toContain("metadata:");
+    expect(asTextFile(exported.files["skills/sentinelai/paperclip/paperclip/SKILL.md"])).toContain('kind: "github-dir"');
+    expect(exported.files["skills/sentinelai/paperclip/paperclip/references/api.md"]).toBeUndefined();
     expect(asTextFile(exported.files["skills/company/PAP/company-playbook/SKILL.md"])).toContain("# Company Playbook");
     expect(asTextFile(exported.files["skills/company/PAP/company-playbook/references/checklist.md"])).toContain("# Checklist");
 
-    const extension = asTextFile(exported.files[".paperclip.yaml"]);
+    const extension = asTextFile(exported.files[".sentinel.yaml"]);
     expect(extension).toContain('schema: "paperclip/v1"');
     expect(extension).not.toContain("promptTemplate");
     expect(extension).not.toContain("instructionsFilePath");
@@ -463,7 +463,7 @@ describe("company portability", () => {
     expect(extension).toContain("ANTHROPIC_API_KEY:");
     expect(extension).toContain('requirement: "optional"');
     expect(extension).toContain('default: ""');
-    expect(extension).not.toContain("paperclipSkillSync");
+    expect(extension).not.toContain("sentinelSkillSync");
     expect(extension).not.toContain("PATH:");
     expect(extension).not.toContain("requireBoardApprovalForNewAgents: true");
     expect(extension).not.toContain("budgetMonthlyCents: 0");
@@ -494,7 +494,7 @@ describe("company portability", () => {
       },
     });
 
-    expect(asTextFile(exported.files[".paperclip.yaml"])).toContain("requireBoardApprovalForNewAgents: true");
+    expect(asTextFile(exported.files[".sentinel.yaml"])).toContain("requireBoardApprovalForNewAgents: true");
   });
 
   it("exports legacy inline sensitive env values as declarations without values", async () => {
@@ -604,7 +604,7 @@ describe("company portability", () => {
       },
     });
 
-    expect(asTextFile(exported.files[".paperclip.yaml"])).toContain([
+    expect(asTextFile(exported.files[".sentinel.yaml"])).toContain([
       "sidebar:",
       "  agents:",
       '    - "claudecoder"',
@@ -632,9 +632,9 @@ describe("company portability", () => {
       expandReferencedSkills: true,
     });
 
-    expect(asTextFile(exported.files["skills/paperclipai/paperclip/paperclip/SKILL.md"])).toContain("# Paperclip");
-    expect(asTextFile(exported.files["skills/paperclipai/paperclip/paperclip/SKILL.md"])).toContain("metadata:");
-    expect(asTextFile(exported.files["skills/paperclipai/paperclip/paperclip/references/api.md"])).toContain("# API");
+    expect(asTextFile(exported.files["skills/sentinelai/paperclip/paperclip/SKILL.md"])).toContain("# Paperclip");
+    expect(asTextFile(exported.files["skills/sentinelai/paperclip/paperclip/SKILL.md"])).toContain("metadata:");
+    expect(asTextFile(exported.files["skills/sentinelai/paperclip/paperclip/references/api.md"])).toContain("# API");
   });
 
   it("exports only selected skills when skills filter is provided", async () => {
@@ -652,7 +652,7 @@ describe("company portability", () => {
 
     expect(exported.files["skills/company/PAP/company-playbook/SKILL.md"]).toBeDefined();
     expect(asTextFile(exported.files["skills/company/PAP/company-playbook/SKILL.md"])).toContain("# Company Playbook");
-    expect(exported.files["skills/paperclipai/paperclip/paperclip/SKILL.md"]).toBeUndefined();
+    expect(exported.files["skills/sentinelai/paperclip/paperclip/SKILL.md"]).toBeUndefined();
   });
 
   it("warns and exports all skills when skills filter matches nothing", async () => {
@@ -670,10 +670,10 @@ describe("company portability", () => {
 
     expect(exported.warnings).toContainEqual(expect.stringContaining("nonexistent-skill"));
     expect(exported.files["skills/company/PAP/company-playbook/SKILL.md"]).toBeDefined();
-    expect(exported.files["skills/paperclipai/paperclip/paperclip/SKILL.md"]).toBeDefined();
+    expect(exported.files["skills/sentinelai/paperclip/paperclip/SKILL.md"]).toBeDefined();
   });
 
-  it("exports the company logo into images/ and references it from .paperclip.yaml", async () => {
+  it("exports the company logo into images/ and references it from .sentinel.yaml", async () => {
     const storage = {
       getObject: vi.fn().mockResolvedValue({
         stream: Readable.from([Buffer.from("png-bytes")]),
@@ -714,7 +714,7 @@ describe("company portability", () => {
       data: Buffer.from("png-bytes").toString("base64"),
       contentType: "image/png",
     });
-    expect(exported.files[".paperclip.yaml"]).toContain('logoPath: "images/company-logo.png"');
+    expect(exported.files[".sentinel.yaml"]).toContain('logoPath: "images/company-logo.png"');
   });
 
   it("exports duplicate skill slugs into readable namespaced paths", async () => {
@@ -766,20 +766,20 @@ describe("company portability", () => {
       {
         id: "skill-paperclip",
         companyId: "company-1",
-        key: "paperclipai/paperclip/release-changelog",
+        key: "sentinelai/paperclip/release-changelog",
         slug: "release-changelog",
         name: "release-changelog",
         description: "Bundled release changelog skill",
         markdown: "---\nname: release-changelog\n---\n\n# Bundled Release Changelog\n",
         sourceType: "github",
-        sourceLocator: "https://github.com/paperclipai/paperclip/tree/master/skills/release-changelog",
+        sourceLocator: "https://github.com/sentinelai/paperclip/tree/master/skills/release-changelog",
         sourceRef: "0123456789abcdef0123456789abcdef01234567",
         trustLevel: "markdown_only",
         compatibility: "compatible",
         fileInventory: [{ path: "SKILL.md", kind: "skill" }],
         metadata: {
           sourceKind: "paperclip_bundled",
-          owner: "paperclipai",
+          owner: "sentinelai",
           repo: "paperclip",
           ref: "0123456789abcdef0123456789abcdef01234567",
           trackingRef: "master",
@@ -798,8 +798,8 @@ describe("company portability", () => {
     });
 
     expect(asTextFile(exported.files["skills/local/release-changelog/SKILL.md"])).toContain("# Local Release Changelog");
-    expect(asTextFile(exported.files["skills/paperclipai/paperclip/release-changelog/SKILL.md"])).toContain("metadata:");
-    expect(asTextFile(exported.files["skills/paperclipai/paperclip/release-changelog/SKILL.md"])).toContain("paperclipai/paperclip/release-changelog");
+    expect(asTextFile(exported.files["skills/sentinelai/paperclip/release-changelog/SKILL.md"])).toContain("metadata:");
+    expect(asTextFile(exported.files["skills/sentinelai/paperclip/release-changelog/SKILL.md"])).toContain("sentinelai/paperclip/release-changelog");
   });
 
   it("builds export previews without tasks by default", async () => {
@@ -877,7 +877,7 @@ describe("company portability", () => {
             name: "Main Repo",
             sourceType: "git_repo",
             cwd: "/Users/dotta/paperclip",
-            repoUrl: "https://github.com/paperclipai/paperclip.git",
+            repoUrl: "https://github.com/sentinelai/paperclip.git",
             repoRef: "main",
             defaultRef: "main",
             visibility: "default",
@@ -947,10 +947,10 @@ describe("company portability", () => {
       },
     });
 
-    const extension = asTextFile(exported.files[".paperclip.yaml"]);
+    const extension = asTextFile(exported.files[".sentinel.yaml"]);
     expect(extension).toContain("workspaces:");
     expect(extension).toContain("main-repo:");
-    expect(extension).toContain('repoUrl: "https://github.com/paperclipai/paperclip.git"');
+    expect(extension).toContain('repoUrl: "https://github.com/sentinelai/paperclip.git"');
     expect(extension).toContain('defaultProjectWorkspaceKey: "main-repo"');
     expect(extension).toContain('projectWorkspaceKey: "main-repo"');
     expect(extension).not.toContain("/Users/dotta/paperclip");
@@ -1023,7 +1023,7 @@ describe("company portability", () => {
     expect(projectSvc.createWorkspace).toHaveBeenCalledWith("project-imported", expect.objectContaining({
       name: "Main Repo",
       sourceType: "git_repo",
-      repoUrl: "https://github.com/paperclipai/paperclip.git",
+      repoUrl: "https://github.com/sentinelai/paperclip.git",
       repoRef: "main",
       defaultRef: "main",
       visibility: "default",
@@ -1047,7 +1047,7 @@ describe("company portability", () => {
     const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-portability-git-"));
     execFileSync("git", ["init"], { cwd: repoDir, stdio: "ignore" });
     execFileSync("git", ["checkout", "-b", "main"], { cwd: repoDir, stdio: "ignore" });
-    execFileSync("git", ["remote", "add", "origin", "https://github.com/paperclipai/paperclip.git"], {
+    execFileSync("git", ["remote", "add", "origin", "https://github.com/sentinelai/paperclip.git"], {
       cwd: repoDir,
       stdio: "ignore",
     });
@@ -1120,8 +1120,8 @@ describe("company portability", () => {
       },
     });
 
-    const extension = asTextFile(exported.files[".paperclip.yaml"]);
-    expect(extension).toContain('repoUrl: "https://github.com/paperclipai/paperclip.git"');
+    const extension = asTextFile(exported.files[".sentinel.yaml"]);
+    expect(extension).toContain('repoUrl: "https://github.com/sentinelai/paperclip.git"');
     expect(extension).toContain('projectWorkspaceKey: "paperclip"');
     expect(exported.warnings).not.toContainEqual(expect.stringContaining("does not have a portable repoUrl"));
     expect(exported.warnings).not.toContainEqual(expect.stringContaining("reference workspace workspace-1"));
@@ -1230,7 +1230,7 @@ describe("company portability", () => {
     expect(exported.warnings.filter((warning) => warning.includes("could not be exported portably"))).toHaveLength(1);
   });
 
-  it("reads env inputs back from .paperclip.yaml during preview import", async () => {
+  it("reads env inputs back from .sentinel.yaml during preview import", async () => {
     const portability = companyPortabilityService({} as any);
 
     const exported = await portability.exportBundle("company-1", {
@@ -1330,7 +1330,7 @@ describe("company portability", () => {
       },
     });
 
-    const extension = asTextFile(exported.files[".paperclip.yaml"]);
+    const extension = asTextFile(exported.files[".sentinel.yaml"]);
     expect(extension).toContain("OPENAI_API_KEY:");
     expect(extension).toContain("DOCS_MODE:");
     expect(extension).toContain("GITHUB_TOKEN:");
@@ -1342,7 +1342,7 @@ describe("company portability", () => {
     expect(extension).toContain('kind: "plain"');
   });
 
-  it("reads project env inputs back from .paperclip.yaml during preview import", async () => {
+  it("reads project env inputs back from .sentinel.yaml during preview import", async () => {
     const portability = companyPortabilityService({} as any);
 
     projectSvc.list.mockResolvedValue([
@@ -1514,7 +1514,7 @@ describe("company portability", () => {
     });
 
     expect(asTextFile(exported.files["tasks/monday-review/TASK.md"])).toContain('recurring: true');
-    const extension = asTextFile(exported.files[".paperclip.yaml"]);
+    const extension = asTextFile(exported.files[".sentinel.yaml"]);
     expect(extension).toContain("routines:");
     expect(extension).toContain("monday-review:");
     expect(extension).toContain('cronExpression: "0 9 * * 1"');
@@ -1592,7 +1592,7 @@ describe("company portability", () => {
         "Review pipeline health.",
         "",
       ].join("\n"),
-      ".paperclip.yaml": [
+      ".sentinel.yaml": [
         'schema: "paperclip/v1"',
         "routines:",
         "  monday-review:",
@@ -1766,7 +1766,7 @@ describe("company portability", () => {
     expect(preview.errors).toContain("Recurring task monday-review must declare an assignee to import as a routine.");
   });
 
-  it("imports a vendor-neutral package without .paperclip.yaml", async () => {
+  it("imports a vendor-neutral package without .sentinel.yaml", async () => {
     const portability = companyPortabilityService({} as any);
 
     companySvc.create.mockResolvedValue({
@@ -1975,7 +1975,7 @@ describe("company portability", () => {
       },
     });
 
-    const extension = asTextFile(exported.files[".paperclip.yaml"]);
+    const extension = asTextFile(exported.files[".sentinel.yaml"]);
     expect(extension).toContain("APIKEY:");
     expect(extension).toContain("GITHUBAUTH:");
     expect(extension).toContain("PRIVATEKEY:");
@@ -2035,7 +2035,7 @@ describe("company portability", () => {
     });
     expect(agentSvc.create).toHaveBeenCalledWith("company-imported", expect.objectContaining({
       adapterConfig: expect.objectContaining({
-        paperclipSkillSync: {
+        sentinelSkillSync: {
           desiredSkills: [paperclipKey],
         },
       }),
@@ -2083,7 +2083,7 @@ describe("company portability", () => {
       data: Buffer.from("png-bytes").toString("base64"),
       contentType: "image/png",
     };
-    exported.files[".paperclip.yaml"] = `${exported.files[".paperclip.yaml"]}`.replace(
+    exported.files[".sentinel.yaml"] = `${exported.files[".sentinel.yaml"]}`.replace(
       'brandColor: "#5c5fff"\n',
       'brandColor: "#5c5fff"\n  logoPath: "images/company-logo.png"\n',
     );
@@ -2537,7 +2537,7 @@ describe("company portability", () => {
       include: { company: true, agents: false, projects: true, issues: true },
     });
 
-    const extension = asTextFile(exported.files[".paperclip.yaml"]);
+    const extension = asTextFile(exported.files[".sentinel.yaml"]);
     expect(extension).toContain("labelIds:");
     expect(extension).toContain("label-a");
     expect(extension).toContain("label-b");
@@ -2612,7 +2612,7 @@ describe("company portability", () => {
       include: { company: true, agents: false, projects: false, issues: true },
     });
 
-    const extension = asTextFile(exported.files[".paperclip.yaml"]);
+    const extension = asTextFile(exported.files[".sentinel.yaml"]);
     expect(extension).toContain("comments:");
     expect(extension).toContain("system_notice");
     expect(extension).toContain("successful_run_missing_state");
@@ -2686,7 +2686,7 @@ describe("company portability", () => {
       include: { company: true, agents: false, projects: false, issues: true },
     });
 
-    const extension = asTextFile(exported.files[".paperclip.yaml"]);
+    const extension = asTextFile(exported.files[".sentinel.yaml"]);
     expect(extension).toContain('authorType: "user"');
     expect(extension).not.toContain("authorUserId: local-board");
   });

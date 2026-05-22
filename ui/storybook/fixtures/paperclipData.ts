@@ -27,8 +27,8 @@ import type { LiveRunForIssue } from "@/api/heartbeats";
 const now = new Date("2026-04-20T12:00:00.000Z");
 const recent = (minutesAgo: number) => new Date(now.getTime() - minutesAgo * 60_000);
 const storybookRepoRoot = "~/paperclip";
-const storybookWorkspaceRoot = `${storybookRepoRoot}/.paperclip/workspaces`;
-const storybookWorktreeRoot = `${storybookRepoRoot}/.paperclip/worktrees`;
+const storybookWorkspaceRoot = `${storybookRepoRoot}/.sentinel/workspaces`;
+const storybookWorktreeRoot = `${storybookRepoRoot}/.sentinel/worktrees`;
 
 export const storybookCompanies: Company[] = [
   {
@@ -371,7 +371,7 @@ export const storybookProjectWorkspaces: Project["workspaces"] = [
     name: "Board UI",
     sourceType: "local_path" as const,
     cwd: `${storybookRepoRoot}/ui`,
-    repoUrl: "https://github.com/paperclipai/paperclip",
+    repoUrl: "https://github.com/sentinelai/paperclip",
     repoRef: "master",
     defaultRef: "master",
     visibility: "default" as const,
@@ -398,7 +398,7 @@ export const storybookProjectWorkspaces: Project["workspaces"] = [
     name: "Docs preview sandbox",
     sourceType: "remote_managed",
     cwd: null,
-    repoUrl: "https://github.com/paperclipai/paperclip",
+    repoUrl: "https://github.com/sentinelai/paperclip",
     repoRef: "preview/docs-workspaces",
     defaultRef: "master",
     visibility: "advanced",
@@ -459,7 +459,7 @@ export const storybookProjectWorkspaces: Project["workspaces"] = [
     name: "Release smoke local checkout",
     sourceType: "local_path",
     cwd: `${storybookWorkspaceRoot}/release-smoke`,
-    repoUrl: "https://github.com/paperclipai/paperclip",
+    repoUrl: "https://github.com/sentinelai/paperclip",
     repoRef: "release/smoke-2026-04-20",
     defaultRef: "master",
     visibility: "advanced",
@@ -503,7 +503,7 @@ export const storybookExecutionWorkspaces: ExecutionWorkspace[] = [
     name: "PAP-1641 storybook worktree",
     status: "active",
     cwd: `${storybookWorktreeRoot}/PAP-1641-create-super-detailed-storybooks-for-our-project`,
-    repoUrl: "https://github.com/paperclipai/paperclip",
+    repoUrl: "https://github.com/sentinelai/paperclip",
     baseRef: "master",
     branchName: "PAP-1641-create-super-detailed-storybooks-for-our-project",
     providerType: "git_worktree",
@@ -531,7 +531,7 @@ export const storybookExecutionWorkspaces: ExecutionWorkspace[] = [
     name: "PAP-1608 release smoke cleanup",
     status: "cleanup_failed",
     cwd: `${storybookWorktreeRoot}/PAP-1608-release-smoke-cleanup`,
-    repoUrl: "https://github.com/paperclipai/paperclip",
+    repoUrl: "https://github.com/sentinelai/paperclip",
     baseRef: "master",
     branchName: "PAP-1608-release-smoke-cleanup",
     providerType: "git_worktree",
@@ -614,12 +614,12 @@ function createProject(overrides: Partial<Project> = {}): Project {
     },
     codebase: {
       workspaceId: "workspace-board-ui",
-      repoUrl: "https://github.com/paperclipai/paperclip",
+      repoUrl: "https://github.com/sentinelai/paperclip",
       repoRef: "master",
       defaultRef: "master",
       repoName: "paperclip",
       localFolder: storybookRepoRoot,
-      managedFolder: ".paperclip/worktrees/storybook",
+      managedFolder: ".sentinel/worktrees/storybook",
       effectiveLocalFolder: storybookRepoRoot,
       origin: "local_folder",
     },
@@ -1410,7 +1410,7 @@ export const storybookSecretProviderDiscoveryPreview: SecretProviderConfigDiscov
         kmsKeyId: "alias/paperclip-secrets",
         hasKmsKey: true,
         sampleCount: 5,
-        paperclipManagedSampleCount: 5,
+        sentinelManagedSampleCount: 5,
         skippedForeignPaperclipSampleCount: 1,
       },
       warnings: [],
@@ -1611,7 +1611,7 @@ export const storybookSecretProviderHealth = {
       status: "ok" as const,
       message: "Encryption key loaded; permissions OK.",
       warnings: [] as string[],
-      backupGuidance: ["Backup ~/.paperclip/instances/default/secrets/key separately from the database."],
+      backupGuidance: ["Backup ~/.sentinel/instances/default/secrets/key separately from the database."],
     },
     {
       provider: "aws_secrets_manager" as const,

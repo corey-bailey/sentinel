@@ -26,7 +26,7 @@ export AUTH_SECRET=$(openssl rand -base64 32)
 
 ```bash
 aws ecr create-repository \
-  --repository-name paperclip-server \
+  --repository-name sentinel-server \
   --image-scanning-configuration scanOnPush=true \
   --region $AWS_REGION
 ```
@@ -42,14 +42,14 @@ aws ecr get-login-password --region $AWS_REGION \
     $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
 # Build
-docker build -t paperclip-server .
+docker build -t sentinel-server .
 
 # Tag and push
-docker tag paperclip-server:latest \
-  $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/paperclip-server:latest
+docker tag sentinel-server:latest \
+  $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/sentinel-server:latest
 
 docker push \
-  $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/paperclip-server:latest
+  $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/sentinel-server:latest
 ```
 
 ## 3. Networking (VPC, Subnets, Security Groups)
@@ -92,7 +92,7 @@ aws ec2 authorize-security-group-ingress \
 
 # ECS task security group — inbound from ALB only
 ECS_SG=$(aws ec2 create-security-group \
-  --group-name paperclip-ecs \
+  --group-name sentinel-ecs \
   --description "Paperclip ECS tasks" \
   --vpc-id $VPC_ID \
   --query 'GroupId' --output text)
@@ -173,7 +173,7 @@ EFS_ID=$(aws efs create-file-system \
   --performance-mode generalPurpose \
   --throughput-mode bursting \
   --encrypted \
-  --tags Key=Name,Value=paperclip-data \
+  --tags Key=Name,Value=sentinel-data \
   --query 'FileSystemId' --output text)
 
 # Create mount targets in each subnet
@@ -219,7 +219,7 @@ Create the ECS task execution role (pulls images, reads secrets) and the task ro
 ```bash
 # Task execution role
 aws iam create-role \
-  --role-name paperclip-ecs-execution \
+  --role-name sentinel-ecs-execution \
   --assume-role-policy-document '{
     "Version": "2012-10-17",
     "Statement": [{
@@ -230,12 +230,12 @@ aws iam create-role \
   }'
 
 aws iam attach-role-policy \
-  --role-name paperclip-ecs-execution \
+  --role-name sentinel-ecs-execution \
   --policy-arn arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
 
 # Allow reading secrets
 aws iam put-role-policy \
-  --role-name paperclip-ecs-execution \
+  --role-name sentinel-ecs-execution \
   --policy-name SecretsAccess \
   --policy-document '{
     "Version": "2012-10-17",
@@ -248,7 +248,7 @@ aws iam put-role-policy \
 
 # Task role (application — add permissions as needed)
 aws iam create-role \
-  --role-name paperclip-ecs-task \
+  --role-name sentinel-ecs-task \
   --assume-role-policy-document '{
     "Version": "2012-10-17",
     "Statement": [{
@@ -356,8 +356,8 @@ Point your DNS to the ALB:
 ```bash
 aws ecs create-service \
   --cluster paperclip \
-  --service-name paperclip-server \
-  --task-definition paperclip-server \
+  --service-name sentinel-server \
+  --task-definition sentinel-server \
   --desired-count 1 \
   --launch-type FARGATE \
   --deployment-configuration '{
@@ -374,7 +374,7 @@ aws ecs create-service \
   }' \
   --load-balancers '[{
     "targetGroupArn": "'$TG_ARN'",
-    "containerName": "paperclip-server",
+    "containerName": "sentinel-server",
     "containerPort": 3100
   }]'
 ```
@@ -387,12 +387,12 @@ aws ecs create-service \
 # Watch task come up
 aws ecs describe-services \
   --cluster paperclip \
-  --services paperclip-server \
+  --services sentinel-server \
   --query 'services[0].{desired:desiredCount,running:runningCount,status:status}'
 
 # Check task health
-aws ecs list-tasks --cluster paperclip --service-name paperclip-server
-TASK_ARN=$(aws ecs list-tasks --cluster paperclip --service-name paperclip-server --query 'taskArns[0]' --output text)
+aws ecs list-tasks --cluster paperclip --service-name sentinel-server
+TASK_ARN=$(aws ecs list-tasks --cluster paperclip --service-name sentinel-server --query 'taskArns[0]' --output text)
 aws ecs describe-tasks --cluster paperclip --tasks $TASK_ARN \
   --query 'tasks[0].{status:lastStatus,health:healthStatus}'
 
@@ -420,7 +420,7 @@ After the first user has signed up (which grants admin role), lock down the inst
 # Or update via Secrets Manager / task def override, then force new deployment
 aws ecs update-service \
   --cluster paperclip \
-  --service paperclip-server \
+  --service sentinel-server \
   --force-new-deployment
 ```
 
@@ -432,22 +432,22 @@ Build, push, and force a new deployment:
 
 ```bash
 # Build and push new image
-docker build -t paperclip-server .
-docker tag paperclip-server:latest \
-  $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/paperclip-server:latest
+docker build -t sentinel-server .
+docker tag sentinel-server:latest \
+  $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/sentinel-server:latest
 docker push \
-  $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/paperclip-server:latest
+  $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/sentinel-server:latest
 
 # Roll out
 aws ecs update-service \
   --cluster paperclip \
-  --service paperclip-server \
+  --service sentinel-server \
   --force-new-deployment
 
 # Watch the deployment
 aws ecs describe-services \
   --cluster paperclip \
-  --services paperclip-server \
+  --services sentinel-server \
   --query 'services[0].deployments[*].{status:status,running:runningCount,desired:desiredCount,rollout:rolloutState}'
 ```
 
@@ -464,15 +464,15 @@ If the new deployment is unhealthy:
 
 # 1. Find the previous task definition revision
 aws ecs list-task-definitions \
-  --family-prefix paperclip-server \
+  --family-prefix sentinel-server \
   --sort DESC \
   --query 'taskDefinitionArns[0:3]'
 
 # 2. Update service to the previous revision
 aws ecs update-service \
   --cluster paperclip \
-  --service paperclip-server \
-  --task-definition paperclip-server:<PREVIOUS_REVISION>
+  --service sentinel-server \
+  --task-definition sentinel-server:<PREVIOUS_REVISION>
 ```
 
 ## Scaling to Zero (Cost Savings)
@@ -483,13 +483,13 @@ Scale down when not in use:
 # Stop
 aws ecs update-service \
   --cluster paperclip \
-  --service paperclip-server \
+  --service sentinel-server \
   --desired-count 0
 
 # Start
 aws ecs update-service \
   --cluster paperclip \
-  --service paperclip-server \
+  --service sentinel-server \
   --desired-count 1
 ```
 
@@ -506,8 +506,8 @@ Remove all resources in reverse order:
 
 ```bash
 # 1. ECS service and cluster
-aws ecs update-service --cluster paperclip --service paperclip-server --desired-count 0
-aws ecs delete-service --cluster paperclip --service paperclip-server --force
+aws ecs update-service --cluster paperclip --service sentinel-server --desired-count 0
+aws ecs delete-service --cluster paperclip --service sentinel-server --force
 aws ecs delete-cluster --cluster paperclip
 
 # 2. ALB and ACM cert
@@ -549,14 +549,14 @@ for sg in $EFS_SG $RDS_SG $ECS_SG $ALB_SG; do
 done
 
 # 7. ECR
-aws ecr delete-repository --repository-name paperclip-server --force
+aws ecr delete-repository --repository-name sentinel-server --force
 
 # 8. IAM roles
-aws iam delete-role-policy --role-name paperclip-ecs-execution --policy-name SecretsAccess
-aws iam detach-role-policy --role-name paperclip-ecs-execution \
+aws iam delete-role-policy --role-name sentinel-ecs-execution --policy-name SecretsAccess
+aws iam detach-role-policy --role-name sentinel-ecs-execution \
   --policy-arn arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-aws iam delete-role --role-name paperclip-ecs-execution
-aws iam delete-role --role-name paperclip-ecs-task
+aws iam delete-role --role-name sentinel-ecs-execution
+aws iam delete-role --role-name sentinel-ecs-task
 
 # 9. Log group
 aws logs delete-log-group --log-group-name /ecs/paperclip

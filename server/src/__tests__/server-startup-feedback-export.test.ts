@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const ORIGINAL_PAPERCLIP_API_URL = process.env.PAPERCLIP_API_URL;
-const ORIGINAL_PAPERCLIP_RUNTIME_API_URL = process.env.PAPERCLIP_RUNTIME_API_URL;
-const ORIGINAL_PAPERCLIP_RUNTIME_API_CANDIDATES_JSON = process.env.PAPERCLIP_RUNTIME_API_CANDIDATES_JSON;
-const ORIGINAL_PAPERCLIP_LISTEN_HOST = process.env.PAPERCLIP_LISTEN_HOST;
-const ORIGINAL_PAPERCLIP_LISTEN_PORT = process.env.PAPERCLIP_LISTEN_PORT;
+const ORIGINAL_SENTINEL_API_URL = process.env.SENTINEL_API_URL;
+const ORIGINAL_SENTINEL_RUNTIME_API_URL = process.env.SENTINEL_RUNTIME_API_URL;
+const ORIGINAL_SENTINEL_RUNTIME_API_CANDIDATES_JSON = process.env.SENTINEL_RUNTIME_API_CANDIDATES_JSON;
+const ORIGINAL_SENTINEL_LISTEN_HOST = process.env.SENTINEL_LISTEN_HOST;
+const ORIGINAL_SENTINEL_LISTEN_PORT = process.env.SENTINEL_LISTEN_PORT;
 
 const {
   createAppMock,
@@ -264,52 +264,52 @@ describe("startServer authenticated auth origin setup", () => {
   });
 });
 
-describe("startServer PAPERCLIP_API_URL handling", () => {
+describe("startServer SENTINEL_API_URL handling", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     loadConfigMock.mockReturnValue(buildTestConfig());
     process.env.BETTER_AUTH_SECRET = "test-secret";
-    delete process.env.PAPERCLIP_API_URL;
+    delete process.env.SENTINEL_API_URL;
   });
 
   afterEach(() => {
-    if (ORIGINAL_PAPERCLIP_API_URL === undefined) delete process.env.PAPERCLIP_API_URL;
-    else process.env.PAPERCLIP_API_URL = ORIGINAL_PAPERCLIP_API_URL;
+    if (ORIGINAL_SENTINEL_API_URL === undefined) delete process.env.SENTINEL_API_URL;
+    else process.env.SENTINEL_API_URL = ORIGINAL_SENTINEL_API_URL;
 
-    if (ORIGINAL_PAPERCLIP_RUNTIME_API_URL === undefined) delete process.env.PAPERCLIP_RUNTIME_API_URL;
-    else process.env.PAPERCLIP_RUNTIME_API_URL = ORIGINAL_PAPERCLIP_RUNTIME_API_URL;
+    if (ORIGINAL_SENTINEL_RUNTIME_API_URL === undefined) delete process.env.SENTINEL_RUNTIME_API_URL;
+    else process.env.SENTINEL_RUNTIME_API_URL = ORIGINAL_SENTINEL_RUNTIME_API_URL;
 
-    if (ORIGINAL_PAPERCLIP_RUNTIME_API_CANDIDATES_JSON === undefined) {
-      delete process.env.PAPERCLIP_RUNTIME_API_CANDIDATES_JSON;
+    if (ORIGINAL_SENTINEL_RUNTIME_API_CANDIDATES_JSON === undefined) {
+      delete process.env.SENTINEL_RUNTIME_API_CANDIDATES_JSON;
     } else {
-      process.env.PAPERCLIP_RUNTIME_API_CANDIDATES_JSON = ORIGINAL_PAPERCLIP_RUNTIME_API_CANDIDATES_JSON;
+      process.env.SENTINEL_RUNTIME_API_CANDIDATES_JSON = ORIGINAL_SENTINEL_RUNTIME_API_CANDIDATES_JSON;
     }
 
-    if (ORIGINAL_PAPERCLIP_LISTEN_HOST === undefined) delete process.env.PAPERCLIP_LISTEN_HOST;
-    else process.env.PAPERCLIP_LISTEN_HOST = ORIGINAL_PAPERCLIP_LISTEN_HOST;
+    if (ORIGINAL_SENTINEL_LISTEN_HOST === undefined) delete process.env.SENTINEL_LISTEN_HOST;
+    else process.env.SENTINEL_LISTEN_HOST = ORIGINAL_SENTINEL_LISTEN_HOST;
 
-    if (ORIGINAL_PAPERCLIP_LISTEN_PORT === undefined) delete process.env.PAPERCLIP_LISTEN_PORT;
-    else process.env.PAPERCLIP_LISTEN_PORT = ORIGINAL_PAPERCLIP_LISTEN_PORT;
+    if (ORIGINAL_SENTINEL_LISTEN_PORT === undefined) delete process.env.SENTINEL_LISTEN_PORT;
+    else process.env.SENTINEL_LISTEN_PORT = ORIGINAL_SENTINEL_LISTEN_PORT;
   });
 
-  it("uses the externally set PAPERCLIP_API_URL when provided", async () => {
-    process.env.PAPERCLIP_API_URL = "http://custom-api:3100";
+  it("uses the externally set SENTINEL_API_URL when provided", async () => {
+    process.env.SENTINEL_API_URL = "http://custom-api:3100";
 
     const started = await startServer();
 
     expect(started.apiUrl).toBe("http://custom-api:3100");
-    expect(process.env.PAPERCLIP_API_URL).toBe("http://custom-api:3100");
-    expect(JSON.parse(process.env.PAPERCLIP_RUNTIME_API_CANDIDATES_JSON ?? "[]")).toEqual(
+    expect(process.env.SENTINEL_API_URL).toBe("http://custom-api:3100");
+    expect(JSON.parse(process.env.SENTINEL_RUNTIME_API_CANDIDATES_JSON ?? "[]")).toEqual(
       expect.arrayContaining(["http://custom-api:3100"]),
     );
-    expect(JSON.parse(process.env.PAPERCLIP_RUNTIME_API_CANDIDATES_JSON ?? "[]")[0]).toBe("http://custom-api:3100");
+    expect(JSON.parse(process.env.SENTINEL_RUNTIME_API_CANDIDATES_JSON ?? "[]")[0]).toBe("http://custom-api:3100");
   });
 
-  it("falls back to host-based URL when PAPERCLIP_API_URL is not set", async () => {
+  it("falls back to host-based URL when SENTINEL_API_URL is not set", async () => {
     const started = await startServer();
 
     expect(started.apiUrl).toBe("http://127.0.0.1:3210");
-    expect(process.env.PAPERCLIP_API_URL).toBe("http://127.0.0.1:3210");
+    expect(process.env.SENTINEL_API_URL).toBe("http://127.0.0.1:3210");
   });
 
   it("rewrites explicit-port auth public URLs when detect-port selects a new port", async () => {
@@ -324,7 +324,7 @@ describe("startServer PAPERCLIP_API_URL handling", () => {
 
     expect(started.listenPort).toBe(3110);
     expect(started.apiUrl).toBe("http://my-host.ts.net:3110");
-    expect(process.env.PAPERCLIP_RUNTIME_API_URL).toBe("http://my-host.ts.net:3110");
+    expect(process.env.SENTINEL_RUNTIME_API_URL).toBe("http://my-host.ts.net:3110");
   });
 
   it("keeps no-port auth public URLs stable when detect-port selects a new port", async () => {
@@ -339,6 +339,6 @@ describe("startServer PAPERCLIP_API_URL handling", () => {
 
     expect(started.listenPort).toBe(3110);
     expect(started.apiUrl).toBe("https://paperclip.example");
-    expect(process.env.PAPERCLIP_RUNTIME_API_URL).toBe("https://paperclip.example");
+    expect(process.env.SENTINEL_RUNTIME_API_URL).toBe("https://paperclip.example");
   });
 });

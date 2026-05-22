@@ -177,7 +177,7 @@ function makeDiscoveryPreview(
           kmsKeyId: "alias/paperclip-secrets",
           hasKmsKey: true,
           sampleCount: 2,
-          paperclipManagedSampleCount: 0,
+          sentinelManagedSampleCount: 0,
           skippedForeignPaperclipSampleCount: 0,
         },
         warnings: [],

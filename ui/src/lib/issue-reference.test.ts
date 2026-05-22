@@ -17,8 +17,8 @@ describe("issue-reference", () => {
   });
 
   it("does not treat GitHub issue URLs as internal Paperclip issue links", () => {
-    expect(parseIssuePathIdFromPath("https://github.com/paperclipai/paperclip/issues/1778")).toBeNull();
-    expect(parseIssueReferenceFromHref("https://github.com/paperclipai/paperclip/issues/1778")).toBeNull();
+    expect(parseIssuePathIdFromPath("https://github.com/sentinelai/paperclip/issues/1778")).toBeNull();
+    expect(parseIssueReferenceFromHref("https://github.com/sentinelai/paperclip/issues/1778")).toBeNull();
   });
 
   it("ignores placeholder issue paths", () => {

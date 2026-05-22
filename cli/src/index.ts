@@ -29,10 +29,10 @@ import { cliVersion } from "./version.js";
 
 const program = new Command();
 const DATA_DIR_OPTION_HELP =
-  "Paperclip data directory root (isolates state from ~/.paperclip)";
+  "Paperclip data directory root (isolates state from ~/.sentinel)";
 
 program
-  .name("paperclipai")
+  .name("sentinelai")
   .description("Paperclip CLI — setup, diagnose, and configure your instance")
   .version(cliVersion);
 

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import type { PaperclipConfig } from "@sentinel/shared";
-import { resolvePaperclipConfigPath, resolvePaperclipEnvPath } from "./paths.js";
+import { resolveSentinelConfigPath, resolveSentinelEnvPath } from "./paths.js";
 
 function nonEmpty(value: string | null | undefined): string | null {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
@@ -110,25 +110,25 @@ function resolveWorktreeRuntimeContext(
   env: NodeJS.ProcessEnv,
   overrideConfigPath?: string,
 ): WorktreeRuntimeContext | null {
-  if (env.PAPERCLIP_IN_WORKTREE !== "true") return null;
+  if (env.SENTINEL_IN_WORKTREE !== "true") return null;
 
-  const configPath = resolvePaperclipConfigPath(overrideConfigPath);
-  const envPath = resolvePaperclipEnvPath(configPath);
+  const configPath = resolveSentinelConfigPath(overrideConfigPath);
+  const envPath = resolveSentinelEnvPath(configPath);
   const persistedEnv = readEnvEntries(envPath);
   const worktreeRoot = path.resolve(path.dirname(configPath), "..");
   const worktreeName =
-    nonEmpty(persistedEnv.PAPERCLIP_WORKTREE_NAME) ??
-    nonEmpty(env.PAPERCLIP_WORKTREE_NAME) ??
+    nonEmpty(persistedEnv.SENTINEL_WORKTREE_NAME) ??
+    nonEmpty(env.SENTINEL_WORKTREE_NAME) ??
     path.basename(worktreeRoot);
   const instanceId =
-    nonEmpty(persistedEnv.PAPERCLIP_INSTANCE_ID) ??
-    nonEmpty(env.PAPERCLIP_INSTANCE_ID) ??
+    nonEmpty(persistedEnv.SENTINEL_INSTANCE_ID) ??
+    nonEmpty(env.SENTINEL_INSTANCE_ID) ??
     sanitizeWorktreeInstanceId(worktreeName);
   const homeDir = resolveHomeAwarePath(
-    nonEmpty(persistedEnv.PAPERCLIP_HOME) ??
-      nonEmpty(env.PAPERCLIP_HOME) ??
-      nonEmpty(env.PAPERCLIP_WORKTREES_DIR) ??
-      "~/.paperclip-worktrees",
+    nonEmpty(persistedEnv.SENTINEL_HOME) ??
+      nonEmpty(env.SENTINEL_HOME) ??
+      nonEmpty(env.SENTINEL_WORKTREES_DIR) ??
+      "~/.sentinel-worktrees",
   );
   const instanceRoot = path.resolve(homeDir, "instances", instanceId);
 
@@ -159,7 +159,7 @@ function resolveRepoManagedWorktreesRoot(worktreeRoot: string): string | null {
   const index = normalized.indexOf(marker);
   if (index === -1) return null;
   const repoRoot = normalized.slice(0, index);
-  return path.resolve(repoRoot, ".paperclip", "worktrees");
+  return path.resolve(repoRoot, ".sentinel", "worktrees");
 }
 
 function collectSiblingWorktreePorts(context: WorktreeRuntimeContext): {
@@ -186,7 +186,7 @@ function collectSiblingWorktreePorts(context: WorktreeRuntimeContext): {
     for (const entry of fs.readdirSync(repoManagedWorktreesRoot, { withFileTypes: true })) {
       if (!entry.isDirectory()) continue;
 
-      const siblingConfigPath = path.resolve(repoManagedWorktreesRoot, entry.name, ".paperclip", "config.json");
+      const siblingConfigPath = path.resolve(repoManagedWorktreesRoot, entry.name, ".sentinel", "config.json");
       if (path.resolve(siblingConfigPath) === path.resolve(context.configPath)) continue;
       if (fs.existsSync(siblingConfigPath)) {
         siblingConfigPaths.add(siblingConfigPath);
@@ -376,11 +376,11 @@ export function maybeRepairLegacyWorktreeConfigAndEnvFiles(): {
     return { repairedConfig: false, repairedEnv: false };
   }
 
-  process.env.PAPERCLIP_HOME = context.homeDir;
-  process.env.PAPERCLIP_INSTANCE_ID = context.instanceId;
-  process.env.PAPERCLIP_CONFIG = context.configPath;
-  process.env.PAPERCLIP_CONTEXT = context.contextPath;
-  process.env.PAPERCLIP_WORKTREE_NAME = context.worktreeName;
+  process.env.SENTINEL_HOME = context.homeDir;
+  process.env.SENTINEL_INSTANCE_ID = context.instanceId;
+  process.env.SENTINEL_CONFIG = context.configPath;
+  process.env.SENTINEL_CONTEXT = context.contextPath;
+  process.env.SENTINEL_WORKTREE_NAME = context.worktreeName;
 
   let repairedConfig = false;
   if (fs.existsSync(context.configPath)) {
@@ -424,12 +424,12 @@ export function maybeRepairLegacyWorktreeConfigAndEnvFiles(): {
   const existingEnvEntries = readEnvEntries(context.envPath);
   const desiredEnvEntries: Record<string, string> = {
     ...existingEnvEntries,
-    PAPERCLIP_HOME: context.homeDir,
-    PAPERCLIP_INSTANCE_ID: context.instanceId,
-    PAPERCLIP_CONFIG: context.configPath,
-    PAPERCLIP_CONTEXT: context.contextPath,
-    PAPERCLIP_IN_WORKTREE: "true",
-    PAPERCLIP_WORKTREE_NAME: context.worktreeName,
+    SENTINEL_HOME: context.homeDir,
+    SENTINEL_INSTANCE_ID: context.instanceId,
+    SENTINEL_CONFIG: context.configPath,
+    SENTINEL_CONTEXT: context.contextPath,
+    SENTINEL_IN_WORKTREE: "true",
+    SENTINEL_WORKTREE_NAME: context.worktreeName,
   };
 
   const repairedEnv = Object.entries(desiredEnvEntries).some(

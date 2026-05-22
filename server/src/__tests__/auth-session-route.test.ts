@@ -25,11 +25,11 @@ function createDb() {
 }
 
 describe("actorMiddleware authenticated session profile", () => {
-  const originalCloudTenantToken = process.env.PAPERCLIP_CLOUD_TENANT_SERVER_TOKEN;
+  const originalCloudTenantToken = process.env.SENTINEL_CLOUD_TENANT_SERVER_TOKEN;
 
   afterEach(() => {
-    if (originalCloudTenantToken === undefined) delete process.env.PAPERCLIP_CLOUD_TENANT_SERVER_TOKEN;
-    else process.env.PAPERCLIP_CLOUD_TENANT_SERVER_TOKEN = originalCloudTenantToken;
+    if (originalCloudTenantToken === undefined) delete process.env.SENTINEL_CLOUD_TENANT_SERVER_TOKEN;
+    else process.env.SENTINEL_CLOUD_TENANT_SERVER_TOKEN = originalCloudTenantToken;
   });
 
   it("preserves the signed-in user name and email on the board actor", async () => {
@@ -67,7 +67,7 @@ describe("actorMiddleware authenticated session profile", () => {
   });
 
   it("trusts Cloud tenant identity headers and seeds board access", async () => {
-    process.env.PAPERCLIP_CLOUD_TENANT_SERVER_TOKEN = "tenant-token";
+    process.env.SENTINEL_CLOUD_TENANT_SERVER_TOKEN = "tenant-token";
     const inserts: Array<{ values: Record<string, unknown> }> = [];
     const db = {
       insert: vi.fn(() => {

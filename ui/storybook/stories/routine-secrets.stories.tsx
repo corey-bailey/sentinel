@@ -80,7 +80,7 @@ function SecretsTabSurface({
       <CardContent className="space-y-3">
         <p className="text-xs text-muted-foreground">
           Routine secrets apply to every issue this routine creates. They override matching keys in
-          project and agent env. <span className="font-mono">PAPERCLIP_*</span> variables are reserved.
+          project and agent env. <span className="font-mono">SENTINEL_*</span> variables are reserved.
         </p>
         <EnvVarEditor
           value={env}

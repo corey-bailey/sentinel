@@ -144,7 +144,7 @@ describe("feedbackService.saveIssueVote", () => {
       {
         id: randomUUID(),
         companyId,
-        key: "paperclipai/paperclip/paperclip",
+        key: "sentinelai/paperclip/paperclip",
         slug: "paperclip",
         name: "Paperclip",
         markdown: "# Paperclip",
@@ -182,7 +182,7 @@ describe("feedbackService.saveIssueVote", () => {
           instructionsEntryFile: "AGENTS.md",
           instructionsFilePath: instructionsPath,
         },
-        ["paperclipai/paperclip/paperclip", "octo/research/public-skill"],
+        ["sentinelai/paperclip/paperclip", "octo/research/public-skill"],
       ),
       runtimeConfig: {
         heartbeat: {
@@ -870,7 +870,7 @@ describe("feedbackService.saveIssueVote", () => {
       JSON.stringify([{ content: "Verify exported traces" }]),
       "utf8",
     );
-    vi.stubEnv("PAPERCLIP_OPENCODE_STORAGE_DIR", opencodeRoot);
+    vi.stubEnv("SENTINEL_OPENCODE_STORAGE_DIR", opencodeRoot);
     const uploadTraceBundle = vi.fn().mockResolvedValue({ objectKey: "feedback-traces/test.json" });
     const flushingSvc = feedbackService(db, {
       shareClient: {

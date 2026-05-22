@@ -5,7 +5,7 @@ import {
   scaffoldPluginProject,
   shellQuote,
   type ScaffoldPluginOptions,
-} from "../../../../packages/plugins/create-paperclip-plugin/src/index.js";
+} from "../../../../packages/plugins/create-sentinel-plugin/src/index.js";
 import pc from "picocolors";
 import {
   addCommonClientOptions,
@@ -196,7 +196,7 @@ export function buildPluginInitNextCommands(outputDir: string): string[] {
     `cd ${quotedOutputDir}`,
     "pnpm install",
     "pnpm dev",
-    `paperclipai plugin install ${quotedOutputDir}`,
+    `sentinelai plugin install ${quotedOutputDir}`,
   ];
 }
 
@@ -305,9 +305,9 @@ export function registerPluginCommands(program: Command): void {
       .description(
         "Install a plugin from a local path or npm package.\n" +
           "  Examples:\n" +
-          "    paperclipai plugin install ./my-plugin              # local path\n" +
-          "    paperclipai plugin install @acme/plugin-linear      # npm package\n" +
-          "    paperclipai plugin install @acme/plugin-linear@1.2  # pinned version",
+          "    sentinelai plugin install ./my-plugin              # local path\n" +
+          "    sentinelai plugin install @acme/plugin-linear      # npm package\n" +
+          "    sentinelai plugin install @acme/plugin-linear@1.2  # pinned version",
       )
       .option("-l, --local", "Treat <package> as a local filesystem path", false)
       .option("--version <version>", "Specific npm version to install (npm packages only)")
@@ -523,7 +523,7 @@ export function registerPluginCommands(program: Command): void {
             console.log(
               `${pc.bold(ex.displayName)}  ${pc.dim(ex.pluginKey)}\n` +
                 `  ${ex.description}\n` +
-                `  ${pc.cyan(`paperclipai plugin install ${ex.localPath}`)}`,
+                `  ${pc.cyan(`sentinelai plugin install ${ex.localPath}`)}`,
             );
           }
         } catch (err) {

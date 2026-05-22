@@ -527,7 +527,7 @@ export function createTestHarness(options: TestHarnessOptions): TestHarness {
   }
 
   function isManagedAgent(agent: Agent, agentKey: string) {
-    const marker = agent.metadata?.paperclipManagedResource;
+    const marker = agent.metadata?.sentinelManagedResource;
     return Boolean(
       marker
       && typeof marker === "object"
@@ -541,7 +541,7 @@ export function createTestHarness(options: TestHarnessOptions): TestHarness {
   function managedAgentMetadata(agentKey: string, existing?: Record<string, unknown> | null) {
     return {
       ...(existing ?? {}),
-      paperclipManagedResource: {
+      sentinelManagedResource: {
         pluginKey: manifest.id,
         resourceKind: "agent",
         resourceKey: agentKey,

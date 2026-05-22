@@ -79,11 +79,11 @@ export const runningProcesses = new Map<string, RunningProcess>();
 export const MAX_CAPTURE_BYTES = 4 * 1024 * 1024;
 export const MAX_EXCERPT_BYTES = 32 * 1024;
 const TERMINAL_RESULT_SCAN_OVERLAP_CHARS = 64 * 1024;
-const DEFAULT_PAPERCLIP_INSTANCE_ID = "default";
+const DEFAULT_SENTINEL_INSTANCE_ID = "default";
 const PATH_SEGMENT_RE = /^[a-zA-Z0-9_-]+$/;
 const SENSITIVE_ENV_KEY = /(key|token|secret|password|passwd|authorization|cookie)/i;
 const REDACTED_LOG_VALUE = "***REDACTED***";
-const PAPERCLIP_SKILL_ROOT_RELATIVE_CANDIDATES = [
+const SENTINEL_SKILL_ROOT_RELATIVE_CANDIDATES = [
   "../../skills",
   "../../../../../skills",
 ];
@@ -97,20 +97,20 @@ function expandHomePrefix(value: string): string {
   return value;
 }
 
-export function resolvePaperclipInstanceRootForAdapter(input: {
+export function resolveSentinelInstanceRootForAdapter(input: {
   homeDir?: string;
   instanceId?: string;
   env?: NodeJS.ProcessEnv;
 } = {}): string {
   const env = input.env ?? process.env;
-  const homeRaw = input.homeDir?.trim() || env.PAPERCLIP_HOME?.trim();
-  const homeDir = path.resolve(homeRaw ? expandHomePrefix(homeRaw) : path.resolve(os.homedir(), ".paperclip"));
-  const instanceId = input.instanceId?.trim() || env.PAPERCLIP_INSTANCE_ID?.trim() || DEFAULT_PAPERCLIP_INSTANCE_ID;
-  if (!PATH_SEGMENT_RE.test(instanceId)) throw new Error(`Invalid PAPERCLIP_INSTANCE_ID '${instanceId}'.`);
+  const homeRaw = input.homeDir?.trim() || env.SENTINEL_HOME?.trim();
+  const homeDir = path.resolve(homeRaw ? expandHomePrefix(homeRaw) : path.resolve(os.homedir(), ".sentinel"));
+  const instanceId = input.instanceId?.trim() || env.SENTINEL_INSTANCE_ID?.trim() || DEFAULT_SENTINEL_INSTANCE_ID;
+  if (!PATH_SEGMENT_RE.test(instanceId)) throw new Error(`Invalid SENTINEL_INSTANCE_ID '${instanceId}'.`);
   return path.resolve(homeDir, "instances", instanceId);
 }
 
-export const DEFAULT_PAPERCLIP_AGENT_PROMPT_TEMPLATE = [
+export const DEFAULT_SENTINEL_AGENT_PROMPT_TEMPLATE = [
   "You are agent {{agent.id}} ({{agent.name}}). Continue your Paperclip work.",
   "",
   "Execution contract:",
@@ -617,22 +617,22 @@ export function normalizePaperclipWakePayload(value: unknown): PaperclipWakePayl
   };
 }
 
-export function stringifyPaperclipWakePayload(value: unknown): string | null {
+export function stringifySentinelWakePayload(value: unknown): string | null {
   const normalized = normalizePaperclipWakePayload(value);
   if (!normalized) return null;
   return JSON.stringify(normalized);
 }
 
-export function readPaperclipIssueWorkModeFromContext(value: unknown): string | null {
+export function readSentinelIssueWorkModeFromContext(value: unknown): string | null {
   const context = parseObject(value);
-  const issue = parseObject(context.paperclipIssue);
+  const issue = parseObject(context.sentinelIssue);
   const direct = asString(issue.workMode, "").trim();
   if (direct) return direct;
-  const wake = normalizePaperclipWakePayload(context.paperclipWake);
+  const wake = normalizePaperclipWakePayload(context.sentinelWake);
   return wake?.issue?.workMode ?? null;
 }
 
-export function renderPaperclipWakePrompt(
+export function renderSentinelWakePrompt(
   value: unknown,
   options: { resumedSession?: boolean } = {},
 ): string {
@@ -884,13 +884,13 @@ export function buildInvocationEnvForLogs(
 
   const resolvedCommand = options.resolvedCommand?.trim();
   if (resolvedCommand) {
-    merged[options.resolvedCommandEnvKey ?? "PAPERCLIP_RESOLVED_COMMAND"] = redactCommandTextForLogs(resolvedCommand);
+    merged[options.resolvedCommandEnvKey ?? "SENTINEL_RESOLVED_COMMAND"] = redactCommandTextForLogs(resolvedCommand);
   }
 
   return redactEnvForLogs(merged);
 }
 
-export function buildPaperclipEnv(agent: { id: string; companyId: string }): Record<string, string> {
+export function buildSentinelEnv(agent: { id: string; companyId: string }): Record<string, string> {
   const resolveHostForUrl = (rawHost: string): string => {
     const host = rawHost.trim();
     if (!host || host === "0.0.0.0" || host === "::") return "localhost";
@@ -898,22 +898,22 @@ export function buildPaperclipEnv(agent: { id: string; companyId: string }): Rec
     return host;
   };
   const vars: Record<string, string> = {
-    PAPERCLIP_AGENT_ID: agent.id,
-    PAPERCLIP_COMPANY_ID: agent.companyId,
+    SENTINEL_AGENT_ID: agent.id,
+    SENTINEL_COMPANY_ID: agent.companyId,
   };
   const runtimeHost = resolveHostForUrl(
-    process.env.PAPERCLIP_LISTEN_HOST ?? process.env.HOST ?? "localhost",
+    process.env.SENTINEL_LISTEN_HOST ?? process.env.HOST ?? "localhost",
   );
-  const runtimePort = process.env.PAPERCLIP_LISTEN_PORT ?? process.env.PORT ?? "3100";
+  const runtimePort = process.env.SENTINEL_LISTEN_PORT ?? process.env.PORT ?? "3100";
   const apiUrl =
-    process.env.PAPERCLIP_RUNTIME_API_URL ??
-    process.env.PAPERCLIP_API_URL ??
+    process.env.SENTINEL_RUNTIME_API_URL ??
+    process.env.SENTINEL_API_URL ??
     `http://${runtimeHost}:${runtimePort}`;
-  vars.PAPERCLIP_API_URL = apiUrl;
+  vars.SENTINEL_API_URL = apiUrl;
   return vars;
 }
 
-export function applyPaperclipWorkspaceEnv(
+export function applySentinelWorkspaceEnv(
   env: Record<string, string>,
   input: {
     workspaceCwd?: string | null;
@@ -928,14 +928,14 @@ export function applyPaperclipWorkspaceEnv(
   },
 ): Record<string, string> {
   const mappings = [
-    ["PAPERCLIP_WORKSPACE_CWD", input.workspaceCwd],
-    ["PAPERCLIP_WORKSPACE_SOURCE", input.workspaceSource],
-    ["PAPERCLIP_WORKSPACE_STRATEGY", input.workspaceStrategy],
-    ["PAPERCLIP_WORKSPACE_ID", input.workspaceId],
-    ["PAPERCLIP_WORKSPACE_REPO_URL", input.workspaceRepoUrl],
-    ["PAPERCLIP_WORKSPACE_REPO_REF", input.workspaceRepoRef],
-    ["PAPERCLIP_WORKSPACE_BRANCH", input.workspaceBranch],
-    ["PAPERCLIP_WORKSPACE_WORKTREE_PATH", input.workspaceWorktreePath],
+    ["SENTINEL_WORKSPACE_CWD", input.workspaceCwd],
+    ["SENTINEL_WORKSPACE_SOURCE", input.workspaceSource],
+    ["SENTINEL_WORKSPACE_STRATEGY", input.workspaceStrategy],
+    ["SENTINEL_WORKSPACE_ID", input.workspaceId],
+    ["SENTINEL_WORKSPACE_REPO_URL", input.workspaceRepoUrl],
+    ["SENTINEL_WORKSPACE_REPO_REF", input.workspaceRepoRef],
+    ["SENTINEL_WORKSPACE_BRANCH", input.workspaceBranch],
+    ["SENTINEL_WORKSPACE_WORKTREE_PATH", input.workspaceWorktreePath],
     ["AGENT_HOME", input.agentHome],
   ] as const;
 
@@ -948,7 +948,7 @@ export function applyPaperclipWorkspaceEnv(
   return env;
 }
 
-export function shapePaperclipWorkspaceEnvForExecution(input: {
+export function shapeSentinelWorkspaceEnvForExecution(input: {
   workspaceCwd?: string | null;
   workspaceWorktreePath?: string | null;
   workspaceHints?: Array<Record<string, unknown>>;
@@ -990,7 +990,7 @@ export function shapePaperclipWorkspaceEnvForExecution(input: {
   if (executionCwd === null) {
     // eslint-disable-next-line no-console
     console.warn(
-      "[paperclip] shapePaperclipWorkspaceEnvForExecution called with executionCwd=null on a remote target; " +
+      "[paperclip] shapeSentinelWorkspaceEnvForExecution called with executionCwd=null on a remote target; " +
         "stripping workspaceCwd to avoid leaking local paths into the remote environment.",
     );
   }
@@ -1078,7 +1078,7 @@ export function refreshPaperclipWorkspaceEnvForExecution(input: {
   workspaceWorktreePath: string | null;
   workspaceHints: Array<Record<string, unknown>>;
 } {
-  const shapedWorkspaceEnv = shapePaperclipWorkspaceEnvForExecution({
+  const shapedWorkspaceEnv = shapeSentinelWorkspaceEnvForExecution({
     workspaceCwd: input.workspaceCwd,
     workspaceWorktreePath: input.workspaceWorktreePath,
     workspaceHints: input.workspaceHints,
@@ -1086,11 +1086,11 @@ export function refreshPaperclipWorkspaceEnvForExecution(input: {
     executionCwd: input.executionCwd,
   });
 
-  delete input.env.PAPERCLIP_WORKSPACE_CWD;
-  delete input.env.PAPERCLIP_WORKSPACE_WORKTREE_PATH;
-  delete input.env.PAPERCLIP_WORKSPACES_JSON;
+  delete input.env.SENTINEL_WORKSPACE_CWD;
+  delete input.env.SENTINEL_WORKSPACE_WORKTREE_PATH;
+  delete input.env.SENTINEL_WORKSPACES_JSON;
 
-  applyPaperclipWorkspaceEnv(input.env, {
+  applySentinelWorkspaceEnv(input.env, {
     workspaceCwd: shapedWorkspaceEnv.workspaceCwd,
     workspaceSource: input.workspaceSource,
     workspaceStrategy: input.workspaceStrategy,
@@ -1103,7 +1103,7 @@ export function refreshPaperclipWorkspaceEnvForExecution(input: {
   });
 
   if (shapedWorkspaceEnv.workspaceHints.length > 0) {
-    input.env.PAPERCLIP_WORKSPACES_JSON = JSON.stringify(shapedWorkspaceEnv.workspaceHints);
+    input.env.SENTINEL_WORKSPACES_JSON = JSON.stringify(shapedWorkspaceEnv.workspaceHints);
   }
 
   const shapedEnvConfig = rewriteWorkspaceCwdEnvVarsForExecution({
@@ -1122,10 +1122,10 @@ export function refreshPaperclipWorkspaceEnvForExecution(input: {
 export function sanitizeInheritedPaperclipEnv(baseEnv: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = { ...baseEnv };
   for (const key of Object.keys(env)) {
-    if (!key.startsWith("PAPERCLIP_")) continue;
-    if (key === "PAPERCLIP_RUNTIME_API_URL") continue;
-    if (key === "PAPERCLIP_LISTEN_HOST") continue;
-    if (key === "PAPERCLIP_LISTEN_PORT") continue;
+    if (!key.startsWith("SENTINEL_")) continue;
+    if (key === "SENTINEL_RUNTIME_API_URL") continue;
+    if (key === "SENTINEL_LISTEN_HOST") continue;
+    if (key === "SENTINEL_LISTEN_PORT") continue;
     delete env[key];
   }
   return env;
@@ -1308,12 +1308,12 @@ export async function ensureAbsoluteDirectory(
   }
 }
 
-export async function resolvePaperclipSkillsDir(
+export async function resolveSentinelSkillsDir(
   moduleDir: string,
   additionalCandidates: string[] = [],
 ): Promise<string | null> {
   const candidates = [
-    ...PAPERCLIP_SKILL_ROOT_RELATIVE_CANDIDATES.map((relativePath) => path.resolve(moduleDir, relativePath)),
+    ...SENTINEL_SKILL_ROOT_RELATIVE_CANDIDATES.map((relativePath) => path.resolve(moduleDir, relativePath)),
     ...additionalCandidates.map((candidate) => path.resolve(candidate)),
   ];
   const seenRoots = new Set<string>();
@@ -1346,7 +1346,7 @@ export async function listPaperclipSkillEntries(
   moduleDir: string,
   additionalCandidates: string[] = [],
 ): Promise<PaperclipSkillEntry[]> {
-  const root = await resolvePaperclipSkillsDir(moduleDir, additionalCandidates);
+  const root = await resolveSentinelSkillsDir(moduleDir, additionalCandidates);
   if (!root) return [];
 
   try {
@@ -1356,7 +1356,7 @@ export async function listPaperclipSkillEntries(
       const skillDir = path.join(root, entry.name);
       const required = await readSkillRequired(skillDir);
       return {
-        key: `paperclipai/paperclip/${entry.name}`,
+        key: `sentinelai/paperclip/${entry.name}`,
         runtimeName: entry.name,
         source: skillDir,
         required,
@@ -1506,12 +1506,12 @@ function normalizeConfiguredPaperclipRuntimeSkills(value: unknown): PaperclipSki
   return out;
 }
 
-export async function readPaperclipRuntimeSkillEntries(
+export async function readSentinelRuntimeSkillEntries(
   config: Record<string, unknown>,
   moduleDir: string,
   additionalCandidates: string[] = [],
 ): Promise<PaperclipSkillEntry[]> {
-  const configuredEntries = normalizeConfiguredPaperclipRuntimeSkills(config.paperclipRuntimeSkills);
+  const configuredEntries = normalizeConfiguredPaperclipRuntimeSkills(config.sentinelRuntimeSkills);
   if (configuredEntries.length > 0) return configuredEntries;
   return listPaperclipSkillEntries(moduleDir, additionalCandidates);
 }
@@ -1538,7 +1538,7 @@ export function readPaperclipSkillSyncPreference(config: Record<string, unknown>
   explicit: boolean;
   desiredSkills: string[];
 } {
-  const raw = config.paperclipSkillSync;
+  const raw = config.sentinelSkillSync;
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
     return { explicit: false, desiredSkills: [] };
   }
@@ -1579,7 +1579,7 @@ function canonicalizeDesiredPaperclipSkillReference(
   return normalizedReference;
 }
 
-export function resolvePaperclipDesiredSkillNames(
+export function resolveSentinelDesiredSkillNames(
   config: Record<string, unknown>,
   availableEntries: Array<{ key: string; runtimeName?: string | null; required?: boolean }>,
 ): string[] {
@@ -1601,7 +1601,7 @@ export function writePaperclipSkillSyncPreference(
   desiredSkills: string[],
 ): Record<string, unknown> {
   const next = { ...config };
-  const raw = next.paperclipSkillSync;
+  const raw = next.sentinelSkillSync;
   const current =
     typeof raw === "object" && raw !== null && !Array.isArray(raw)
       ? { ...(raw as Record<string, unknown>) }
@@ -1613,7 +1613,7 @@ export function writePaperclipSkillSyncPreference(
         .filter(Boolean),
     ),
   );
-  next.paperclipSkillSync = current;
+  next.sentinelSkillSync = current;
   return next;
 }
 
@@ -1749,7 +1749,7 @@ async function removeStaleMaterializeLock(lockDir: string, staleMs: number): Pro
   return true;
 }
 
-export async function materializePaperclipSkillCopy(
+export async function materializeSentinelSkillCopy(
   source: string,
   target: string,
 ): Promise<MaterializedPaperclipSkillCopyResult> {
@@ -1922,7 +1922,7 @@ export async function runChildProcess(
     // Strip Claude Code nesting-guard env vars so spawned `claude` processes
     // don't refuse to start with "cannot be launched inside another session".
     // These vars leak in when the Paperclip server itself is started from
-    // within a Claude Code session (e.g. `npx paperclipai run` in a terminal
+    // within a Claude Code session (e.g. `npx sentinelai run` in a terminal
     // owned by Claude Code) or when cron inherits a contaminated shell env.
     const CLAUDE_CODE_NESTING_VARS = [
       "CLAUDECODE",

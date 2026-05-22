@@ -146,7 +146,7 @@ export interface SecretProviderConfigDiscoverySignal {
   kmsKeyId: string | null;
   hasKmsKey: boolean;
   sampleCount: number;
-  paperclipManagedSampleCount: number;
+  sentinelManagedSampleCount: number;
   skippedForeignPaperclipSampleCount: number;
 }
 

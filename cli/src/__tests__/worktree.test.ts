@@ -224,12 +224,12 @@ describe("worktree helpers", () => {
       name: "feature-worktree-support",
       color: "#3abf7a",
     });
-    expect(env.PAPERCLIP_HOME).toBe(path.resolve("/tmp/paperclip-worktrees"));
-    expect(env.PAPERCLIP_INSTANCE_ID).toBe("feature-worktree-support");
-    expect(env.PAPERCLIP_IN_WORKTREE).toBe("true");
-    expect(env.PAPERCLIP_WORKTREE_NAME).toBe("feature-worktree-support");
-    expect(env.PAPERCLIP_WORKTREE_COLOR).toBe("#3abf7a");
-    expect(formatShellExports(env)).toContain("export PAPERCLIP_INSTANCE_ID='feature-worktree-support'");
+    expect(env.SENTINEL_HOME).toBe(path.resolve("/tmp/paperclip-worktrees"));
+    expect(env.SENTINEL_INSTANCE_ID).toBe("feature-worktree-support");
+    expect(env.SENTINEL_IN_WORKTREE).toBe("true");
+    expect(env.SENTINEL_WORKTREE_NAME).toBe("feature-worktree-support");
+    expect(env.SENTINEL_WORKTREE_COLOR).toBe("#3abf7a");
+    expect(formatShellExports(env)).toContain("export SENTINEL_INSTANCE_ID='feature-worktree-support'");
   });
 
   it("falls back across storage roots before skipping a missing attachment object", async () => {
@@ -421,11 +421,11 @@ describe("worktree helpers", () => {
 
   it("copies the source local_encrypted secrets key into the seeded worktree instance", () => {
     const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-worktree-secrets-"));
-    const originalInlineMasterKey = process.env.PAPERCLIP_SECRETS_MASTER_KEY;
-    const originalKeyFile = process.env.PAPERCLIP_SECRETS_MASTER_KEY_FILE;
+    const originalInlineMasterKey = process.env.SENTINEL_SECRETS_MASTER_KEY;
+    const originalKeyFile = process.env.SENTINEL_SECRETS_MASTER_KEY_FILE;
     try {
-      delete process.env.PAPERCLIP_SECRETS_MASTER_KEY;
-      delete process.env.PAPERCLIP_SECRETS_MASTER_KEY_FILE;
+      delete process.env.SENTINEL_SECRETS_MASTER_KEY;
+      delete process.env.SENTINEL_SECRETS_MASTER_KEY_FILE;
       const sourceConfigPath = path.join(tempRoot, "source", "config.json");
       const sourceKeyPath = path.join(tempRoot, "source", "secrets", "master.key");
       const targetKeyPath = path.join(tempRoot, "target", "secrets", "master.key");
@@ -445,14 +445,14 @@ describe("worktree helpers", () => {
       expect(fs.readFileSync(targetKeyPath, "utf8")).toBe("source-master-key");
     } finally {
       if (originalInlineMasterKey === undefined) {
-        delete process.env.PAPERCLIP_SECRETS_MASTER_KEY;
+        delete process.env.SENTINEL_SECRETS_MASTER_KEY;
       } else {
-        process.env.PAPERCLIP_SECRETS_MASTER_KEY = originalInlineMasterKey;
+        process.env.SENTINEL_SECRETS_MASTER_KEY = originalInlineMasterKey;
       }
       if (originalKeyFile === undefined) {
-        delete process.env.PAPERCLIP_SECRETS_MASTER_KEY_FILE;
+        delete process.env.SENTINEL_SECRETS_MASTER_KEY_FILE;
       } else {
-        process.env.PAPERCLIP_SECRETS_MASTER_KEY_FILE = originalKeyFile;
+        process.env.SENTINEL_SECRETS_MASTER_KEY_FILE = originalKeyFile;
       }
       fs.rmSync(tempRoot, { recursive: true, force: true });
     }
@@ -468,7 +468,7 @@ describe("worktree helpers", () => {
         sourceConfigPath,
         sourceConfig: buildSourceConfig(),
         sourceEnvEntries: {
-          PAPERCLIP_SECRETS_MASTER_KEY: "inline-source-master-key",
+          SENTINEL_SECRETS_MASTER_KEY: "inline-source-master-key",
         },
         targetKeyFilePath: targetKeyPath,
       });
@@ -483,30 +483,30 @@ describe("worktree helpers", () => {
     const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-worktree-jwt-"));
     const repoRoot = path.join(tempRoot, "repo");
     const originalCwd = process.cwd();
-    const originalJwtSecret = process.env.PAPERCLIP_AGENT_JWT_SECRET;
+    const originalJwtSecret = process.env.SENTINEL_AGENT_JWT_SECRET;
 
     try {
       fs.mkdirSync(repoRoot, { recursive: true });
-      process.env.PAPERCLIP_AGENT_JWT_SECRET = "worktree-shared-secret";
+      process.env.SENTINEL_AGENT_JWT_SECRET = "worktree-shared-secret";
       process.chdir(repoRoot);
 
       await worktreeInitCommand({
         seed: false,
         fromConfig: path.join(tempRoot, "missing", "config.json"),
-        home: path.join(tempRoot, ".paperclip-worktrees"),
+        home: path.join(tempRoot, ".sentinel-worktrees"),
       });
 
-      const envPath = path.join(repoRoot, ".paperclip", ".env");
+      const envPath = path.join(repoRoot, ".sentinel", ".env");
       const envContents = fs.readFileSync(envPath, "utf8");
-      expect(envContents).toContain("PAPERCLIP_AGENT_JWT_SECRET=worktree-shared-secret");
-      expect(envContents).toContain("PAPERCLIP_WORKTREE_NAME=repo");
-      expect(envContents).toMatch(/PAPERCLIP_WORKTREE_COLOR=\"#[0-9a-f]{6}\"/);
+      expect(envContents).toContain("SENTINEL_AGENT_JWT_SECRET=worktree-shared-secret");
+      expect(envContents).toContain("SENTINEL_WORKTREE_NAME=repo");
+      expect(envContents).toMatch(/SENTINEL_WORKTREE_COLOR=\"#[0-9a-f]{6}\"/);
     } finally {
       process.chdir(originalCwd);
       if (originalJwtSecret === undefined) {
-        delete process.env.PAPERCLIP_AGENT_JWT_SECRET;
+        delete process.env.SENTINEL_AGENT_JWT_SECRET;
       } else {
-        process.env.PAPERCLIP_AGENT_JWT_SECRET = originalJwtSecret;
+        process.env.SENTINEL_AGENT_JWT_SECRET = originalJwtSecret;
       }
       fs.rmSync(tempRoot, { recursive: true, force: true });
     }
@@ -519,7 +519,7 @@ describe("worktree helpers", () => {
 
     try {
       fs.mkdirSync(repoRoot, { recursive: true });
-      const repoConfigDir = path.join(repoRoot, ".paperclip");
+      const repoConfigDir = path.join(repoRoot, ".sentinel");
       fs.mkdirSync(repoConfigDir, { recursive: true });
       fs.writeFileSync(path.join(repoConfigDir, "config.json"), "stale", "utf8");
       fs.writeFileSync(path.join(repoConfigDir, ".env"), "STALE=1", "utf8");
@@ -538,7 +538,7 @@ describe("worktree helpers", () => {
         seed: false,
         force: true,
         fromConfig: path.join(tempRoot, "missing", "config.json"),
-        home: path.join(tempRoot, ".paperclip-worktrees"),
+        home: path.join(tempRoot, ".sentinel-worktrees"),
       });
 
       expect(fs.existsSync(sentinelPath)).toBe(true);
@@ -561,7 +561,7 @@ describe("worktree helpers", () => {
       const sourceConfigPath = path.join(sourceConfigDir, "config.json");
       const sourceEnvPath = path.join(sourceConfigDir, ".env");
       const sourceKeyPath = path.join(sourceConfigDir, "secrets", "master.key");
-      const worktreeHome = path.join(tempRoot, ".paperclip-worktrees");
+      const worktreeHome = path.join(tempRoot, ".sentinel-worktrees");
       const originalCwd = process.cwd();
       const sourceDb = await startEmbeddedPostgresTestDatabase("paperclip-worktree-auth-source-");
 
@@ -609,7 +609,7 @@ describe("worktree helpers", () => {
         });
 
         const targetConfig = JSON.parse(
-          fs.readFileSync(path.join(worktreeRoot, ".paperclip", "config.json"), "utf8"),
+          fs.readFileSync(path.join(worktreeRoot, ".sentinel", "config.json"), "utf8"),
         ) as PaperclipConfig;
         const { default: EmbeddedPostgres } = await import("embedded-postgres");
         const targetPg = new EmbeddedPostgres({
@@ -645,7 +645,7 @@ describe("worktree helpers", () => {
   it("avoids ports already claimed by sibling worktree instance configs", async () => {
     const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-worktree-claimed-ports-"));
     const repoRoot = path.join(tempRoot, "repo");
-    const homeDir = path.join(tempRoot, ".paperclip-worktrees");
+    const homeDir = path.join(tempRoot, ".sentinel-worktrees");
     const siblingInstanceRoot = path.join(homeDir, "instances", "existing-worktree");
     const originalCwd = process.cwd();
 
@@ -712,7 +712,7 @@ describe("worktree helpers", () => {
         home: homeDir,
       });
 
-      const config = JSON.parse(fs.readFileSync(path.join(repoRoot, ".paperclip", "config.json"), "utf8"));
+      const config = JSON.parse(fs.readFileSync(path.join(repoRoot, ".sentinel", "config.json"), "utf8"));
       expect(config.server.port).toBeGreaterThan(3101);
       expect(config.database.embeddedPostgresPort).not.toBe(54330);
       expect(config.database.embeddedPostgresPort).not.toBe(config.server.port);
@@ -726,23 +726,23 @@ describe("worktree helpers", () => {
   it("defaults the seed source config to the current repo-local Paperclip config", () => {
     const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-worktree-source-config-"));
     const repoRoot = path.join(tempRoot, "repo");
-    const localConfigPath = path.join(repoRoot, ".paperclip", "config.json");
+    const localConfigPath = path.join(repoRoot, ".sentinel", "config.json");
     const originalCwd = process.cwd();
-    const originalPaperclipConfig = process.env.PAPERCLIP_CONFIG;
+    const originalPaperclipConfig = process.env.SENTINEL_CONFIG;
 
     try {
       fs.mkdirSync(path.dirname(localConfigPath), { recursive: true });
       fs.writeFileSync(localConfigPath, JSON.stringify(buildSourceConfig()), "utf8");
-      delete process.env.PAPERCLIP_CONFIG;
+      delete process.env.SENTINEL_CONFIG;
       process.chdir(repoRoot);
 
       expect(fs.realpathSync(resolveSourceConfigPath({}))).toBe(fs.realpathSync(localConfigPath));
     } finally {
       process.chdir(originalCwd);
       if (originalPaperclipConfig === undefined) {
-        delete process.env.PAPERCLIP_CONFIG;
+        delete process.env.SENTINEL_CONFIG;
       } else {
-        process.env.PAPERCLIP_CONFIG = originalPaperclipConfig;
+        process.env.SENTINEL_CONFIG = originalPaperclipConfig;
       }
       fs.rmSync(tempRoot, { recursive: true, force: true });
     }
@@ -753,13 +753,13 @@ describe("worktree helpers", () => {
     const sourceConfigPath = path.join(tempRoot, "source", "config.json");
     const targetRoot = path.join(tempRoot, "target");
     const originalCwd = process.cwd();
-    const originalPaperclipConfig = process.env.PAPERCLIP_CONFIG;
+    const originalPaperclipConfig = process.env.SENTINEL_CONFIG;
 
     try {
       fs.mkdirSync(path.dirname(sourceConfigPath), { recursive: true });
       fs.mkdirSync(targetRoot, { recursive: true });
       fs.writeFileSync(sourceConfigPath, JSON.stringify(buildSourceConfig()), "utf8");
-      delete process.env.PAPERCLIP_CONFIG;
+      delete process.env.SENTINEL_CONFIG;
       process.chdir(targetRoot);
 
       expect(resolveSourceConfigPath({ sourceConfigPathOverride: sourceConfigPath })).toBe(
@@ -768,9 +768,9 @@ describe("worktree helpers", () => {
     } finally {
       process.chdir(originalCwd);
       if (originalPaperclipConfig === undefined) {
-        delete process.env.PAPERCLIP_CONFIG;
+        delete process.env.SENTINEL_CONFIG;
       } else {
-        process.env.PAPERCLIP_CONFIG = originalPaperclipConfig;
+        process.env.SENTINEL_CONFIG = originalPaperclipConfig;
       }
       fs.rmSync(tempRoot, { recursive: true, force: true });
     }
@@ -794,8 +794,8 @@ describe("worktree helpers", () => {
   it("derives worktree reseed target paths from the adjacent env file", () => {
     const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-worktree-reseed-target-"));
     const worktreeRoot = path.join(tempRoot, "repo");
-    const configPath = path.join(worktreeRoot, ".paperclip", "config.json");
-    const envPath = path.join(worktreeRoot, ".paperclip", ".env");
+    const configPath = path.join(worktreeRoot, ".sentinel", "config.json");
+    const envPath = path.join(worktreeRoot, ".sentinel", ".env");
 
     try {
       fs.mkdirSync(path.dirname(configPath), { recursive: true });
@@ -803,8 +803,8 @@ describe("worktree helpers", () => {
       fs.writeFileSync(
         envPath,
         [
-          "PAPERCLIP_HOME=/tmp/paperclip-worktrees",
-          "PAPERCLIP_INSTANCE_ID=pap-1132-chat",
+          "SENTINEL_HOME=/tmp/paperclip-worktrees",
+          "SENTINEL_INSTANCE_ID=pap-1132-chat",
         ].join("\n"),
         "utf8",
       );
@@ -826,12 +826,12 @@ describe("worktree helpers", () => {
   it("rejects reseed targets without worktree env metadata", () => {
     const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-worktree-reseed-target-missing-"));
     const worktreeRoot = path.join(tempRoot, "repo");
-    const configPath = path.join(worktreeRoot, ".paperclip", "config.json");
+    const configPath = path.join(worktreeRoot, ".sentinel", "config.json");
 
     try {
       fs.mkdirSync(path.dirname(configPath), { recursive: true });
       fs.writeFileSync(configPath, JSON.stringify(buildSourceConfig()), "utf8");
-      fs.writeFileSync(path.join(worktreeRoot, ".paperclip", ".env"), "", "utf8");
+      fs.writeFileSync(path.join(worktreeRoot, ".sentinel", ".env"), "", "utf8");
 
       expect(() =>
         resolveWorktreeReseedTargetPaths({
@@ -847,7 +847,7 @@ describe("worktree helpers", () => {
     const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-worktree-reseed-"));
     const repoRoot = path.join(tempRoot, "repo");
     const sourceRoot = path.join(tempRoot, "source");
-    const homeDir = path.join(tempRoot, ".paperclip-worktrees");
+    const homeDir = path.join(tempRoot, ".sentinel-worktrees");
     const currentInstanceId = "existing-worktree";
     const currentPaths = resolveWorktreeLocalPaths({
       cwd: repoRoot,
@@ -860,7 +860,7 @@ describe("worktree helpers", () => {
       instanceId: "default",
     });
     const originalCwd = process.cwd();
-    const originalPaperclipConfig = process.env.PAPERCLIP_CONFIG;
+    const originalPaperclipConfig = process.env.SENTINEL_CONFIG;
 
     try {
       fs.mkdirSync(path.dirname(currentPaths.configPath), { recursive: true });
@@ -887,15 +887,15 @@ describe("worktree helpers", () => {
       fs.writeFileSync(
         currentPaths.envPath,
         [
-          `PAPERCLIP_HOME=${homeDir}`,
-          `PAPERCLIP_INSTANCE_ID=${currentInstanceId}`,
-          "PAPERCLIP_WORKTREE_NAME=existing-name",
-          "PAPERCLIP_WORKTREE_COLOR=\"#112233\"",
+          `SENTINEL_HOME=${homeDir}`,
+          `SENTINEL_INSTANCE_ID=${currentInstanceId}`,
+          "SENTINEL_WORKTREE_NAME=existing-name",
+          "SENTINEL_WORKTREE_COLOR=\"#112233\"",
         ].join("\n"),
         "utf8",
       );
 
-      delete process.env.PAPERCLIP_CONFIG;
+      delete process.env.SENTINEL_CONFIG;
       process.chdir(repoRoot);
 
       await worktreeReseedCommand({
@@ -909,15 +909,15 @@ describe("worktree helpers", () => {
       expect(rewrittenConfig.server.port).toBe(3114);
       expect(rewrittenConfig.database.embeddedPostgresPort).toBe(54341);
       expect(rewrittenConfig.database.embeddedPostgresDataDir).toBe(currentPaths.embeddedPostgresDataDir);
-      expect(rewrittenEnv).toContain(`PAPERCLIP_INSTANCE_ID=${currentInstanceId}`);
-      expect(rewrittenEnv).toContain("PAPERCLIP_WORKTREE_NAME=existing-name");
-      expect(rewrittenEnv).toContain("PAPERCLIP_WORKTREE_COLOR=\"#112233\"");
+      expect(rewrittenEnv).toContain(`SENTINEL_INSTANCE_ID=${currentInstanceId}`);
+      expect(rewrittenEnv).toContain("SENTINEL_WORKTREE_NAME=existing-name");
+      expect(rewrittenEnv).toContain("SENTINEL_WORKTREE_COLOR=\"#112233\"");
     } finally {
       process.chdir(originalCwd);
       if (originalPaperclipConfig === undefined) {
-        delete process.env.PAPERCLIP_CONFIG;
+        delete process.env.SENTINEL_CONFIG;
       } else {
-        process.env.PAPERCLIP_CONFIG = originalPaperclipConfig;
+        process.env.SENTINEL_CONFIG = originalPaperclipConfig;
       }
       fs.rmSync(tempRoot, { recursive: true, force: true });
     }
@@ -927,7 +927,7 @@ describe("worktree helpers", () => {
     const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-worktree-reseed-rollback-"));
     const repoRoot = path.join(tempRoot, "repo");
     const sourceRoot = path.join(tempRoot, "source");
-    const homeDir = path.join(tempRoot, ".paperclip-worktrees");
+    const homeDir = path.join(tempRoot, ".sentinel-worktrees");
     const currentInstanceId = "rollback-worktree";
     const currentPaths = resolveWorktreeLocalPaths({
       cwd: repoRoot,
@@ -940,7 +940,7 @@ describe("worktree helpers", () => {
       instanceId: "default",
     });
     const originalCwd = process.cwd();
-    const originalPaperclipConfig = process.env.PAPERCLIP_CONFIG;
+    const originalPaperclipConfig = process.env.SENTINEL_CONFIG;
 
     try {
       fs.mkdirSync(path.dirname(currentPaths.configPath), { recursive: true });
@@ -972,12 +972,12 @@ describe("worktree helpers", () => {
       } as PaperclipConfig;
 
       fs.writeFileSync(currentPaths.configPath, JSON.stringify(currentConfig, null, 2), "utf8");
-      fs.writeFileSync(currentPaths.envPath, `PAPERCLIP_HOME=${homeDir}\nPAPERCLIP_INSTANCE_ID=${currentInstanceId}\n`, "utf8");
+      fs.writeFileSync(currentPaths.envPath, `SENTINEL_HOME=${homeDir}\nSENTINEL_INSTANCE_ID=${currentInstanceId}\n`, "utf8");
       fs.writeFileSync(path.join(currentPaths.instanceRoot, "marker.txt"), "keep me", "utf8");
       fs.writeFileSync(sourcePaths.configPath, JSON.stringify(sourceConfig, null, 2), "utf8");
       fs.writeFileSync(sourcePaths.secretsKeyFilePath, "source-secret", "utf8");
 
-      delete process.env.PAPERCLIP_CONFIG;
+      delete process.env.SENTINEL_CONFIG;
       process.chdir(repoRoot);
 
       await expect(worktreeReseedCommand({
@@ -991,14 +991,14 @@ describe("worktree helpers", () => {
 
       expect(restoredConfig.server.port).toBe(3114);
       expect(restoredConfig.database.embeddedPostgresPort).toBe(54341);
-      expect(restoredEnv).toContain(`PAPERCLIP_INSTANCE_ID=${currentInstanceId}`);
+      expect(restoredEnv).toContain(`SENTINEL_INSTANCE_ID=${currentInstanceId}`);
       expect(restoredMarker).toBe("keep me");
     } finally {
       process.chdir(originalCwd);
       if (originalPaperclipConfig === undefined) {
-        delete process.env.PAPERCLIP_CONFIG;
+        delete process.env.SENTINEL_CONFIG;
       } else {
-        process.env.PAPERCLIP_CONFIG = originalPaperclipConfig;
+        process.env.SENTINEL_CONFIG = originalPaperclipConfig;
       }
       fs.rmSync(tempRoot, { recursive: true, force: true });
     }
@@ -1102,12 +1102,12 @@ describe("worktree helpers", () => {
 
       await worktreeMakeCommand("paperclip-make-test", {
         seed: false,
-        home: path.join(tempRoot, ".paperclip-worktrees"),
+        home: path.join(tempRoot, ".sentinel-worktrees"),
       });
 
       expect(fs.existsSync(path.join(worktreePath, ".git"))).toBe(true);
-      expect(fs.existsSync(path.join(worktreePath, ".paperclip", "config.json"))).toBe(true);
-      expect(fs.existsSync(path.join(worktreePath, ".paperclip", ".env"))).toBe(true);
+      expect(fs.existsSync(path.join(worktreePath, ".sentinel", "config.json"))).toBe(true);
+      expect(fs.existsSync(path.join(worktreePath, ".sentinel", ".env"))).toBe(true);
     } finally {
       process.chdir(originalCwd);
       homedirSpy.mockRestore();
@@ -1132,8 +1132,8 @@ describe("worktree helpers", () => {
       process.chdir(repoRoot);
       await worktreeRepairCommand({});
 
-      expect(fs.existsSync(path.join(repoRoot, ".paperclip", "config.json"))).toBe(false);
-      expect(fs.existsSync(path.join(repoRoot, ".paperclip", "worktrees"))).toBe(false);
+      expect(fs.existsSync(path.join(repoRoot, ".sentinel", "config.json"))).toBe(false);
+      expect(fs.existsSync(path.join(repoRoot, ".sentinel", "worktrees"))).toBe(false);
     } finally {
       process.chdir(originalCwd);
       fs.rmSync(tempRoot, { recursive: true, force: true });
@@ -1143,9 +1143,9 @@ describe("worktree helpers", () => {
   it("repairs the current linked worktree when Paperclip metadata is missing", async () => {
     const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-worktree-repair-current-"));
     const repoRoot = path.join(tempRoot, "repo");
-    const worktreePath = path.join(repoRoot, ".paperclip", "worktrees", "repair-me");
+    const worktreePath = path.join(repoRoot, ".sentinel", "worktrees", "repair-me");
     const sourceConfigPath = path.join(tempRoot, "source-config.json");
-    const worktreeHome = path.join(tempRoot, ".paperclip-worktrees");
+    const worktreeHome = path.join(tempRoot, ".sentinel-worktrees");
     const worktreePaths = resolveWorktreeLocalPaths({
       cwd: worktreePath,
       homeDir: worktreeHome,
@@ -1178,8 +1178,8 @@ describe("worktree helpers", () => {
         noSeed: true,
       });
 
-      expect(fs.existsSync(path.join(worktreePath, ".paperclip", "config.json"))).toBe(true);
-      expect(fs.existsSync(path.join(worktreePath, ".paperclip", ".env"))).toBe(true);
+      expect(fs.existsSync(path.join(worktreePath, ".sentinel", "config.json"))).toBe(true);
+      expect(fs.existsSync(path.join(worktreePath, ".sentinel", ".env"))).toBe(true);
       expect(fs.existsSync(path.join(worktreePaths.instanceRoot, "marker.txt"))).toBe(false);
     } finally {
       process.chdir(originalCwd);
@@ -1191,9 +1191,9 @@ describe("worktree helpers", () => {
     const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-worktree-repair-branch-"));
     const repoRoot = path.join(tempRoot, "repo");
     const sourceConfigPath = path.join(tempRoot, "source-config.json");
-    const worktreeHome = path.join(tempRoot, ".paperclip-worktrees");
+    const worktreeHome = path.join(tempRoot, ".sentinel-worktrees");
     const originalCwd = process.cwd();
-    const expectedWorktreePath = path.join(repoRoot, ".paperclip", "worktrees", "feature-repair-me");
+    const expectedWorktreePath = path.join(repoRoot, ".sentinel", "worktrees", "feature-repair-me");
 
     try {
       fs.mkdirSync(repoRoot, { recursive: true });
@@ -1214,8 +1214,8 @@ describe("worktree helpers", () => {
       });
 
       expect(fs.existsSync(path.join(expectedWorktreePath, ".git"))).toBe(true);
-      expect(fs.existsSync(path.join(expectedWorktreePath, ".paperclip", "config.json"))).toBe(true);
-      expect(fs.existsSync(path.join(expectedWorktreePath, ".paperclip", ".env"))).toBe(true);
+      expect(fs.existsSync(path.join(expectedWorktreePath, ".sentinel", "config.json"))).toBe(true);
+      expect(fs.existsSync(path.join(expectedWorktreePath, ".sentinel", ".env"))).toBe(true);
     } finally {
       process.chdir(originalCwd);
       fs.rmSync(tempRoot, { recursive: true, force: true });

@@ -204,8 +204,8 @@ const LIVENESS_BOOKKEEPING_ACTIVITY_ACTIONS = [
 ];
 const DEFERRED_WAKE_CONTEXT_KEY = "_paperclipWakeContext";
 const WAKE_COMMENT_IDS_KEY = "wakeCommentIds";
-const PAPERCLIP_WAKE_PAYLOAD_KEY = "paperclipWake";
-const PAPERCLIP_HARNESS_CHECKOUT_KEY = "paperclipHarnessCheckedOut";
+const SENTINEL_WAKE_PAYLOAD_KEY = "paperclipWake";
+const SENTINEL_HARNESS_CHECKOUT_KEY = "paperclipHarnessCheckedOut";
 const DETACHED_PROCESS_ERROR_CODE = "process_detached";
 const REPO_ONLY_CWD_SENTINEL = "/__paperclip_repo_only__";
 const MANAGED_WORKSPACE_GIT_CLONE_TIMEOUT_MS = 10 * 60 * 1000;
@@ -341,7 +341,7 @@ type RuntimeConfigSecretResolver = Pick<
 >;
 
 function isPaperclipRuntimeEnvKey(key: string) {
-  return key.startsWith("PAPERCLIP_");
+  return key.startsWith("SENTINEL_");
 }
 
 function stripPaperclipRuntimeEnvBindings(envValue: unknown): Record<string, unknown> | null {
@@ -1872,7 +1872,7 @@ function enrichWakeContextSnapshot(input: {
     contextSnapshot.wakeCommentId = latestCommentId;
     // Once comment ids are normalized into the snapshot, rebuild the structured
     // wake payload from those ids later instead of carrying forward stale data.
-    delete contextSnapshot[PAPERCLIP_WAKE_PAYLOAD_KEY];
+    delete contextSnapshot[SENTINEL_WAKE_PAYLOAD_KEY];
   } else if (!readNonEmptyString(contextSnapshot["wakeCommentId"]) && wakeCommentId) {
     contextSnapshot.wakeCommentId = wakeCommentId;
   }
@@ -1940,7 +1940,7 @@ export function mergeCoalescedContextSnapshot(
     merged.wakeCommentId = latestCommentId;
     // The merged context should carry canonical comment ids; the next wake will
     // regenerate any structured payload from those ids.
-    delete merged[PAPERCLIP_WAKE_PAYLOAD_KEY];
+    delete merged[SENTINEL_WAKE_PAYLOAD_KEY];
   }
   if (!hasInteractionContinuationWakeContext(incoming)) {
     clearInteractionContinuationWakeContext(merged);
@@ -2094,7 +2094,7 @@ async function buildPaperclipWakePayload(input: {
       : null,
     interactionKind: readNonEmptyString(input.contextSnapshot.interactionKind),
     interactionStatus: readNonEmptyString(input.contextSnapshot.interactionStatus),
-    checkedOutByHarness: input.contextSnapshot[PAPERCLIP_HARNESS_CHECKOUT_KEY] === true,
+    checkedOutByHarness: input.contextSnapshot[SENTINEL_HARNESS_CHECKOUT_KEY] === true,
     dependencyBlockedInteraction: input.contextSnapshot.dependencyBlockedInteraction === true,
     treeHoldInteraction: input.contextSnapshot.treeHoldInteraction === true,
     activeTreeHold: parseObject(input.contextSnapshot.activeTreeHold),
@@ -6199,9 +6199,9 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
       !wakeCommentId &&
       (wakeReason === "issue_continuation_needed" || retryReason === "issue_continuation_needed")
     ) {
-      const queuedWake = parseObject(context.paperclipWake);
+      const queuedWake = parseObject(context.sentinelWake);
       const queuedContinuationSummary =
-        readNonEmptyString(parseObject(context.paperclipContinuationSummary).body) ??
+        readNonEmptyString(parseObject(context.sentinelContinuationSummary).body) ??
         readNonEmptyString(parseObject(queuedWake.continuationSummary).body);
       const currentContinuationSummary = queuedContinuationSummary
         ? null
@@ -6996,10 +6996,10 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
     ) {
       try {
         await issuesSvc.checkout(issueId, agent.id, ["todo", "backlog", "blocked"], run.id);
-        context[PAPERCLIP_HARNESS_CHECKOUT_KEY] = true;
+        context[SENTINEL_HARNESS_CHECKOUT_KEY] = true;
       } catch (error) {
         if (!isCheckoutConflictError(error)) throw error;
-        context[PAPERCLIP_HARNESS_CHECKOUT_KEY] = false;
+        context[SENTINEL_HARNESS_CHECKOUT_KEY] = false;
       }
       issueContext = await getIssueExecutionContext(agent.companyId, issueId);
     }
@@ -7101,14 +7101,14 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
       ? await getIssueContinuationSummaryDocument(db, issueRef.id)
       : null;
     if (continuationSummary) {
-      context.paperclipContinuationSummary = {
+      context.sentinelContinuationSummary = {
         key: continuationSummary.key,
         title: continuationSummary.title,
         body: continuationSummary.body,
         updatedAt: continuationSummary.updatedAt.toISOString(),
       };
     } else {
-      delete context.paperclipContinuationSummary;
+      delete context.sentinelContinuationSummary;
     }
     const paperclipWakePayload = await buildPaperclipWakePayload({
       db,
@@ -7127,9 +7127,9 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         : null,
     });
     if (paperclipWakePayload) {
-      context[PAPERCLIP_WAKE_PAYLOAD_KEY] = paperclipWakePayload;
+      context[SENTINEL_WAKE_PAYLOAD_KEY] = paperclipWakePayload;
     } else {
-      delete context[PAPERCLIP_WAKE_PAYLOAD_KEY];
+      delete context[SENTINEL_WAKE_PAYLOAD_KEY];
     }
     const taskMarkdown = buildPaperclipTaskMarkdown({
       issue: issueRef
@@ -7148,7 +7148,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
       },
     });
     if (issueRef) {
-      context.paperclipIssue = {
+      context.sentinelIssue = {
         id: issueRef.id,
         identifier: issueRef.identifier,
         title: issueRef.title,
@@ -7156,17 +7156,17 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         workMode: issueRef.workMode,
       };
     } else {
-      delete context.paperclipIssue;
+      delete context.sentinelIssue;
     }
     if (wakeCommentContext) {
-      context.paperclipWakeComment = wakeCommentContext;
+      context.sentinelWakeComment = wakeCommentContext;
     } else {
-      delete context.paperclipWakeComment;
+      delete context.sentinelWakeComment;
     }
     if (taskMarkdown) {
-      context.paperclipTaskMarkdown = taskMarkdown;
+      context.sentinelTaskMarkdown = taskMarkdown;
     } else {
-      delete context.paperclipTaskMarkdown;
+      delete context.sentinelTaskMarkdown;
     }
     const existingExecutionWorkspace =
       issueRef?.executionWorkspaceId ? await executionWorkspacesSvc.getById(issueRef.executionWorkspaceId) : null;
@@ -7234,10 +7234,10 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
     });
     const modelProfileMetadata = modelProfileRunMetadata(modelProfileApplication);
     if (modelProfileMetadata) {
-      context.paperclipModelProfile = modelProfileMetadata;
+      context.sentinelModelProfile = modelProfileMetadata;
       if (modelProfileApplication.requested) context.modelProfile = modelProfileApplication.requested;
     } else {
-      delete context.paperclipModelProfile;
+      delete context.sentinelModelProfile;
     }
     const mergedConfig = mergeModelProfileAdapterConfig({
       baseConfig: persistedWorkspaceManagedConfig,
@@ -7259,11 +7259,11 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
       secretsSvc,
     });
     if (secretManifest.length > 0) {
-      context.paperclipSecrets = {
+      context.sentinelSecrets = {
         manifest: secretManifest,
       };
     } else {
-      delete context.paperclipSecrets;
+      delete context.sentinelSecrets;
     }
     const runScopedMentionedSkillKeys = await resolveRunScopedMentionedSkillKeys({
       db,
@@ -7484,7 +7484,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
     const workspaceRealization = realizationResult.workspaceRealization;
     const executionTarget = realizationResult.executionTarget;
     const remoteExecution = realizationResult.remoteExecution;
-    context.paperclipEnvironment = {
+    context.sentinelEnvironment = {
       id: selectedEnvironment.id,
       name: selectedEnvironment.name,
       driver: selectedEnvironment.driver,
@@ -7536,7 +7536,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
           ]
         : []),
     ];
-    context.paperclipWorkspace = {
+    context.sentinelWorkspace = {
       cwd: executionWorkspace.cwd,
       source: executionWorkspace.source,
       mode: effectiveExecutionWorkspaceMode,
@@ -7554,7 +7554,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         return home;
       })(),
     };
-    context.paperclipWorkspaces = resolvedWorkspace.workspaceHints;
+    context.sentinelWorkspaces = resolvedWorkspace.workspaceHints;
     const runtimeServiceIntents = (() => {
       const runtimeConfig = parseObject(resolvedConfig.workspaceRuntime);
       return Array.isArray(runtimeConfig.services)
@@ -7564,9 +7564,9 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         : [];
     })();
     if (runtimeServiceIntents.length > 0) {
-      context.paperclipRuntimeServiceIntents = runtimeServiceIntents;
+      context.sentinelRuntimeServiceIntents = runtimeServiceIntents;
     } else {
-      delete context.paperclipRuntimeServiceIntents;
+      delete context.sentinelRuntimeServiceIntents;
     }
     if (executionWorkspace.projectId && !readNonEmptyString(context.projectId)) {
       context.projectId = executionWorkspace.projectId;
@@ -7590,9 +7590,9 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
       continuationSummaryBody: continuationSummary?.body ?? null,
     });
     if (sessionCompaction.rotate) {
-      context.paperclipSessionHandoffMarkdown = sessionCompaction.handoffMarkdown;
-      context.paperclipSessionRotationReason = sessionCompaction.reason;
-      context.paperclipPreviousSessionId = previousSessionDisplayId ?? runtimeSessionIdForAdapter;
+      context.sentinelSessionHandoffMarkdown = sessionCompaction.handoffMarkdown;
+      context.sentinelSessionRotationReason = sessionCompaction.reason;
+      context.sentinelPreviousSessionId = previousSessionDisplayId ?? runtimeSessionIdForAdapter;
       runtimeSessionIdForAdapter = null;
       runtimeSessionParamsForAdapter = null;
       previousSessionDisplayId = null;
@@ -7602,9 +7602,9 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         );
       }
     } else {
-      delete context.paperclipSessionHandoffMarkdown;
-      delete context.paperclipSessionRotationReason;
-      delete context.paperclipPreviousSessionId;
+      delete context.sentinelSessionHandoffMarkdown;
+      delete context.sentinelSessionRotationReason;
+      delete context.sentinelPreviousSessionId;
     }
 
     const runtimeForAdapter = {
@@ -7783,8 +7783,8 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
         onLog,
       });
       if (runtimeServices.length > 0) {
-        context.paperclipRuntimeServices = runtimeServices;
-        context.paperclipRuntimePrimaryUrl =
+        context.sentinelRuntimeServices = runtimeServices;
+        context.sentinelRuntimePrimaryUrl =
           runtimeServices.find((service) => readNonEmptyString(service.url))?.url ?? null;
         await db
           .update(heartbeatRuns)
@@ -7842,7 +7842,7 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
             runId: run.id,
             adapterType: agent.adapterType,
           },
-          "local agent jwt secret missing or invalid; running without injected PAPERCLIP_API_KEY",
+          "local agent jwt secret missing or invalid; running without injected SENTINEL_API_KEY",
         );
       }
       // Upstream circuit breaker gate. If a recent burst of `*_transient_upstream`
@@ -7937,8 +7937,8 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
           ...runtimeServices,
           ...adapterManagedRuntimeServices,
         ];
-        context.paperclipRuntimeServices = combinedRuntimeServices;
-        context.paperclipRuntimePrimaryUrl =
+        context.sentinelRuntimeServices = combinedRuntimeServices;
+        context.sentinelRuntimePrimaryUrl =
           combinedRuntimeServices.find((service) => readNonEmptyString(service.url))?.url ?? null;
         await db
           .update(heartbeatRuns)

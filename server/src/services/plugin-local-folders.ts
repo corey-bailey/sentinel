@@ -592,7 +592,7 @@ export async function deletePluginLocalFolderFile(
 }
 
 export function defaultLocalFolderBasePath(pluginKey: string, companyId: string) {
-  return path.join(os.homedir(), ".paperclip", "plugin-data", companyId, pluginKey);
+  return path.join(os.homedir(), ".sentinel", "plugin-data", companyId, pluginKey);
 }
 
 export function assertConfiguredLocalFolder(status: PluginLocalFolderStatus) {

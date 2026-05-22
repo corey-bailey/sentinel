@@ -19,7 +19,7 @@ const AWS_SECRETS_MANAGER_SCHEME = "aws_secrets_manager_v1";
 const DEFAULT_PREFIX = "paperclip";
 const DEFAULT_OWNER_TAG = "paperclip";
 const DEFAULT_VERSION_STAGE = "AWSCURRENT";
-const PAPERCLIP_PENDING_VERSION_STAGE = "PAPERCLIP_PENDING";
+const SENTINEL_PENDING_VERSION_STAGE = "SENTINEL_PENDING";
 const DEFAULT_DELETE_RECOVERY_WINDOW_DAYS = 30;
 const AWS_SECRETS_MANAGER_REQUEST_TIMEOUT_MS = 30_000;
 const AWS_CREDENTIAL_CACHE_TTL_MS = 5 * 60_000;
@@ -290,18 +290,18 @@ function readProviderVaultConfig(input: SecretProviderVaultRuntimeConfig): AwsSe
   if (!region) {
     throw unprocessable("AWS Secrets Manager provider vault requires non-secret config: region");
   }
-  const recoveryWindowRaw = process.env.PAPERCLIP_SECRETS_AWS_DELETE_RECOVERY_DAYS?.trim();
+  const recoveryWindowRaw = process.env.SENTINEL_SECRETS_AWS_DELETE_RECOVERY_DAYS?.trim();
   const recoveryWindow = recoveryWindowRaw ? Number(recoveryWindowRaw) : DEFAULT_DELETE_RECOVERY_WINDOW_DAYS;
   if (!Number.isFinite(recoveryWindow) || recoveryWindow < 7 || recoveryWindow > 30) {
     throw unprocessable(
-      "PAPERCLIP_SECRETS_AWS_DELETE_RECOVERY_DAYS must be an integer between 7 and 30",
+      "SENTINEL_SECRETS_AWS_DELETE_RECOVERY_DAYS must be an integer between 7 and 30",
     );
   }
 
   return {
     region,
     endpoint:
-      process.env.PAPERCLIP_SECRETS_AWS_ENDPOINT?.trim() ||
+      process.env.SENTINEL_SECRETS_AWS_ENDPOINT?.trim() ||
       `https://secretsmanager.${region}.amazonaws.com`,
     deploymentId: sanitizePathSegment(
       asOptionalNonEmptyString(input.config.namespace) ?? input.id,
@@ -322,22 +322,22 @@ function readProviderVaultConfig(input: SecretProviderVaultRuntimeConfig): AwsSe
 
 function getAwsConfigReadiness() {
   const region = (
-    process.env.PAPERCLIP_SECRETS_AWS_REGION ??
+    process.env.SENTINEL_SECRETS_AWS_REGION ??
     process.env.AWS_REGION ??
     process.env.AWS_DEFAULT_REGION
   )?.trim();
-  const deploymentId = process.env.PAPERCLIP_SECRETS_AWS_DEPLOYMENT_ID?.trim();
-  const kmsKeyId = process.env.PAPERCLIP_SECRETS_AWS_KMS_KEY_ID?.trim();
+  const deploymentId = process.env.SENTINEL_SECRETS_AWS_DEPLOYMENT_ID?.trim();
+  const kmsKeyId = process.env.SENTINEL_SECRETS_AWS_KMS_KEY_ID?.trim();
   const missingConfig: string[] = [];
 
   if (!region) {
-    missingConfig.push("PAPERCLIP_SECRETS_AWS_REGION or AWS_REGION/AWS_DEFAULT_REGION");
+    missingConfig.push("SENTINEL_SECRETS_AWS_REGION or AWS_REGION/AWS_DEFAULT_REGION");
   }
   if (!deploymentId) {
-    missingConfig.push("PAPERCLIP_SECRETS_AWS_DEPLOYMENT_ID");
+    missingConfig.push("SENTINEL_SECRETS_AWS_DEPLOYMENT_ID");
   }
   if (!kmsKeyId) {
-    missingConfig.push("PAPERCLIP_SECRETS_AWS_KMS_KEY_ID");
+    missingConfig.push("SENTINEL_SECRETS_AWS_KMS_KEY_ID");
   }
 
   return {
@@ -373,11 +373,11 @@ function describeDetectedAwsCredentialSources() {
 function loadAwsSecretsManagerConfig(): AwsSecretsManagerConfig {
   const readiness = getAwsConfigReadiness();
   const region =
-    process.env.PAPERCLIP_SECRETS_AWS_REGION?.trim() ||
+    process.env.SENTINEL_SECRETS_AWS_REGION?.trim() ||
     process.env.AWS_REGION?.trim() ||
     process.env.AWS_DEFAULT_REGION?.trim();
-  const deploymentId = process.env.PAPERCLIP_SECRETS_AWS_DEPLOYMENT_ID?.trim();
-  const kmsKeyId = process.env.PAPERCLIP_SECRETS_AWS_KMS_KEY_ID?.trim();
+  const deploymentId = process.env.SENTINEL_SECRETS_AWS_DEPLOYMENT_ID?.trim();
+  const kmsKeyId = process.env.SENTINEL_SECRETS_AWS_KMS_KEY_ID?.trim();
 
   if (readiness.missingConfig.length > 0) {
     throw unprocessable(
@@ -386,42 +386,42 @@ function loadAwsSecretsManagerConfig(): AwsSecretsManagerConfig {
   }
   if (!region) {
     throw unprocessable(
-      "AWS Secrets Manager provider requires PAPERCLIP_SECRETS_AWS_REGION or AWS_REGION",
+      "AWS Secrets Manager provider requires SENTINEL_SECRETS_AWS_REGION or AWS_REGION",
     );
   }
   if (!deploymentId) {
     throw unprocessable(
-      "AWS Secrets Manager provider requires PAPERCLIP_SECRETS_AWS_DEPLOYMENT_ID",
+      "AWS Secrets Manager provider requires SENTINEL_SECRETS_AWS_DEPLOYMENT_ID",
     );
   }
   if (!kmsKeyId) {
     throw unprocessable(
-      "AWS Secrets Manager provider requires PAPERCLIP_SECRETS_AWS_KMS_KEY_ID",
+      "AWS Secrets Manager provider requires SENTINEL_SECRETS_AWS_KMS_KEY_ID",
     );
   }
 
-  const recoveryWindowRaw = process.env.PAPERCLIP_SECRETS_AWS_DELETE_RECOVERY_DAYS?.trim();
+  const recoveryWindowRaw = process.env.SENTINEL_SECRETS_AWS_DELETE_RECOVERY_DAYS?.trim();
   const recoveryWindow = recoveryWindowRaw ? Number(recoveryWindowRaw) : DEFAULT_DELETE_RECOVERY_WINDOW_DAYS;
   if (!Number.isFinite(recoveryWindow) || recoveryWindow < 7 || recoveryWindow > 30) {
     throw unprocessable(
-      "PAPERCLIP_SECRETS_AWS_DELETE_RECOVERY_DAYS must be an integer between 7 and 30",
+      "SENTINEL_SECRETS_AWS_DELETE_RECOVERY_DAYS must be an integer between 7 and 30",
     );
   }
 
   return {
     region,
     endpoint:
-      process.env.PAPERCLIP_SECRETS_AWS_ENDPOINT?.trim() ||
+      process.env.SENTINEL_SECRETS_AWS_ENDPOINT?.trim() ||
       `https://secretsmanager.${region}.amazonaws.com`,
     deploymentId,
-    prefix: sanitizePathSegment(process.env.PAPERCLIP_SECRETS_AWS_PREFIX?.trim() || DEFAULT_PREFIX),
+    prefix: sanitizePathSegment(process.env.SENTINEL_SECRETS_AWS_PREFIX?.trim() || DEFAULT_PREFIX),
     kmsKeyId,
     environmentTag:
-      process.env.PAPERCLIP_SECRETS_AWS_ENVIRONMENT?.trim() ||
+      process.env.SENTINEL_SECRETS_AWS_ENVIRONMENT?.trim() ||
       process.env.NODE_ENV?.trim() ||
       "unknown",
     providerOwnerTag:
-      process.env.PAPERCLIP_SECRETS_AWS_PROVIDER_OWNER?.trim() || DEFAULT_OWNER_TAG,
+      process.env.SENTINEL_SECRETS_AWS_PROVIDER_OWNER?.trim() || DEFAULT_OWNER_TAG,
     deleteRecoveryWindowDays: recoveryWindow,
   };
 }
@@ -629,9 +629,9 @@ function inferPathSignals(entry: AwsSecretsManagerListSecretEntry, tags: Map<str
   const name = entry.Name?.trim() || entry.ARN?.trim() || "";
   const segments = pathSegments(name);
   const paperclipDeploymentId = tagValue(tags, ["paperclip:deployment-id"]);
-  const paperclipManaged = tagValue(tags, ["paperclip:managed-by"])?.toLowerCase() === "paperclip";
+  const sentinelManaged = tagValue(tags, ["paperclip:managed-by"])?.toLowerCase() === "paperclip";
 
-  if (paperclipDeploymentId || paperclipManaged) {
+  if (paperclipDeploymentId || sentinelManaged) {
     return {
       prefix: segments[0] ?? DEFAULT_PREFIX,
       namespace: paperclipDeploymentId ?? segments[1] ?? null,
@@ -682,8 +682,8 @@ function discoverAwsProviderConfigCandidates(input: {
     environmentTag: string | null;
     ownerTag: string | null;
     kmsKeyId: string | null;
-    paperclipManaged: boolean;
-    paperclipCompanyId: string | null;
+    sentinelManaged: boolean;
+    sentinelCompanyId: string | null;
   };
 
   const skippedWarnings: string[] = [];
@@ -694,9 +694,9 @@ function discoverAwsProviderConfigCandidates(input: {
     const name = entry.Name?.trim() || entry.ARN?.trim();
     if (!name) continue;
     const tags = normalizeAwsTags(entry.Tags);
-    const paperclipManaged = tagValue(tags, ["paperclip:managed-by"])?.toLowerCase() === "paperclip";
-    const paperclipCompanyId = tagValue(tags, ["paperclip:company-id"]);
-    if (paperclipManaged && paperclipCompanyId !== input.companyId) {
+    const sentinelManaged = tagValue(tags, ["paperclip:managed-by"])?.toLowerCase() === "paperclip";
+    const sentinelCompanyId = tagValue(tags, ["paperclip:company-id"]);
+    if (sentinelManaged && sentinelCompanyId !== input.companyId) {
       skippedForeignPaperclipSampleCount += 1;
       continue;
     }
@@ -710,8 +710,8 @@ function discoverAwsProviderConfigCandidates(input: {
       environmentTag: tagValue(tags, ["paperclip:environment", "environment", "env", "stage"]),
       ownerTag: tagValue(tags, ["paperclip:provider-owner", "owner", "team", "service", "application"]),
       kmsKeyId: asOptionalNonEmptyString(entry.KmsKeyId),
-      paperclipManaged,
-      paperclipCompanyId,
+      sentinelManaged,
+      sentinelCompanyId,
     });
   }
 
@@ -761,7 +761,7 @@ function discoverAwsProviderConfigCandidates(input: {
       if (kmsKeys.length > 1 && !draftKmsKeyId) {
         candidateWarnings.push("Sampled AWS secrets use multiple KMS keys; choose the intended KMS key before saving.");
       }
-      if (group.some((sample) => sample.paperclipManaged && sample.paperclipCompanyId === input.companyId)) {
+      if (group.some((sample) => sample.sentinelManaged && sample.sentinelCompanyId === input.companyId)) {
         candidateWarnings.push("Sample includes Paperclip-managed secrets for this company; do not import them as external references.");
       }
 
@@ -795,7 +795,7 @@ function discoverAwsProviderConfigCandidates(input: {
           kmsKeyId: kmsKeyId ?? null,
           hasKmsKey: kmsKeys.length > 0,
           sampleCount: group.length,
-          paperclipManagedSampleCount: group.filter((sample) => sample.paperclipManaged).length,
+          sentinelManagedSampleCount: group.filter((sample) => sample.sentinelManaged).length,
           skippedForeignPaperclipSampleCount,
         },
         warnings: candidateWarnings,
@@ -1021,7 +1021,7 @@ export function createAwsSecretsManagerProvider(
     }
     const config = resolveConfig(input?.providerConfig);
     if (!config.prefix) {
-      warnings.push("PAPERCLIP_SECRETS_AWS_PREFIX should be set to a deployment-scoped prefix");
+      warnings.push("SENTINEL_SECRETS_AWS_PREFIX should be set to a deployment-scoped prefix");
     }
     return { ok: true, warnings };
   }
@@ -1093,16 +1093,16 @@ export function createAwsSecretsManagerProvider(
           requiredProviderConfig: input?.providerConfig
             ? ["region"]
             : [
-                "PAPERCLIP_SECRETS_AWS_REGION or AWS_REGION/AWS_DEFAULT_REGION",
-                "PAPERCLIP_SECRETS_AWS_DEPLOYMENT_ID",
-                "PAPERCLIP_SECRETS_AWS_KMS_KEY_ID",
+                "SENTINEL_SECRETS_AWS_REGION or AWS_REGION/AWS_DEFAULT_REGION",
+                "SENTINEL_SECRETS_AWS_DEPLOYMENT_ID",
+                "SENTINEL_SECRETS_AWS_KMS_KEY_ID",
               ],
           optionalProviderConfig: [
-            "PAPERCLIP_SECRETS_AWS_PREFIX",
-            "PAPERCLIP_SECRETS_AWS_ENVIRONMENT",
-            "PAPERCLIP_SECRETS_AWS_PROVIDER_OWNER",
-            "PAPERCLIP_SECRETS_AWS_ENDPOINT",
-            "PAPERCLIP_SECRETS_AWS_DELETE_RECOVERY_DAYS",
+            "SENTINEL_SECRETS_AWS_PREFIX",
+            "SENTINEL_SECRETS_AWS_ENVIRONMENT",
+            "SENTINEL_SECRETS_AWS_PROVIDER_OWNER",
+            "SENTINEL_SECRETS_AWS_ENDPOINT",
+            "SENTINEL_SECRETS_AWS_DELETE_RECOVERY_DAYS",
           ],
           credentialSource: "AWS SDK default credential provider chain",
           detectedCredentialSources: readiness.credentialSources,
@@ -1160,7 +1160,7 @@ export function createAwsSecretsManagerProvider(
         const created = await gateway.putSecretValue({
           SecretId: secretId,
           SecretString: input.value,
-          VersionStages: [PAPERCLIP_PENDING_VERSION_STAGE],
+          VersionStages: [SENTINEL_PENDING_VERSION_STAGE],
         });
         const normalizedSecretId = created.ARN ?? created.Name ?? secretId;
         return {
@@ -1292,7 +1292,7 @@ export function createAwsSecretsManagerProvider(
           if (material.versionId && gateway.updateSecretVersionStage) {
             await gateway.updateSecretVersionStage({
               SecretId: secretId,
-              VersionStage: PAPERCLIP_PENDING_VERSION_STAGE,
+              VersionStage: SENTINEL_PENDING_VERSION_STAGE,
               RemoveFromVersionId: material.versionId,
             });
           }

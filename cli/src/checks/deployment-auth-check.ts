@@ -15,7 +15,7 @@ export function deploymentAuthCheck(config: PaperclipConfig): CheckResult {
         status: "fail",
         message: `local_trusted requires loopback binding (found ${bind})`,
         canRepair: false,
-        repairHint: "Run `paperclipai configure --section server` and choose Local trusted / loopback reachability",
+        repairHint: "Run `sentinelai configure --section server` and choose Local trusted / loopback reachability",
       };
     }
     return {
@@ -27,12 +27,12 @@ export function deploymentAuthCheck(config: PaperclipConfig): CheckResult {
 
   const secret =
     process.env.BETTER_AUTH_SECRET?.trim() ??
-    process.env.PAPERCLIP_AGENT_JWT_SECRET?.trim();
+    process.env.SENTINEL_AGENT_JWT_SECRET?.trim();
   if (!secret) {
     return {
       name: "Deployment/auth mode",
       status: "fail",
-      message: "authenticated mode requires BETTER_AUTH_SECRET (or PAPERCLIP_AGENT_JWT_SECRET)",
+      message: "authenticated mode requires BETTER_AUTH_SECRET (or SENTINEL_AGENT_JWT_SECRET)",
       canRepair: false,
       repairHint: "Set BETTER_AUTH_SECRET before starting Paperclip",
     };
@@ -44,7 +44,7 @@ export function deploymentAuthCheck(config: PaperclipConfig): CheckResult {
       status: "fail",
       message: "auth.baseUrlMode=explicit requires auth.publicBaseUrl",
       canRepair: false,
-      repairHint: "Run `paperclipai configure --section server` and provide a base URL",
+      repairHint: "Run `sentinelai configure --section server` and provide a base URL",
     };
   }
 
@@ -55,7 +55,7 @@ export function deploymentAuthCheck(config: PaperclipConfig): CheckResult {
         status: "fail",
         message: "authenticated/public requires explicit auth.publicBaseUrl",
         canRepair: false,
-        repairHint: "Run `paperclipai configure --section server` and select public exposure",
+        repairHint: "Run `sentinelai configure --section server` and select public exposure",
       };
     }
     try {
@@ -75,7 +75,7 @@ export function deploymentAuthCheck(config: PaperclipConfig): CheckResult {
         status: "fail",
         message: "auth.publicBaseUrl is not a valid URL",
         canRepair: false,
-        repairHint: "Run `paperclipai configure --section server` and provide a valid URL",
+        repairHint: "Run `sentinelai configure --section server` and provide a valid URL",
       };
     }
   }

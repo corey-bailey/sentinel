@@ -46,7 +46,7 @@ The new direction is:
 4. the company package model is explicitly an extension of Agent Skills
 5. no future dependency on `paperclip.manifest.json`
 6. implicit folder discovery by convention for the common case
-7. an always-emitted `.paperclip.yaml` sidecar for high-fidelity Paperclip-specific details
+7. an always-emitted `.sentinel.yaml` sidecar for high-fidelity Paperclip-specific details
 8. package graph resolution at import time
 9. entity-level import UI with dependency-aware tree selection
 10. `skills.sh` compatibility is a V1 requirement for skill packages and skill installation flows
@@ -134,7 +134,7 @@ Rules:
 - `SKILL.md` stays Agent Skills compatible
 - the company package model is an extension of Agent Skills
 - the base package is vendor-neutral and intended for any agent-company runtime
-- Paperclip-specific fidelity lives in `.paperclip.yaml`
+- Paperclip-specific fidelity lives in `.sentinel.yaml`
 - Paperclip may resolve and install `SKILL.md` packages, but it must not require a Paperclip-only skill format
 - `skills.sh` compatibility is a V1 requirement, not a future nice-to-have
 
@@ -161,7 +161,7 @@ The repo format should have two layers:
   - implicit folder discovery by convention
   - no Paperclip-only runtime fields by default
 - Paperclip extension:
-  - `.paperclip.yaml`
+  - `.sentinel.yaml`
   - adapter/runtime/permissions/budget/workspace fidelity
   - emitted by Paperclip tools as a sidecar while the base package stays readable
 
@@ -380,9 +380,9 @@ Exports should:
 - omit timestamps and counters unless explicitly needed
 - omit secret values
 - omit local absolute paths
-- omit duplicated inline prompt content from `.paperclip.yaml` when `AGENTS.md` already carries the instructions
+- omit duplicated inline prompt content from `.sentinel.yaml` when `AGENTS.md` already carries the instructions
 - preserve references and attribution
-- emit `.paperclip.yaml` alongside the base package
+- emit `.sentinel.yaml` alongside the base package
 - express adapter env/secrets as portable env input declarations rather than exported secret binding ids
 - preserve compatible `SKILL.md` content as-is
 
@@ -483,9 +483,9 @@ The CLI should continue to support direct import/export without a registry.
 
 Target commands:
 
-- `paperclipai company export <company-id> --out <path>`
-- `paperclipai company import <path-or-url> --dry-run`
-- `paperclipai company import <path-or-url> --target existing -C <company-id>`
+- `sentinelai company export <company-id> --out <path>`
+- `sentinelai company import <path-or-url> --dry-run`
+- `sentinelai company import <path-or-url> --target existing -C <company-id>`
 
 Planned additions:
 

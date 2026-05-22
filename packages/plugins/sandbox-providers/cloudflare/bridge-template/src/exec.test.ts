@@ -24,7 +24,7 @@ describe("bridge exec", () => {
       command: "claude",
       args: ["--version"],
       cwd: "/workspace/paperclip",
-      env: { PAPERCLIP_TEST_FLAG: "1" },
+      env: { SENTINEL_TEST_FLAG: "1" },
       sessionStrategy: "named",
       sessionId: "paperclip",
       timeoutMs: 12_345,
@@ -40,7 +40,7 @@ describe("bridge exec", () => {
     expect(commandArg).toContain('. /etc/profile');
     expect(commandArg).toContain("cd ");
     expect(commandArg).toContain("/workspace/paperclip");
-    expect(commandArg).toContain("PAPERCLIP_TEST_FLAG");
+    expect(commandArg).toContain("SENTINEL_TEST_FLAG");
     expect(commandArg).toContain("claude");
     expect(commandArg).toContain("--version");
   });
@@ -106,7 +106,7 @@ describe("bridge exec", () => {
     expect(writeFile).toHaveBeenCalledTimes(1);
     const [stdinPath, stdinPayload] = writeFile.mock.calls[0] ?? [];
     expect(typeof stdinPath).toBe("string");
-    expect(stdinPath).toMatch(/^\/tmp\/\.paperclip-bridge-stdin-/);
+    expect(stdinPath).toMatch(/^\/tmp\/\.sentinel-bridge-stdin-/);
     expect(stdinPayload).toBe("payload-bytes");
 
     const commandArg = exec.mock.calls[0]?.[0];

@@ -39,7 +39,7 @@ curl -X POST http://127.0.0.1:3100/api/plugins/install \
 After the plugin is ready, run the scoped route against an existing issue:
 
 ```bash
-curl -X POST http://127.0.0.1:3100/api/plugins/paperclipai.plugin-orchestration-smoke-example/api/issues/<issue-id>/smoke \
+curl -X POST http://127.0.0.1:3100/api/plugins/sentinelai.plugin-orchestration-smoke-example/api/issues/<issue-id>/smoke \
   -H "Content-Type: application/json" \
   -d '{"assigneeAgentId":"<agent-id>"}'
 ```

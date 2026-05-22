@@ -244,11 +244,11 @@ describeEmbeddedPostgres("accepted plan workspace refresh", () => {
     };
     expect(adapterInput.runtime.sessionId).toBeNull();
     expect(adapterInput.runtime.sessionParams).toBeNull();
-    expect(adapterInput.context.paperclipWorkspace).toEqual(expect.objectContaining({
+    expect(adapterInput.context.sentinelWorkspace).toEqual(expect.objectContaining({
       mode: "isolated_workspace",
       strategy: "git_worktree",
     }));
-    expect((adapterInput.context.paperclipWorkspace as { cwd: string }).cwd).not.toBe(repoRoot);
+    expect((adapterInput.context.sentinelWorkspace as { cwd: string }).cwd).not.toBe(repoRoot);
 
     const refreshedIssue = await db
       .select({

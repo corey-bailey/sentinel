@@ -102,7 +102,7 @@ function projectWorkspace(overrides: Partial<ProjectWorkspace> = {}): ProjectWor
     name: "Primary checkout",
     sourceType: "local_path",
     cwd: "/tmp/paperclip",
-    repoUrl: "https://github.com/paperclipai/paperclip",
+    repoUrl: "https://github.com/sentinelai/paperclip",
     repoRef: "master",
     defaultRef: "origin/main",
     visibility: "default",

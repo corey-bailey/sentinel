@@ -6,8 +6,8 @@ import type {
   AdapterSkillSnapshot,
 } from "@sentinel/adapter-utils";
 import {
-  readPaperclipRuntimeSkillEntries,
-  resolvePaperclipDesiredSkillNames,
+  readSentinelRuntimeSkillEntries,
+  resolveSentinelDesiredSkillNames,
 } from "@sentinel/adapter-utils/server-utils";
 
 const __moduleDir = path.dirname(fileURLToPath(import.meta.url));
@@ -34,9 +34,9 @@ function unsupportedDetail(): string {
 
 async function buildAcpxSkillSnapshot(config: Record<string, unknown>): Promise<AdapterSkillSnapshot> {
   const acpxAgent = normalizeAcpxSkillAgent(config);
-  const availableEntries = await readPaperclipRuntimeSkillEntries(config, __moduleDir);
+  const availableEntries = await readSentinelRuntimeSkillEntries(config, __moduleDir);
   const availableByKey = new Map(availableEntries.map((entry) => [entry.key, entry]));
-  const desiredSkills = resolvePaperclipDesiredSkillNames(config, availableEntries);
+  const desiredSkills = resolveSentinelDesiredSkillNames(config, availableEntries);
   const desiredSet = new Set(desiredSkills);
   const supported = acpxAgent !== "custom";
   const warnings: string[] = supported

@@ -106,7 +106,7 @@ function writeTestConfig(configPath: string, tempRoot: string, port: number, con
 
 interface TestPaperclipEnv {
   configPath: string;
-  paperclipHome: string;
+  sentinelHome: string;
   instanceId: string;
   shellHome?: string;
 }
@@ -114,16 +114,16 @@ interface TestPaperclipEnv {
 function createBasePaperclipEnv(options: TestPaperclipEnv) {
   const env = { ...process.env };
   for (const key of Object.keys(env)) {
-    if (key.startsWith("PAPERCLIP_")) {
+    if (key.startsWith("SENTINEL_")) {
       delete env[key];
     }
   }
 
-  env.PAPERCLIP_CONFIG = options.configPath;
-  env.PAPERCLIP_HOME = options.paperclipHome;
-  env.PAPERCLIP_INSTANCE_ID = options.instanceId;
-  env.PAPERCLIP_CONTEXT = path.join(options.paperclipHome, "context.json");
-  env.PAPERCLIP_AUTH_STORE = path.join(options.paperclipHome, "auth.json");
+  env.SENTINEL_CONFIG = options.configPath;
+  env.SENTINEL_HOME = options.sentinelHome;
+  env.SENTINEL_INSTANCE_ID = options.instanceId;
+  env.SENTINEL_CONTEXT = path.join(options.sentinelHome, "context.json");
+  env.SENTINEL_AUTH_STORE = path.join(options.sentinelHome, "auth.json");
   if (options.shellHome) {
     env.HOME = options.shellHome;
   }
@@ -152,10 +152,10 @@ function createServerEnv(
   env.HOST = "127.0.0.1";
   env.PORT = String(port);
   env.SERVE_UI = "false";
-  env.PAPERCLIP_DB_BACKUP_ENABLED = "false";
+  env.SENTINEL_DB_BACKUP_ENABLED = "false";
   env.HEARTBEAT_SCHEDULER_ENABLED = "false";
-  env.PAPERCLIP_MIGRATION_AUTO_APPLY = "true";
-  env.PAPERCLIP_UI_DEV_MIDDLEWARE = "false";
+  env.SENTINEL_MIGRATION_AUTO_APPLY = "true";
+  env.SENTINEL_UI_DEV_MIDDLEWARE = "false";
 
   return env;
 }
@@ -166,10 +166,10 @@ function createCliEnv(options: TestPaperclipEnv) {
   delete env.PORT;
   delete env.HOST;
   delete env.SERVE_UI;
-  delete env.PAPERCLIP_DB_BACKUP_ENABLED;
+  delete env.SENTINEL_DB_BACKUP_ENABLED;
   delete env.HEARTBEAT_SCHEDULER_ENABLED;
-  delete env.PAPERCLIP_MIGRATION_AUTO_APPLY;
-  delete env.PAPERCLIP_UI_DEV_MIDDLEWARE;
+  delete env.SENTINEL_MIGRATION_AUTO_APPLY;
+  delete env.SENTINEL_UI_DEV_MIDDLEWARE;
   return env;
 }
 
@@ -213,7 +213,7 @@ async function runCliJson<T>(
   opts: TestPaperclipEnv & { apiBase?: string; includeConfigArg?: boolean },
 ) {
   const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
-  const cliArgs = ["--silent", "paperclipai", ...args];
+  const cliArgs = ["--silent", "sentinelai", ...args];
   if (opts.apiBase) {
     cliArgs.push("--api-base", opts.apiBase);
   }
@@ -247,7 +247,7 @@ async function waitForServer(
   while (Date.now() - startedAt < 30_000) {
     if (child.exitCode !== null) {
       throw new Error(
-        `paperclipai run exited before healthcheck succeeded.\nstdout:\n${output.stdout.join("")}\nstderr:\n${output.stderr.join("")}`,
+        `sentinelai run exited before healthcheck succeeded.\nstdout:\n${output.stdout.join("")}\nstderr:\n${output.stderr.join("")}`,
       );
     }
 
@@ -266,14 +266,14 @@ async function waitForServer(
   );
 }
 
-describeEmbeddedPostgres("paperclipai company import/export e2e", () => {
+describeEmbeddedPostgres("sentinelai company import/export e2e", () => {
   let tempRoot = "";
   let configPath = "";
   let exportDir = "";
   let apiBase = "";
-  let paperclipHome = "";
+  let sentinelHome = "";
   let cliShellHome = "";
-  let paperclipInstanceId = "";
+  let sentinelInstanceId = "";
   let serverProcess: ServerProcess | null = null;
   let tempDb: Awaited<ReturnType<typeof startEmbeddedPostgresTestDatabase>> | null = null;
 
@@ -281,10 +281,10 @@ describeEmbeddedPostgres("paperclipai company import/export e2e", () => {
     tempRoot = mkdtempSync(path.join(os.tmpdir(), "paperclip-company-cli-e2e-"));
     configPath = path.join(tempRoot, "config", "config.json");
     exportDir = path.join(tempRoot, "exported-company");
-    paperclipHome = path.join(tempRoot, "paperclip-home");
+    sentinelHome = path.join(tempRoot, "paperclip-home");
     cliShellHome = path.join(tempRoot, "shell-home");
-    paperclipInstanceId = "company-cli-e2e";
-    mkdirSync(paperclipHome, { recursive: true });
+    sentinelInstanceId = "company-cli-e2e";
+    mkdirSync(sentinelHome, { recursive: true });
     mkdirSync(cliShellHome, { recursive: true });
 
     tempDb = await startEmbeddedPostgresTestDatabase("paperclip-company-cli-db-");
@@ -297,12 +297,12 @@ describeEmbeddedPostgres("paperclipai company import/export e2e", () => {
     const output = { stdout: [] as string[], stderr: [] as string[] };
     const child = spawn(
       "pnpm",
-      ["paperclipai", "run", "--config", configPath],
+      ["sentinelai", "run", "--config", configPath],
       {
         cwd: repoRoot,
         env: createServerEnv(configPath, port, tempDb.connectionString, {
-          paperclipHome,
-          instanceId: paperclipInstanceId,
+          sentinelHome,
+          instanceId: sentinelInstanceId,
           shellHome: cliShellHome,
         }),
         stdio: ["ignore", "pipe", "pipe"],
@@ -338,15 +338,15 @@ describeEmbeddedPostgres("paperclipai company import/export e2e", () => {
       ["context", "set", "--profile", "isolation-check", "--api-base", "https://example.test"],
       {
         configPath,
-        paperclipHome,
-        instanceId: paperclipInstanceId,
+        sentinelHome,
+        instanceId: sentinelInstanceId,
         shellHome: cliShellHome,
         includeConfigArg: false,
       },
     );
 
-    const expectedContextPath = path.join(paperclipHome, "context.json");
-    const leakedContextPath = path.join(cliShellHome, ".paperclip", "context.json");
+    const expectedContextPath = path.join(sentinelHome, "context.json");
+    const leakedContextPath = path.join(cliShellHome, ".sentinel", "context.json");
     expect(cliContext.contextPath).toBe(expectedContextPath);
     expect(cliContext.profileName).toBe("isolation-check");
     expect(cliContext.profile.apiBase).toBe("https://example.test");
@@ -434,8 +434,8 @@ describeEmbeddedPostgres("paperclipai company import/export e2e", () => {
       {
         apiBase,
         configPath,
-        paperclipHome,
-        instanceId: paperclipInstanceId,
+        sentinelHome,
+        instanceId: sentinelInstanceId,
         shellHome: cliShellHome,
       },
     );
@@ -443,7 +443,7 @@ describeEmbeddedPostgres("paperclipai company import/export e2e", () => {
     expect(exportResult.ok).toBe(true);
     expect(exportResult.filesWritten).toBeGreaterThan(0);
     expect(readFileSync(path.join(exportDir, "COMPANY.md"), "utf8")).toContain(sourceCompany.name);
-    expect(readFileSync(path.join(exportDir, ".paperclip.yaml"), "utf8")).toContain('schema: "paperclip/v1"');
+    expect(readFileSync(path.join(exportDir, ".sentinel.yaml"), "utf8")).toContain('schema: "paperclip/v1"');
 
     const importedNew = await runCliJson<{
       company: { id: string; name: string; action: string };
@@ -464,8 +464,8 @@ describeEmbeddedPostgres("paperclipai company import/export e2e", () => {
       {
         apiBase,
         configPath,
-        paperclipHome,
-        instanceId: paperclipInstanceId,
+        sentinelHome,
+        instanceId: sentinelInstanceId,
         shellHome: cliShellHome,
       },
     );
@@ -518,8 +518,8 @@ describeEmbeddedPostgres("paperclipai company import/export e2e", () => {
       {
         apiBase,
         configPath,
-        paperclipHome,
-        instanceId: paperclipInstanceId,
+        sentinelHome,
+        instanceId: sentinelInstanceId,
         shellHome: cliShellHome,
       },
     );
@@ -551,8 +551,8 @@ describeEmbeddedPostgres("paperclipai company import/export e2e", () => {
       {
         apiBase,
         configPath,
-        paperclipHome,
-        instanceId: paperclipInstanceId,
+        sentinelHome,
+        instanceId: sentinelInstanceId,
         shellHome: cliShellHome,
       },
     );
@@ -604,8 +604,8 @@ describeEmbeddedPostgres("paperclipai company import/export e2e", () => {
       {
         apiBase,
         configPath,
-        paperclipHome,
-        instanceId: paperclipInstanceId,
+        sentinelHome,
+        instanceId: sentinelInstanceId,
         shellHome: cliShellHome,
       },
     );

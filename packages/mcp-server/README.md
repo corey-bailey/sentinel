@@ -18,13 +18,13 @@ The server reads its configuration from environment variables:
 ## Usage
 
 ```sh
-npx -y @paperclipai/mcp-server
+npx -y @sentinelai/mcp-server
 ```
 
 Or locally in this repo:
 
 ```sh
-pnpm --filter @paperclipai/mcp-server build
+pnpm --filter @sentinelai/mcp-server build
 node packages/mcp-server/dist/stdio.js
 ```
 

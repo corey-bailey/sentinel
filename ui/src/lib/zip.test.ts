@@ -218,7 +218,7 @@ describe("createZipArchive", () => {
       {
         "COMPANY.md": "# Company\n",
         "agents/ceo/AGENTS.md": "# CEO\n",
-        ".paperclip.yaml": "schema: paperclip/v1\n",
+        ".sentinel.yaml": "schema: paperclip/v1\n",
       },
       "paperclip-demo",
     );
@@ -228,7 +228,7 @@ describe("createZipArchive", () => {
       files: {
         "COMPANY.md": "# Company\n",
         "agents/ceo/AGENTS.md": "# CEO\n",
-        ".paperclip.yaml": "schema: paperclip/v1\n",
+        ".sentinel.yaml": "schema: paperclip/v1\n",
       },
     });
   });

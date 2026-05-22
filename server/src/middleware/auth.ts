@@ -200,7 +200,7 @@ export function actorMiddleware(db: Db, opts: ActorMiddlewareOptions): RequestHa
 }
 
 async function resolveCloudTenantActor(db: Db, req: Request): Promise<Express.Request["actor"] | null> {
-  const expectedToken = process.env.PAPERCLIP_CLOUD_TENANT_SERVER_TOKEN?.trim();
+  const expectedToken = process.env.SENTINEL_CLOUD_TENANT_SERVER_TOKEN?.trim();
   if (!expectedToken) return null;
 
   const token = req.header("x-paperclip-cloud-tenant-token")?.trim();
@@ -211,9 +211,9 @@ async function resolveCloudTenantActor(db: Db, req: Request): Promise<Express.Re
   const stackId = requiredCloudHeader(req, "x-paperclip-cloud-stack-id");
   const stackRole = stackMembershipRole(req.header("x-paperclip-cloud-stack-role"));
   const userName = req.header("x-paperclip-cloud-user-name")?.trim() || userEmail;
-  const paperclipCompanyId = req.header("x-paperclip-cloud-paperclip-company-id")?.trim();
+  const sentinelCompanyId = req.header("x-paperclip-cloud-paperclip-company-id")?.trim();
   const companyId = cloudTenantCompanyId(stackId);
-  const companyName = paperclipCompanyId || `${stackId} Paperclip`;
+  const companyName = sentinelCompanyId || `${stackId} Paperclip`;
   const now = new Date();
 
   await db

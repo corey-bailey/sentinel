@@ -19,7 +19,7 @@ async function createSkillDir(root: string, name: string) {
 }
 
 describe("cursor local skill sync", () => {
-  const paperclipKey = "paperclipai/paperclip/paperclip";
+  const paperclipKey = "sentinelai/paperclip/paperclip";
   const cleanupDirs = new Set<string>();
 
   afterEach(async () => {
@@ -39,7 +39,7 @@ describe("cursor local skill sync", () => {
         env: {
           HOME: home,
         },
-        paperclipSkillSync: {
+        sentinelSkillSync: {
           desiredSkills: [paperclipKey],
         },
       },
@@ -87,7 +87,7 @@ describe("cursor local skill sync", () => {
             source: asciiHeartDir,
           },
         ],
-        paperclipSkillSync: {
+        sentinelSkillSync: {
           desiredSkills: ["ascii-heart"],
         },
       },
@@ -116,7 +116,7 @@ describe("cursor local skill sync", () => {
         env: {
           HOME: home,
         },
-        paperclipSkillSync: {
+        sentinelSkillSync: {
           desiredSkills: [paperclipKey],
         },
       },
@@ -130,7 +130,7 @@ describe("cursor local skill sync", () => {
         env: {
           HOME: home,
         },
-        paperclipSkillSync: {
+        sentinelSkillSync: {
           desiredSkills: [],
         },
       },

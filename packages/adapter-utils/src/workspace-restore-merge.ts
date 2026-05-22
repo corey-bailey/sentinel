@@ -152,7 +152,7 @@ async function acquireDirectoryMergeLock(lockDir: string): Promise<() => Promise
       if (code !== "EEXIST") throw error;
       // Stale-lock detection: if the owner PID is dead (SIGKILL / OOM / crash),
       // the lockDir would otherwise persist forever and stall restores. Mirror
-      // the materializePaperclipSkillCopy lock pattern — remove and retry.
+      // the materializeSentinelSkillCopy lock pattern — remove and retry.
       if (!(await isHolderAlive(lockDir))) {
         await fs.rm(lockDir, { recursive: true, force: true }).catch(() => undefined);
         continue;

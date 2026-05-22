@@ -237,7 +237,7 @@ describe("Cloudflare sandbox provider plugin", () => {
       args: ["-lc", "ls"],
       cwd: "/workspace/paperclip",
       env: {
-        PAPERCLIP_SANDBOX_EXEC_CHANNEL: "bridge",
+        SENTINEL_SANDBOX_EXEC_CHANNEL: "bridge",
         KEEP_ME: "visible",
       },
       config: {
@@ -255,7 +255,7 @@ describe("Cloudflare sandbox provider plugin", () => {
         KEEP_ME: "visible",
       },
     });
-    expect(requestBodyAt().env).not.toHaveProperty("PAPERCLIP_SANDBOX_EXEC_CHANNEL");
+    expect(requestBodyAt().env).not.toHaveProperty("SENTINEL_SANDBOX_EXEC_CHANNEL");
     // Bridge-channel commands must use the non-streaming exec path. The
     // @cloudflare/sandbox SDK's streaming mode can drop the final stdout
     // chunk when a short shell exits the same tick it writes — bridge ops

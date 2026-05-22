@@ -93,11 +93,11 @@ V1 implementation extends this baseline into a company-centric, governance-aware
 ## 6.2 Data Stores
 
 - Primary: PostgreSQL
-- Local default: embedded PostgreSQL at `~/.paperclip/instances/default/db`
+- Local default: embedded PostgreSQL at `~/.sentinel/instances/default/db`
 - Optional local prod-like: Docker Postgres
 - Optional hosted: Supabase/Postgres-compatible
 - File/object storage:
-  - local default: `~/.paperclip/instances/default/data/storage` (`local_disk`)
+  - local default: `~/.sentinel/instances/default/data/storage` (`local_disk`)
   - cloud: S3-compatible object storage (`s3`)
 
 ## 6.3 Background Processing
@@ -800,7 +800,7 @@ Required UX behaviors:
 
 - Node 20+
 - `DATABASE_URL` optional
-- if unset, auto-use embedded PostgreSQL under `~/.paperclip/instances/default/db`
+- if unset, auto-use embedded PostgreSQL under `~/.sentinel/instances/default/db`
 
 ## 15.2 Migrations
 
@@ -928,7 +928,7 @@ V1 supports company import/export using a portable package contract:
 
 - markdown-first package rooted at `COMPANY.md`
 - implicit folder discovery by convention
-- `.paperclip.yaml` sidecar for Paperclip-specific fidelity
+- `.sentinel.yaml` sidecar for Paperclip-specific fidelity
 - canonical base package is vendor-neutral and aligned with `docs/companies/companies-spec.md`
 - common conventions:
   - `agents/<slug>/AGENTS.md`
@@ -940,11 +940,11 @@ V1 supports company import/export using a portable package contract:
 
 Export/import behavior in V1:
 
-- export emits a clean vendor-neutral markdown package plus `.paperclip.yaml`
+- export emits a clean vendor-neutral markdown package plus `.sentinel.yaml`
 - projects and starter tasks are opt-in export content rather than default package content
-- recurring `TASK.md` entries use `recurring: true` in the base package and Paperclip routine fidelity in `.paperclip.yaml`
+- recurring `TASK.md` entries use `recurring: true` in the base package and Paperclip routine fidelity in `.sentinel.yaml`
 - Paperclip imports recurring task packages as routines instead of downgrading them to one-time issues
-- export strips environment-specific paths (`cwd`, local instruction file paths, inline prompt duplication) while preserving portable project repo/workspace metadata such as `repoUrl`, refs, and workspace-policy references keyed in `.paperclip.yaml`
+- export strips environment-specific paths (`cwd`, local instruction file paths, inline prompt duplication) while preserving portable project repo/workspace metadata such as `repoUrl`, refs, and workspace-policy references keyed in `.sentinel.yaml`
 - export never includes secret values; env inputs are reported as portable declarations instead
 - import supports target modes:
   - create a new company

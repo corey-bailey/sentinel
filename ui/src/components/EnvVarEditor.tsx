@@ -316,7 +316,7 @@ export function EnvVarEditor({
       })()}
       <p className="text-[11px] text-muted-foreground/60">
         Set KEY to the env var name the process expects, for example GH_TOKEN. Choose Secret to resolve a stored
-        value at run start. PAPERCLIP_* variables are injected automatically.
+        value at run start. SENTINEL_* variables are injected automatically.
       </p>
     </div>
   );

@@ -126,19 +126,19 @@ describe("resolveExecutionRunAdapterConfig", () => {
       agentId: "agent-1",
       executionRunConfig: {
         env: {
-          PAPERCLIP_API_KEY: { type: "secret_ref", secretId: "secret-api-key", version: "latest" },
-          PAPERCLIP_AGENT_ID: "spoofed-agent",
+          SENTINEL_API_KEY: { type: "secret_ref", secretId: "secret-api-key", version: "latest" },
+          SENTINEL_AGENT_ID: "spoofed-agent",
           AGENT_ONLY: "agent-only",
         },
       },
       projectEnv: {
-        PAPERCLIP_API_KEY: "project-api-key",
-        PAPERCLIP_COMPANY_ID: "spoofed-company",
+        SENTINEL_API_KEY: "project-api-key",
+        SENTINEL_COMPANY_ID: "spoofed-company",
         PROJECT_ONLY: "project-only",
       },
       routineEnv: {
-        PAPERCLIP_API_KEY: "routine-api-key",
-        PAPERCLIP_RUN_ID: "spoofed-run",
+        SENTINEL_API_KEY: "routine-api-key",
+        SENTINEL_RUN_ID: "spoofed-run",
         ROUTINE_ONLY: "routine-only",
       },
       routineId: "routine-1",
@@ -164,7 +164,7 @@ describe("resolveExecutionRunAdapterConfig", () => {
       PROJECT_ONLY: "project-only",
       ROUTINE_ONLY: "routine-only",
     });
-    expect(JSON.stringify(result.resolvedConfig.env)).not.toContain("PAPERCLIP_");
+    expect(JSON.stringify(result.resolvedConfig.env)).not.toContain("SENTINEL_");
   });
 
   it("skips project env resolution when the project has no bindings", async () => {
@@ -210,30 +210,30 @@ describe("applyRunScopedMentionedSkillKeys", () => {
   it("adds mentioned skills without mutating the original config", () => {
     const originalConfig = {
       command: "codex",
-      paperclipSkillSync: {
-        desiredSkills: ["paperclipai/paperclip/paperclip"],
+      sentinelSkillSync: {
+        desiredSkills: ["sentinelai/paperclip/paperclip"],
       },
     };
 
     const updatedConfig = applyRunScopedMentionedSkillKeys(originalConfig, [
       "company/company-1/release-changelog",
-      "paperclipai/paperclip/paperclip",
+      "sentinelai/paperclip/paperclip",
       "company/company-1/release-changelog",
     ]);
 
     expect(updatedConfig).toEqual({
       command: "codex",
-      paperclipSkillSync: {
+      sentinelSkillSync: {
         desiredSkills: [
-          "paperclipai/paperclip/paperclip",
+          "sentinelai/paperclip/paperclip",
           "company/company-1/release-changelog",
         ],
       },
     });
     expect(originalConfig).toEqual({
       command: "codex",
-      paperclipSkillSync: {
-        desiredSkills: ["paperclipai/paperclip/paperclip"],
+      sentinelSkillSync: {
+        desiredSkills: ["sentinelai/paperclip/paperclip"],
       },
     });
   });

@@ -35,7 +35,7 @@ import {
   type FeedbackTraceTargetSummary,
   type FeedbackVoteValue,
 } from "@sentinel/shared";
-import { resolveHomeAwarePath, resolvePaperclipInstanceRoot } from "../home-paths.js";
+import { resolveHomeAwarePath, resolveSentinelInstanceRoot } from "../home-paths.js";
 import { notFound, unprocessable } from "../errors.js";
 import { agentInstructionsService } from "./agent-instructions.js";
 import {
@@ -391,7 +391,7 @@ async function buildCodexTraceFiles(input: {
   }
 
   const managedRoot = path.join(
-    resolvePaperclipInstanceRoot(),
+    resolveSentinelInstanceRoot(),
     "companies",
     input.companyId,
     "codex-home",
@@ -588,7 +588,7 @@ async function buildOpenCodeTraceFiles(input: {
   }
 
   const opencodeRoot = resolveHomeAwarePath(
-    process.env.PAPERCLIP_OPENCODE_STORAGE_DIR ?? "~/.local/share/opencode",
+    process.env.SENTINEL_OPENCODE_STORAGE_DIR ?? "~/.local/share/opencode",
   );
   const sessionRoot = path.join(opencodeRoot, "storage", "session");
   const diffRoot = path.join(opencodeRoot, "storage", "session_diff");

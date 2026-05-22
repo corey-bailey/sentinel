@@ -23,20 +23,20 @@ import {
   asString,
   asStringArray,
   buildInvocationEnvForLogs,
-  buildPaperclipEnv,
+  buildSentinelEnv,
   ensureAbsoluteDirectory,
   ensurePathInEnv,
   joinPromptSections,
-  materializePaperclipSkillCopy,
+  materializeSentinelSkillCopy,
   parseObject,
-  readPaperclipIssueWorkModeFromContext,
-  readPaperclipRuntimeSkillEntries,
+  readSentinelIssueWorkModeFromContext,
+  readSentinelRuntimeSkillEntries,
   renderTemplate,
-  renderPaperclipWakePrompt,
-  resolvePaperclipDesiredSkillNames,
-  stringifyPaperclipWakePayload,
+  renderSentinelWakePrompt,
+  resolveSentinelDesiredSkillNames,
+  stringifySentinelWakePayload,
   refreshPaperclipWorkspaceEnvForExecution,
-  DEFAULT_PAPERCLIP_AGENT_PROMPT_TEMPLATE,
+  DEFAULT_SENTINEL_AGENT_PROMPT_TEMPLATE,
 } from "@sentinel/adapter-utils/server-utils";
 import { DEFAULT_GROK_LOCAL_MODEL } from "../index.js";
 import { isGrokUnknownSessionError, parseGrokJsonl } from "./parse.js";
@@ -59,12 +59,12 @@ function hasNonEmptyEnvValue(env: Record<string, string>, key: string): boolean 
 
 function renderPaperclipEnvNote(env: Record<string, string>): string {
   const paperclipKeys = Object.keys(env)
-    .filter((key) => key.startsWith("PAPERCLIP_"))
+    .filter((key) => key.startsWith("SENTINEL_"))
     .sort();
   if (paperclipKeys.length === 0) return "";
   return [
     "Paperclip runtime note:",
-    `The following PAPERCLIP_* environment variables are available in this run: ${paperclipKeys.join(", ")}`,
+    `The following SENTINEL_* environment variables are available in this run: ${paperclipKeys.join(", ")}`,
     "Do not assume these variables are missing without checking your shell environment.",
     "",
     "",
@@ -72,7 +72,7 @@ function renderPaperclipEnvNote(env: Record<string, string>): string {
 }
 
 function renderApiAccessNote(env: Record<string, string>): string {
-  if (!hasNonEmptyEnvValue(env, "PAPERCLIP_API_URL") || !hasNonEmptyEnvValue(env, "PAPERCLIP_API_KEY")) return "";
+  if (!hasNonEmptyEnvValue(env, "SENTINEL_API_URL") || !hasNonEmptyEnvValue(env, "SENTINEL_API_KEY")) return "";
   return [
     "Paperclip API access note:",
     "Use shell commands with curl to make Paperclip API requests when needed.",
@@ -162,7 +162,7 @@ async function stageGrokProjectAssets(input: {
         );
         continue;
       }
-      await materializePaperclipSkillCopy(skill.source, target);
+      await materializeSentinelSkillCopy(skill.source, target);
       ensureCleanupDir(target);
       stagedSkillsCount += 1;
     }
@@ -198,7 +198,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
 
   const promptTemplate = asString(
     config.promptTemplate,
-    DEFAULT_PAPERCLIP_AGENT_PROMPT_TEMPLATE,
+    DEFAULT_SENTINEL_AGENT_PROMPT_TEMPLATE,
   );
   const command = asString(config.command, "grok");
   const model = asString(config.model, DEFAULT_GROK_LOCAL_MODEL).trim();
@@ -208,15 +208,15 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   const alwaysApprove = asBoolean(config.alwaysApprove, true);
   const disableWebSearch = asBoolean(config.disableWebSearch, true);
 
-  const workspaceContext = parseObject(context.paperclipWorkspace);
+  const workspaceContext = parseObject(context.sentinelWorkspace);
   const workspaceCwd = asString(workspaceContext.cwd, "");
   const workspaceSource = asString(workspaceContext.source, "");
   const workspaceId = asString(workspaceContext.workspaceId, "");
   const workspaceRepoUrl = asString(workspaceContext.repoUrl, "");
   const workspaceRepoRef = asString(workspaceContext.repoRef, "");
   const agentHome = asString(workspaceContext.agentHome, "");
-  const workspaceHints = Array.isArray(context.paperclipWorkspaces)
-    ? context.paperclipWorkspaces.filter(
+  const workspaceHints = Array.isArray(context.sentinelWorkspaces)
+    ? context.sentinelWorkspaces.filter(
         (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null,
       )
     : [];
@@ -227,8 +227,8 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   let effectiveExecutionCwd = adapterExecutionTargetRemoteCwd(executionTarget, cwd);
   await ensureAbsoluteDirectory(cwd, { createIfMissing: true });
 
-  const grokSkillEntries = await readPaperclipRuntimeSkillEntries(config, __moduleDir);
-  const desiredGrokSkillNames = resolvePaperclipDesiredSkillNames(config, grokSkillEntries);
+  const grokSkillEntries = await readSentinelRuntimeSkillEntries(config, __moduleDir);
+  const desiredGrokSkillNames = resolveSentinelDesiredSkillNames(config, grokSkillEntries);
   const instructionsFilePath = asString(config.instructionsFilePath, "").trim();
   const stagedAssets = await stageGrokProjectAssets({
     cwd,
@@ -242,9 +242,9 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   try {
     const envConfig = parseObject(config.env);
     const hasExplicitApiKey =
-      typeof envConfig.PAPERCLIP_API_KEY === "string" && envConfig.PAPERCLIP_API_KEY.trim().length > 0;
-    const env: Record<string, string> = { ...buildPaperclipEnv(agent) };
-    env.PAPERCLIP_RUN_ID = runId;
+      typeof envConfig.SENTINEL_API_KEY === "string" && envConfig.SENTINEL_API_KEY.trim().length > 0;
+    const env: Record<string, string> = { ...buildSentinelEnv(agent) };
+    env.SENTINEL_RUN_ID = runId;
     const wakeTaskId =
       (typeof context.taskId === "string" && context.taskId.trim().length > 0 && context.taskId.trim()) ||
       (typeof context.issueId === "string" && context.issueId.trim().length > 0 && context.issueId.trim()) ||
@@ -268,16 +268,16 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     const linkedIssueIds = Array.isArray(context.issueIds)
       ? context.issueIds.filter((value: unknown): value is string => typeof value === "string" && value.trim().length > 0)
       : [];
-    const wakePayloadJson = stringifyPaperclipWakePayload(context.paperclipWake);
-    const issueWorkMode = readPaperclipIssueWorkModeFromContext(context);
-    if (wakeTaskId) env.PAPERCLIP_TASK_ID = wakeTaskId;
-    if (issueWorkMode) env.PAPERCLIP_ISSUE_WORK_MODE = issueWorkMode;
-    if (wakeReason) env.PAPERCLIP_WAKE_REASON = wakeReason;
-    if (wakeCommentId) env.PAPERCLIP_WAKE_COMMENT_ID = wakeCommentId;
-    if (approvalId) env.PAPERCLIP_APPROVAL_ID = approvalId;
-    if (approvalStatus) env.PAPERCLIP_APPROVAL_STATUS = approvalStatus;
-    if (linkedIssueIds.length > 0) env.PAPERCLIP_LINKED_ISSUE_IDS = linkedIssueIds.join(",");
-    if (wakePayloadJson) env.PAPERCLIP_WAKE_PAYLOAD_JSON = wakePayloadJson;
+    const wakePayloadJson = stringifySentinelWakePayload(context.sentinelWake);
+    const issueWorkMode = readSentinelIssueWorkModeFromContext(context);
+    if (wakeTaskId) env.SENTINEL_TASK_ID = wakeTaskId;
+    if (issueWorkMode) env.SENTINEL_ISSUE_WORK_MODE = issueWorkMode;
+    if (wakeReason) env.SENTINEL_WAKE_REASON = wakeReason;
+    if (wakeCommentId) env.SENTINEL_WAKE_COMMENT_ID = wakeCommentId;
+    if (approvalId) env.SENTINEL_APPROVAL_ID = approvalId;
+    if (approvalStatus) env.SENTINEL_APPROVAL_STATUS = approvalStatus;
+    if (linkedIssueIds.length > 0) env.SENTINEL_LINKED_ISSUE_IDS = linkedIssueIds.join(",");
+    if (wakePayloadJson) env.SENTINEL_WAKE_PAYLOAD_JSON = wakePayloadJson;
     refreshPaperclipWorkspaceEnvForExecution({
       env,
       envConfig,
@@ -292,7 +292,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       executionCwd: effectiveExecutionCwd,
     });
     if (!hasExplicitApiKey && authToken) {
-      env.PAPERCLIP_API_KEY = authToken;
+      env.SENTINEL_API_KEY = authToken;
     }
 
     const timeoutSec = resolveAdapterExecutionTargetTimeoutSec(
@@ -407,10 +407,10 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       run: { id: runId, source: "on_demand" },
       context,
     };
-    const wakePrompt = renderPaperclipWakePrompt(context.paperclipWake, { resumedSession: Boolean(sessionId) });
+    const wakePrompt = renderSentinelWakePrompt(context.sentinelWake, { resumedSession: Boolean(sessionId) });
     const shouldUseResumeDeltaPrompt = Boolean(sessionId) && wakePrompt.length > 0;
     const renderedPrompt = shouldUseResumeDeltaPrompt ? "" : renderTemplate(promptTemplate, templateData);
-    const sessionHandoffNote = asString(context.paperclipSessionHandoffMarkdown, "").trim();
+    const sessionHandoffNote = asString(context.sentinelSessionHandoffMarkdown, "").trim();
     const paperclipEnvNote = renderPaperclipEnvNote(env);
     const apiAccessNote = renderApiAccessNote(env);
     const prompt = joinPromptSections([

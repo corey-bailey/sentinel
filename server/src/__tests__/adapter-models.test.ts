@@ -17,7 +17,7 @@ vi.mock("acpx/runtime", () => ({
 describe("adapter model listing", () => {
   beforeEach(() => {
     delete process.env.OPENAI_API_KEY;
-    delete process.env.PAPERCLIP_OPENCODE_COMMAND;
+    delete process.env.SENTINEL_OPENCODE_COMMAND;
     resetCodexModelsCacheForTests();
     resetCursorModelsCacheForTests();
     setCursorModelsRunnerForTests(null);
@@ -116,7 +116,7 @@ describe("adapter model listing", () => {
   });
 
   it("returns opencode fallback models including gpt-5.4", async () => {
-    process.env.PAPERCLIP_OPENCODE_COMMAND = "__paperclip_missing_opencode_command__";
+    process.env.SENTINEL_OPENCODE_COMMAND = "__paperclip_missing_opencode_command__";
 
     const models = await listAdapterModels("opencode_local");
 

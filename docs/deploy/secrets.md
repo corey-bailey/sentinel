@@ -56,12 +56,12 @@ own `PAPERCLIP_*` runtime variables.
 Secrets are encrypted with a local master key stored at:
 
 ```
-~/.paperclip/instances/default/secrets/master.key
+~/.sentinel/instances/default/secrets/master.key
 ```
 
 This key is auto-created during onboarding. The key never leaves your machine.
 Paperclip best-effort enforces `0600` permissions when it creates or loads the
-key file. `paperclipai doctor` and the provider health API warn when the file is
+key file. `sentinelai doctor` and the provider health API warn when the file is
 readable by group or other users.
 
 Back up the key file together with database backups. A database backup without
@@ -75,20 +75,20 @@ metadata is not enough to restore named secret versions.
 Onboarding writes default secrets config:
 
 ```sh
-pnpm paperclipai onboard
+pnpm sentinelai onboard
 ```
 
 Update secrets settings:
 
 ```sh
-pnpm paperclipai configure --section secrets
+pnpm sentinelai configure --section secrets
 ```
 
 Validate secrets config:
 
 ```sh
-pnpm paperclipai doctor
-pnpm paperclipai secrets doctor --company-id <company-id>
+pnpm sentinelai doctor
+pnpm sentinelai secrets doctor --company-id <company-id>
 ```
 
 ### Environment Overrides
@@ -355,8 +355,8 @@ store.
 If you have existing agents with inline API keys in their config, migrate them to encrypted secret refs:
 
 ```sh
-pnpm paperclipai secrets migrate-inline-env --company-id <company-id>
-pnpm paperclipai secrets migrate-inline-env --company-id <company-id> --apply
+pnpm sentinelai secrets migrate-inline-env --company-id <company-id>
+pnpm sentinelai secrets migrate-inline-env --company-id <company-id> --apply
 
 # low-level script for direct database maintenance
 pnpm secrets:migrate-inline-env         # dry run
@@ -373,7 +373,7 @@ Company exports include only environment declarations. They do not include
 secret IDs, provider references, encrypted material, or plaintext values.
 
 ```sh
-pnpm paperclipai secrets declarations --company-id <company-id> --kind secret
+pnpm sentinelai secrets declarations --company-id <company-id> --kind secret
 ```
 
 Before importing a package into another instance, use those declarations to

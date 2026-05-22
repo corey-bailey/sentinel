@@ -1,15 +1,15 @@
 {
-  "family": "paperclip-server",
+  "family": "sentinel-server",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "2048",
   "memory": "4096",
-  "executionRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/paperclip-ecs-execution",
-  "taskRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/paperclip-ecs-task",
+  "executionRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/sentinel-ecs-execution",
+  "taskRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/sentinel-ecs-task",
   "containerDefinitions": [
     {
-      "name": "paperclip-server",
-      "image": "<ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/paperclip-server:latest",
+      "name": "sentinel-server",
+      "image": "<ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/sentinel-server:latest",
       "essential": true,
       "portMappings": [
         {
@@ -55,7 +55,7 @@
       ],
       "mountPoints": [
         {
-          "sourceVolume": "paperclip-data",
+          "sourceVolume": "sentinel-data",
           "containerPath": "/paperclip",
           "readOnly": false
         }
@@ -79,7 +79,7 @@
   ],
   "volumes": [
     {
-      "name": "paperclip-data",
+      "name": "sentinel-data",
       "efsVolumeConfiguration": {
         "fileSystemId": "<EFS_ID>",
         "rootDirectory": "/",

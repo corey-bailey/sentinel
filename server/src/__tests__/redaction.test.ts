@@ -19,7 +19,7 @@ describe("redaction", () => {
           type: "plain",
           value: "sk-plain",
         },
-        PAPERCLIP_API_URL: "http://localhost:3100",
+        SENTINEL_API_URL: "http://localhost:3100",
       },
     };
 
@@ -40,7 +40,7 @@ describe("redaction", () => {
         type: "plain",
         value: REDACTED_EVENT_VALUE,
       },
-      PAPERCLIP_API_URL: "http://localhost:3100",
+      SENTINEL_API_URL: "http://localhost:3100",
     });
   });
 
@@ -70,9 +70,9 @@ describe("redaction", () => {
     const input = [
       "Authorization: Bearer live-bearer-token-value",
       `payload {"apiKey":"json-secret-value"}`,
-      `paperclip {"PAPERCLIP_API_KEY":"paperclip-json-secret"}`,
+      `paperclip {"SENTINEL_API_KEY":"paperclip-json-secret"}`,
       `escaped {\\"apiKey\\":\\"escaped-json-secret\\"}`,
-      `export PAPERCLIP_API_KEY='paperclip-shell-secret'`,
+      `export SENTINEL_API_KEY='paperclip-shell-secret'`,
       `GITHUB_TOKEN=${githubToken}`,
       `session=${jwt}`,
     ].join("\n");
@@ -94,7 +94,7 @@ describe("redaction", () => {
       command: "custom-acp --token ghp_example_secret env OPENAI_API_KEY=sk-live-example custom-acp",
       commandArgs: ["--safe", "ok", "--token", "ghp_arg_secret", "--api-key=sk-inline-example"],
       env: {
-        PAPERCLIP_RESOLVED_COMMAND: "env OPENAI_API_KEY=sk-live-example custom-acp --token ghp_example_secret",
+        SENTINEL_RESOLVED_COMMAND: "env OPENAI_API_KEY=sk-live-example custom-acp --token ghp_example_secret",
         SAFE_VALUE: "visible",
       },
     };
@@ -112,7 +112,7 @@ describe("redaction", () => {
       `--api-key=${REDACTED_EVENT_VALUE}`,
     ]);
     expect(result?.env).toEqual({
-      PAPERCLIP_RESOLVED_COMMAND:
+      SENTINEL_RESOLVED_COMMAND:
         `env OPENAI_API_KEY=${REDACTED_EVENT_VALUE} custom-acp --token ${REDACTED_EVENT_VALUE}`,
       SAFE_VALUE: "visible",
     });

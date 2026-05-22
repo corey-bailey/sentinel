@@ -3,7 +3,7 @@ import path from "node:path";
 import type { PaperclipConfig } from "../config/schema.js";
 import { expandHomePrefix } from "../config/home.js";
 
-export const DEFAULT_WORKTREE_HOME = "~/.paperclip-worktrees";
+export const DEFAULT_WORKTREE_HOME = "~/.sentinel-worktrees";
 export const WORKTREE_SEED_MODES = ["minimal", "full"] as const;
 
 export type WorktreeSeedMode = (typeof WORKTREE_SEED_MODES)[number];
@@ -141,7 +141,7 @@ export function resolveWorktreeLocalPaths(opts: {
   const cwd = path.resolve(opts.cwd);
   const homeDir = path.resolve(expandHomePrefix(opts.homeDir ?? DEFAULT_WORKTREE_HOME));
   const instanceRoot = path.resolve(homeDir, "instances", opts.instanceId);
-  const repoConfigDir = path.resolve(cwd, ".paperclip");
+  const repoConfigDir = path.resolve(cwd, ".sentinel");
   return {
     cwd,
     repoConfigDir,
@@ -253,13 +253,13 @@ export function buildWorktreeEnvEntries(
   branding?: WorktreeUiBranding,
 ): Record<string, string> {
   return {
-    PAPERCLIP_HOME: paths.homeDir,
-    PAPERCLIP_INSTANCE_ID: paths.instanceId,
-    PAPERCLIP_CONFIG: paths.configPath,
-    PAPERCLIP_CONTEXT: paths.contextPath,
-    PAPERCLIP_IN_WORKTREE: "true",
-    ...(branding?.name ? { PAPERCLIP_WORKTREE_NAME: branding.name } : {}),
-    ...(branding?.color ? { PAPERCLIP_WORKTREE_COLOR: branding.color } : {}),
+    SENTINEL_HOME: paths.homeDir,
+    SENTINEL_INSTANCE_ID: paths.instanceId,
+    SENTINEL_CONFIG: paths.configPath,
+    SENTINEL_CONTEXT: paths.contextPath,
+    SENTINEL_IN_WORKTREE: "true",
+    ...(branding?.name ? { SENTINEL_WORKTREE_NAME: branding.name } : {}),
+    ...(branding?.color ? { SENTINEL_WORKTREE_COLOR: branding.color } : {}),
   };
 }
 

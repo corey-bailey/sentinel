@@ -59,7 +59,7 @@ gets stored in the agent's config automatically.
 
 ```
 paperclip auth login
-# Opens browser -> user confirms -> token stored at ~/.paperclip/credentials
+# Opens browser -> user confirms -> token stored at ~/.sentinel/credentials
 ```
 
 **Token format:** Long-lived API key (stored hashed on the server side).
@@ -203,7 +203,7 @@ On approval, the approver sets:
 | **P1**   | Invite link + onboarding endpoint | `POST /api/companies/:id/invites`, `GET /api/invite/:token`, `POST /api/invite/:token/register`. |
 | **P1**   | Approval flow                     | UI + API for reviewing and approving pending agent registrations.                                |
 | **P2**   | OpenClaw integration              | First real external agent onboarding via invite link.                                            |
-| **P3**   | CLI auth flow                     | `paperclipai auth login` for developer-managed remote agents.                                      |
+| **P3**   | CLI auth flow                     | `sentinelai auth login` for developer-managed remote agents.                                      |
 
 ## P0 Implementation Plan
 

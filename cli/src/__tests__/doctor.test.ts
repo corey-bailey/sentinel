@@ -10,7 +10,7 @@ const ORIGINAL_ENV = { ...process.env };
 
 function createTempConfig(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-doctor-"));
-  const configPath = path.join(root, ".paperclip", "config.json");
+  const configPath = path.join(root, ".sentinel", "config.json");
   const runtimeRoot = path.join(root, "runtime");
 
   const config: PaperclipConfig = {
@@ -77,9 +77,9 @@ function createTempConfig(): string {
 describe("doctor", () => {
   beforeEach(() => {
     process.env = { ...ORIGINAL_ENV };
-    delete process.env.PAPERCLIP_AGENT_JWT_SECRET;
-    delete process.env.PAPERCLIP_SECRETS_MASTER_KEY;
-    delete process.env.PAPERCLIP_SECRETS_MASTER_KEY_FILE;
+    delete process.env.SENTINEL_AGENT_JWT_SECRET;
+    delete process.env.SENTINEL_SECRETS_MASTER_KEY;
+    delete process.env.SENTINEL_SECRETS_MASTER_KEY_FILE;
   });
 
   afterEach(() => {
@@ -97,6 +97,6 @@ describe("doctor", () => {
 
     expect(summary.failed).toBe(0);
     expect(summary.warned).toBe(0);
-    expect(process.env.PAPERCLIP_AGENT_JWT_SECRET).toBeTruthy();
+    expect(process.env.SENTINEL_AGENT_JWT_SECRET).toBeTruthy();
   });
 });

@@ -196,7 +196,7 @@ describe("secret routes", () => {
             kmsKeyId: null,
             hasKmsKey: false,
             sampleCount: 2,
-            paperclipManagedSampleCount: 0,
+            sentinelManagedSampleCount: 0,
             skippedForeignPaperclipSampleCount: 0,
           },
           warnings: [],

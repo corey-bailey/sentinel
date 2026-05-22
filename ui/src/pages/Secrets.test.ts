@@ -62,7 +62,7 @@ describe("Secrets page provider helpers", () => {
           provider: "aws_secrets_manager",
           status: "warn",
           message:
-            "AWS Secrets Manager provider is not ready: missing PAPERCLIP_SECRETS_AWS_DEPLOYMENT_ID.",
+            "AWS Secrets Manager provider is not ready: missing SENTINEL_SECRETS_AWS_DEPLOYMENT_ID.",
         },
       ],
     };
@@ -74,7 +74,7 @@ describe("Secrets page provider helpers", () => {
         health,
       ),
     ).toBe(
-      "AWS Secrets Manager is not configured in this deployment. AWS Secrets Manager provider is not ready: missing PAPERCLIP_SECRETS_AWS_DEPLOYMENT_ID.",
+      "AWS Secrets Manager is not configured in this deployment. AWS Secrets Manager provider is not ready: missing SENTINEL_SECRETS_AWS_DEPLOYMENT_ID.",
     );
   });
 

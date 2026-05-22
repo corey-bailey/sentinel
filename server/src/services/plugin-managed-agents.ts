@@ -40,7 +40,7 @@ function managedMetadata(
 ) {
   return {
     ...(existing ?? {}),
-    paperclipManagedResource: {
+    sentinelManagedResource: {
       pluginId,
       pluginKey,
       resourceKind: "agent",
@@ -160,7 +160,7 @@ function rowIsManagedAgent(
 ) {
   const metadata = row.metadata;
   if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return false;
-  const marker = (metadata as Record<string, unknown>).paperclipManagedResource;
+  const marker = (metadata as Record<string, unknown>).sentinelManagedResource;
   if (!marker || typeof marker !== "object" || Array.isArray(marker)) return false;
   const record = marker as Record<string, unknown>;
   return (

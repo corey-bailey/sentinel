@@ -5,8 +5,8 @@ import {
 } from "@sentinel/adapter-acpx-local/server";
 
 describe("acpx local skill sync", () => {
-  const paperclipKey = "paperclipai/paperclip/paperclip";
-  const createAgentKey = "paperclipai/paperclip/paperclip-create-agent";
+  const paperclipKey = "sentinelai/paperclip/paperclip";
+  const createAgentKey = "sentinelai/paperclip/paperclip-create-agent";
 
   it("reports ACPX Claude skills as supported runtime-mounted state", async () => {
     const snapshot = await listAcpxSkills({
@@ -15,7 +15,7 @@ describe("acpx local skill sync", () => {
       adapterType: "acpx_local",
       config: {
         agent: "claude",
-        paperclipSkillSync: {
+        sentinelSkillSync: {
           desiredSkills: [paperclipKey],
         },
       },
@@ -38,7 +38,7 @@ describe("acpx local skill sync", () => {
       adapterType: "acpx_local",
       config: {
         agent: "codex",
-        paperclipSkillSync: {
+        sentinelSkillSync: {
           desiredSkills: ["paperclip"],
         },
       },
@@ -60,7 +60,7 @@ describe("acpx local skill sync", () => {
       adapterType: "acpx_local",
       config: {
         agent: "custom",
-        paperclipSkillSync: {
+        sentinelSkillSync: {
           desiredSkills: [paperclipKey],
         },
       },

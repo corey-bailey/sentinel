@@ -1,4 +1,4 @@
-# @paperclipai/shared
+# @sentinelai/shared
 
 ## 0.3.1
 

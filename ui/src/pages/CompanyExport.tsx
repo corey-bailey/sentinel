@@ -72,7 +72,7 @@ function checkedSlugs(checkedFiles: Set<string>): {
 }
 
 /**
- * Filter .paperclip.yaml content so it only includes entries whose
+ * Filter .sentinel.yaml content so it only includes entries whose
  * corresponding files are checked. Works by line-level YAML parsing
  * since the file has a known, simple structure produced by our own
  * renderYamlBlock.
@@ -473,7 +473,7 @@ function generateReadmeFromSelection(
   lines.push("## Getting Started");
   lines.push("");
   lines.push("```bash");
-  lines.push("pnpm paperclipai company import this-github-url-or-folder");
+  lines.push("pnpm sentinelai company import this-github-url-or-folder");
   lines.push("```");
   lines.push("");
   lines.push("See [Paperclip](https://paperclip.ing) for more information.");
@@ -775,14 +775,14 @@ export function CompanyExport() {
     };
   }, [tree, treeSearch, checkedFiles, taskLimit]);
 
-  // Recompute .paperclip.yaml and README.md content whenever checked files
+  // Recompute .sentinel.yaml and README.md content whenever checked files
   // change so the preview & download always reflect the current selection.
   const effectiveFiles = useMemo(() => {
     if (!exportData) return {} as Record<string, CompanyPortabilityFileEntry>;
     const filtered = { ...exportData.files };
 
-    // Filter .paperclip.yaml
-    const yamlPath = exportData.paperclipExtensionPath;
+    // Filter .sentinel.yaml
+    const yamlPath = exportData.sentinelExtensionPath;
     if (yamlPath && typeof exportData.files[yamlPath] === "string") {
       filtered[yamlPath] = filterPaperclipYaml(exportData.files[yamlPath], checkedFiles);
     }

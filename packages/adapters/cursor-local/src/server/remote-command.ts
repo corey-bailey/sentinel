@@ -83,8 +83,8 @@ async function readSandboxCursorRuntimeInfo(input: {
       ? preferredSandboxCommandBasenames(input.command)
       : [];
   const hintedRemoteSystemHomeDir = input.remoteSystemHomeDirHint?.trim() || null;
-  const homeMarker = "__PAPERCLIP_CURSOR_HOME__:";
-  const preferredMarker = "__PAPERCLIP_CURSOR_AGENT__:";
+  const homeMarker = "__SENTINEL_CURSOR_HOME__:";
+  const preferredMarker = "__SENTINEL_CURSOR_AGENT__:";
   try {
     // When the caller has already resolved the remote `$HOME`, probe absolute
     // paths so the shell doesn't depend on its own environment to interpret

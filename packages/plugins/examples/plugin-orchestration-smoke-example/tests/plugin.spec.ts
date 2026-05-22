@@ -51,7 +51,7 @@ function issue(input: Partial<Issue> & Pick<Issue, "id" | "companyId" | "title">
 describe("orchestration smoke plugin", () => {
   it("declares the Phase 1 orchestration surfaces", () => {
     expect(pluginManifestV1Schema.parse(manifest)).toMatchObject({
-      id: "paperclipai.plugin-orchestration-smoke-example",
+      id: "sentinelai.plugin-orchestration-smoke-example",
       database: {
         migrationsDir: "migrations",
         coreReadTables: ["issues"],

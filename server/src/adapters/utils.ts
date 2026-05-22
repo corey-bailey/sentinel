@@ -28,7 +28,7 @@ export const appendWithByteCap = serverUtils.appendWithByteCap;
 export const resolvePathValue = serverUtils.resolvePathValue;
 export const renderTemplate = serverUtils.renderTemplate;
 export const redactEnvForLogs = serverUtils.redactEnvForLogs;
-export const buildPaperclipEnv = serverUtils.buildPaperclipEnv;
+export const buildSentinelEnv = serverUtils.buildSentinelEnv;
 export const defaultPathForPlatform = serverUtils.defaultPathForPlatform;
 export const ensurePathInEnv = serverUtils.ensurePathInEnv;
 export const ensureAbsoluteDirectory = serverUtils.ensureAbsoluteDirectory;
@@ -64,7 +64,7 @@ export function buildInvocationEnvForLogs(
 
   const resolvedCommand = options.resolvedCommand?.trim();
   if (resolvedCommand) {
-    merged[options.resolvedCommandEnvKey ?? "PAPERCLIP_RESOLVED_COMMAND"] =
+    merged[options.resolvedCommandEnvKey ?? "SENTINEL_RESOLVED_COMMAND"] =
       serverUtils.redactCommandTextForLogs(resolvedCommand);
   }
 

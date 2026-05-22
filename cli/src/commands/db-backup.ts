@@ -5,7 +5,7 @@ import { formatDatabaseBackupResult, runDatabaseBackup } from "@sentinel/db";
 import {
   expandHomePrefix,
   resolveDefaultBackupDir,
-  resolvePaperclipInstanceId,
+  resolveSentinelInstanceId,
 } from "../config/home.js";
 import { readConfig, resolveConfigPath } from "../config/store.js";
 import { printPaperclipCliBanner } from "../utils/banner.js";
@@ -53,7 +53,7 @@ export async function dbBackupCommand(opts: DbBackupOptions): Promise<void> {
   const configPath = resolveConfigPath(opts.config);
   const config = readConfig(opts.config);
   const connection = resolveConnectionString(opts.config);
-  const defaultDir = resolveDefaultBackupDir(resolvePaperclipInstanceId());
+  const defaultDir = resolveDefaultBackupDir(resolveSentinelInstanceId());
   const configuredDir = opts.dir?.trim() || config?.database.backup.dir || defaultDir;
   const backupDir = resolveBackupDir(configuredDir);
   const retentionDays = normalizeRetentionDays(

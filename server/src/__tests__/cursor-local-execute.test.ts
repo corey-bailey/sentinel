@@ -9,12 +9,12 @@ async function writeFakeCursorCommand(commandPath: string): Promise<void> {
   const script = `#!/usr/bin/env node
 const fs = require("node:fs");
 
-const capturePath = process.env.PAPERCLIP_TEST_CAPTURE_PATH;
+const capturePath = process.env.SENTINEL_TEST_CAPTURE_PATH;
 const payload = {
   argv: process.argv.slice(2),
   prompt: fs.readFileSync(0, "utf8"),
-  paperclipEnvKeys: Object.keys(process.env)
-    .filter((key) => key.startsWith("PAPERCLIP_"))
+  sentinelEnvKeys: Object.keys(process.env)
+    .filter((key) => key.startsWith("SENTINEL_"))
     .sort(),
 };
 if (capturePath) {
@@ -106,7 +106,7 @@ function createLocalSandboxRunner() {
 type CapturePayload = {
   argv: string[];
   prompt: string;
-  paperclipEnvKeys: string[];
+  sentinelEnvKeys: string[];
 };
 
 async function createSkillDir(root: string, name: string) {
@@ -150,7 +150,7 @@ describe("cursor execute", () => {
           cwd: workspace,
           model: "auto",
           env: {
-            PAPERCLIP_TEST_CAPTURE_PATH: capturePath,
+            SENTINEL_TEST_CAPTURE_PATH: capturePath,
           },
           promptTemplate: "Follow the paperclip heartbeat.",
         },
@@ -169,19 +169,19 @@ describe("cursor execute", () => {
       expect(capture.argv).not.toContain("Follow the paperclip heartbeat.");
       expect(capture.argv).not.toContain("--mode");
       expect(capture.argv).not.toContain("ask");
-      expect(capture.paperclipEnvKeys).toEqual(
+      expect(capture.sentinelEnvKeys).toEqual(
         expect.arrayContaining([
-          "PAPERCLIP_AGENT_ID",
-          "PAPERCLIP_API_KEY",
-          "PAPERCLIP_API_URL",
-          "PAPERCLIP_COMPANY_ID",
-          "PAPERCLIP_RUN_ID",
+          "SENTINEL_AGENT_ID",
+          "SENTINEL_API_KEY",
+          "SENTINEL_API_URL",
+          "SENTINEL_COMPANY_ID",
+          "SENTINEL_RUN_ID",
         ]),
       );
       expect(capture.prompt).toContain("Paperclip runtime note:");
-      expect(capture.prompt).toContain("PAPERCLIP_API_KEY");
+      expect(capture.prompt).toContain("SENTINEL_API_KEY");
       expect(invocationPrompt).toContain("Paperclip runtime note:");
-      expect(invocationPrompt).toContain("PAPERCLIP_API_URL");
+      expect(invocationPrompt).toContain("SENTINEL_API_URL");
     } finally {
       if (previousHome === undefined) {
         delete process.env.HOME;
@@ -225,7 +225,7 @@ describe("cursor execute", () => {
           model: "auto",
           mode: "ask",
           env: {
-            PAPERCLIP_TEST_CAPTURE_PATH: capturePath,
+            SENTINEL_TEST_CAPTURE_PATH: capturePath,
           },
           promptTemplate: "Follow the paperclip heartbeat.",
         },
@@ -296,7 +296,7 @@ describe("cursor execute", () => {
               source: asciiHeartDir,
             },
           ],
-          paperclipSkillSync: {
+          sentinelSkillSync: {
             desiredSkills: ["ascii-heart"],
           },
           promptTemplate: "Follow the paperclip heartbeat.",

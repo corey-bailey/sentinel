@@ -50,7 +50,7 @@ can create AWS-backed company secrets:
    and the configured KMS key.
 4. Configure the server runtime with the non-secret provider environment
    variables below.
-5. Run `paperclipai doctor` or the provider health endpoint from the deployed
+5. Run `sentinelai doctor` or the provider health endpoint from the deployed
    runtime and confirm that the provider reports the expected region, prefix,
    deployment id, KMS setting, and AWS SDK credential source.
 

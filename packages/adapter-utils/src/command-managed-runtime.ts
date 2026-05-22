@@ -37,7 +37,7 @@ function shellQuote(value: string) {
 }
 
 function mergeRuntimeExcludes(entries: string[] | undefined): string[] {
-  return [...new Set([".paperclip-runtime", ...(entries ?? [])])];
+  return [...new Set([".sentinel-runtime", ...(entries ?? [])])];
 }
 
 const REMOTE_WRITE_BASE64_CHUNK_SIZE = 32 * 1024;

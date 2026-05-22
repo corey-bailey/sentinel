@@ -380,7 +380,7 @@ describe("sandbox adapter execution targets", () => {
     const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-execution-target-bridge-"));
     cleanupDirs.push(rootDir);
     const remoteCwd = path.join(rootDir, "workspace");
-    const runtimeRootDir = path.join(remoteCwd, ".paperclip-runtime", "codex");
+    const runtimeRootDir = path.join(remoteCwd, ".sentinel-runtime", "codex");
     await mkdir(runtimeRootDir, { recursive: true });
 
     const requests: Array<{ method: string; url: string; auth: string | null; runId: string | null }> = [];
@@ -424,13 +424,13 @@ describe("sandbox adapter execution targets", () => {
     });
     try {
       expect(bridge).not.toBeNull();
-      expect(bridge?.env.PAPERCLIP_API_URL).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
-      expect(bridge?.env.PAPERCLIP_API_KEY).not.toBe("real-run-jwt");
-      expect(bridge?.env.PAPERCLIP_API_BRIDGE_MODE).toBe("queue_v1");
+      expect(bridge?.env.SENTINEL_API_URL).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
+      expect(bridge?.env.SENTINEL_API_KEY).not.toBe("real-run-jwt");
+      expect(bridge?.env.SENTINEL_API_BRIDGE_MODE).toBe("queue_v1");
 
-      const response = await fetch(`${bridge!.env.PAPERCLIP_API_URL}/api/agents/me`, {
+      const response = await fetch(`${bridge!.env.SENTINEL_API_URL}/api/agents/me`, {
         headers: {
-          authorization: `Bearer ${bridge!.env.PAPERCLIP_API_KEY}`,
+          authorization: `Bearer ${bridge!.env.SENTINEL_API_KEY}`,
           accept: "application/json",
         },
       });
@@ -453,7 +453,7 @@ describe("sandbox adapter execution targets", () => {
     const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-execution-target-bridge-timeout-"));
     cleanupDirs.push(rootDir);
     const remoteCwd = path.join(rootDir, "workspace");
-    const runtimeRootDir = path.join(remoteCwd, ".paperclip-runtime", "codex");
+    const runtimeRootDir = path.join(remoteCwd, ".sentinel-runtime", "codex");
     await mkdir(runtimeRootDir, { recursive: true });
 
     const delegateRunner = createLocalSandboxRunner();
@@ -507,7 +507,7 @@ describe("sandbox adapter execution targets", () => {
     const rootDir = await mkdtemp(path.join(os.tmpdir(), "paperclip-execution-target-bridge-limit-"));
     cleanupDirs.push(rootDir);
     const remoteCwd = path.join(rootDir, "workspace");
-    const runtimeRootDir = path.join(remoteCwd, ".paperclip-runtime", "codex");
+    const runtimeRootDir = path.join(remoteCwd, ".sentinel-runtime", "codex");
     await mkdir(runtimeRootDir, { recursive: true });
 
     const requests: Array<{ method: string; url: string; auth: string | null; runId: string | null }> = [];
@@ -555,9 +555,9 @@ describe("sandbox adapter execution targets", () => {
       maxBodyBytes: 32,
     });
     try {
-      const response = await fetch(`${bridge!.env.PAPERCLIP_API_URL}/api/agents/me`, {
+      const response = await fetch(`${bridge!.env.SENTINEL_API_URL}/api/agents/me`, {
         headers: {
-          authorization: `Bearer ${bridge!.env.PAPERCLIP_API_KEY}`,
+          authorization: `Bearer ${bridge!.env.SENTINEL_API_KEY}`,
           accept: "application/json",
         },
       });

@@ -115,7 +115,7 @@ ITS TIME TO CLIP :paperclip: :paperclip: :paperclip:
 
 FULL RELEASE NOTES
 
-https://github.com/paperclipai/paperclip/blob/master/releases/v{VERSION}.md
+https://github.com/sentinelai/paperclip/blob/master/releases/v{VERSION}.md
 
 ||@everyone||
 ```
@@ -263,7 +263,7 @@ and I think we're moving at a pretty good clip :paperclip: :paperclip: :papercli
 
 FULL RELEASE NOTES HERE
 
-https://github.com/paperclipai/paperclip/releases/tag/v2026.403.0
+https://github.com/sentinelai/paperclip/releases/tag/v2026.403.0
 
 ||@everyone||
 ```
@@ -282,7 +282,7 @@ This release has *tons* of quality of life improvements around speed, performanc
 :no_smoking: Blocker dependencies - first-class "wake on blocker resolved" which means now you can have "task graphs" that depend on one another and it's enforced by Paperclip
 :woman_feeding_baby: Parent-child tasks - better support for sub-tasks all around, which makes it much easier to organize your work
 
-And then a million fixes around ux, details, keyboard shortcuts, bug fixes, security fixes, etc. Really you should read the [full release notes here](https://github.com/paperclipai/paperclip/releases/tag/v2026.416.0)
+And then a million fixes around ux, details, keyboard shortcuts, bug fixes, security fixes, etc. Really you should read the [full release notes here](https://github.com/sentinelai/paperclip/releases/tag/v2026.416.0)
 
 ## COMMUNITY
 
@@ -321,7 +321,7 @@ ITS TIME TO CLIP :paperclip: :paperclip: :paperclip:
 
 FULL RELEASE NOTES
 
-https://github.com/paperclipai/paperclip/releases/tag/v2026.416.0
+https://github.com/sentinelai/paperclip/releases/tag/v2026.416.0
 
 ||@everyone||
 ```
@@ -382,7 +382,7 @@ ITS TIME TO CLIP :paperclip: :paperclip: :paperclip:
 
 FULL RELEASE NOTES
 
-https://github.com/paperclipai/paperclip/blob/master/releases/v2026.427.0.md
+https://github.com/sentinelai/paperclip/blob/master/releases/v2026.427.0.md
 
 ||@everyone||
 ```

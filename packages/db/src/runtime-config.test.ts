@@ -41,17 +41,17 @@ describe("resolveDatabaseTarget", () => {
     });
   });
 
-  it("uses DATABASE_URL from repo-local .paperclip/.env", () => {
+  it("uses DATABASE_URL from repo-local .sentinel/.env", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-db-runtime-"));
     const projectDir = path.join(tempDir, "repo");
     fs.mkdirSync(projectDir, { recursive: true });
     process.chdir(projectDir);
-    delete process.env.PAPERCLIP_CONFIG;
-    writeJson(path.join(projectDir, ".paperclip", "config.json"), {
+    delete process.env.SENTINEL_CONFIG;
+    writeJson(path.join(projectDir, ".sentinel", "config.json"), {
       database: { mode: "embedded-postgres", embeddedPostgresPort: 54329 },
     });
     writeText(
-      path.join(projectDir, ".paperclip", ".env"),
+      path.join(projectDir, ".sentinel", ".env"),
       'DATABASE_URL="postgres://file-user:file-pass@db.example.com:6543/paperclip"\n',
     );
 
@@ -67,7 +67,7 @@ describe("resolveDatabaseTarget", () => {
   it("uses config postgres connection string when configured", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-db-runtime-"));
     const configPath = path.join(tempDir, "instance", "config.json");
-    process.env.PAPERCLIP_CONFIG = configPath;
+    process.env.SENTINEL_CONFIG = configPath;
     writeJson(configPath, {
       database: {
         mode: "postgres",
@@ -87,7 +87,7 @@ describe("resolveDatabaseTarget", () => {
   it("falls back to embedded postgres settings from config", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-db-runtime-"));
     const configPath = path.join(tempDir, "instance", "config.json");
-    process.env.PAPERCLIP_CONFIG = configPath;
+    process.env.SENTINEL_CONFIG = configPath;
     writeJson(configPath, {
       database: {
         mode: "embedded-postgres",
@@ -110,9 +110,9 @@ describe("resolveDatabaseTarget", () => {
     const home = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-db-home-"));
     const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-db-cwd-"));
     process.chdir(cwd);
-    process.env.PAPERCLIP_HOME = home;
-    delete process.env.PAPERCLIP_CONFIG;
-    delete process.env.PAPERCLIP_INSTANCE_ID;
+    process.env.SENTINEL_HOME = home;
+    delete process.env.SENTINEL_CONFIG;
+    delete process.env.SENTINEL_INSTANCE_ID;
     delete process.env.DATABASE_URL;
 
     const target = resolveDatabaseTarget();

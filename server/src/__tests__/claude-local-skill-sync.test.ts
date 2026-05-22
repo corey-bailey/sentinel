@@ -19,8 +19,8 @@ async function createSkillDir(root: string, name: string) {
 }
 
 describe("claude local skill sync", () => {
-  const paperclipKey = "paperclipai/paperclip/paperclip";
-  const createAgentKey = "paperclipai/paperclip/paperclip-create-agent";
+  const paperclipKey = "sentinelai/paperclip/paperclip";
+  const createAgentKey = "sentinelai/paperclip/paperclip-create-agent";
   const cleanupDirs = new Set<string>();
 
   afterEach(async () => {
@@ -49,7 +49,7 @@ describe("claude local skill sync", () => {
       companyId: "company-1",
       adapterType: "claude_local",
       config: {
-        paperclipSkillSync: {
+        sentinelSkillSync: {
           desiredSkills: [paperclipKey],
         },
       },
@@ -66,7 +66,7 @@ describe("claude local skill sync", () => {
       companyId: "company-1",
       adapterType: "claude_local",
       config: {
-        paperclipSkillSync: {
+        sentinelSkillSync: {
           desiredSkills: ["paperclip"],
         },
       },

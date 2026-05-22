@@ -8,10 +8,10 @@ const mocks = vi.hoisted(() => ({
   scaffoldPluginProject: vi.fn((options: { outputDir: string }) => options.outputDir),
 }));
 
-vi.mock("../../../packages/plugins/create-paperclip-plugin/src/index.js", async () => {
+vi.mock("../../../packages/plugins/create-sentinel-plugin/src/index.js", async () => {
   const actual =
-    await vi.importActual<typeof import("../../../packages/plugins/create-paperclip-plugin/src/index.js")>(
-      "../../../packages/plugins/create-paperclip-plugin/src/index.js",
+    await vi.importActual<typeof import("../../../packages/plugins/create-sentinel-plugin/src/index.js")>(
+      "../../../packages/plugins/create-sentinel-plugin/src/index.js",
     );
   return {
     ...actual,
@@ -79,7 +79,7 @@ describe("plugin init", () => {
       "cd '/tmp/acme plugin'",
       "pnpm install",
       "pnpm dev",
-      "paperclipai plugin install '/tmp/acme plugin'",
+      "sentinelai plugin install '/tmp/acme plugin'",
     ]);
   });
 

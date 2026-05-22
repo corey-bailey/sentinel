@@ -242,12 +242,12 @@ describeEmbeddedPostgres("plugin-managed agents", () => {
   });
 
   it("materializes declared managed agent instructions with local folder paths", async () => {
-    const previousHome = process.env.PAPERCLIP_HOME;
-    const previousInstance = process.env.PAPERCLIP_INSTANCE_ID;
+    const previousHome = process.env.SENTINEL_HOME;
+    const previousInstance = process.env.SENTINEL_INSTANCE_ID;
     const tempHome = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-managed-agent-home-"));
     const wikiRoot = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-managed-agent-wiki-")));
-    process.env.PAPERCLIP_HOME = tempHome;
-    process.env.PAPERCLIP_INSTANCE_ID = "test";
+    process.env.SENTINEL_HOME = tempHome;
+    process.env.SENTINEL_INSTANCE_ID = "test";
     try {
       const pluginManifest = manifest();
       pluginManifest.localFolders = [
@@ -302,10 +302,10 @@ describeEmbeddedPostgres("plugin-managed agents", () => {
       expect(content).toContain(`Wiki root: \`${wikiRoot}\``);
       expect(content).toContain(`Wiki schema: \`${path.join(wikiRoot, "AGENTS.md")}\``);
     } finally {
-      if (previousHome === undefined) delete process.env.PAPERCLIP_HOME;
-      else process.env.PAPERCLIP_HOME = previousHome;
-      if (previousInstance === undefined) delete process.env.PAPERCLIP_INSTANCE_ID;
-      else process.env.PAPERCLIP_INSTANCE_ID = previousInstance;
+      if (previousHome === undefined) delete process.env.SENTINEL_HOME;
+      else process.env.SENTINEL_HOME = previousHome;
+      if (previousInstance === undefined) delete process.env.SENTINEL_INSTANCE_ID;
+      else process.env.SENTINEL_INSTANCE_ID = previousInstance;
       await fs.rm(tempHome, { recursive: true, force: true });
       await fs.rm(wikiRoot, { recursive: true, force: true });
     }
@@ -325,7 +325,7 @@ describeEmbeddedPostgres("plugin-managed agents", () => {
       runtimeConfig: {},
       permissions: {},
       metadata: {
-        paperclipManagedResource: {
+        sentinelManagedResource: {
           pluginId,
           pluginKey: pluginManifest.id,
           resourceKind: "agent",

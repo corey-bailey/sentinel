@@ -184,7 +184,7 @@ function isLinkedGitWorktreeCheckout(rootDir: string) {
 
 function discoverWorkspacePackagePaths(rootDir: string): Map<string, string> {
   const packagePaths = new Map<string, string>();
-  const ignoredDirNames = new Set([".git", ".paperclip", "dist", "node_modules"]);
+  const ignoredDirNames = new Set([".git", ".sentinel", "dist", "node_modules"]);
 
   function visit(dirPath: string) {
     if (!existsSync(dirPath)) return;
@@ -286,7 +286,7 @@ export async function ensureServerWorkspaceLinksCurrent(
 export function sanitizeRuntimeServiceBaseEnv(baseEnv: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = { ...baseEnv };
   for (const key of Object.keys(env)) {
-    if (key.startsWith("PAPERCLIP_")) {
+    if (key.startsWith("SENTINEL_")) {
       delete env[key];
     }
   }
@@ -695,25 +695,25 @@ function buildWorkspaceCommandEnv(input: {
   created: boolean;
 }) {
   const env: NodeJS.ProcessEnv = { ...process.env };
-  env.PAPERCLIP_WORKSPACE_CWD = input.worktreePath;
-  env.PAPERCLIP_WORKSPACE_PATH = input.worktreePath;
-  env.PAPERCLIP_WORKSPACE_WORKTREE_PATH = input.worktreePath;
-  env.PAPERCLIP_WORKSPACE_BRANCH = input.branchName;
-  env.PAPERCLIP_WORKSPACE_BASE_CWD = input.base.baseCwd;
-  env.PAPERCLIP_WORKSPACE_REPO_ROOT = input.repoRoot;
-  env.PAPERCLIP_WORKSPACE_SOURCE = input.base.source;
-  env.PAPERCLIP_WORKSPACE_REPO_REF = input.base.repoRef ?? "";
-  env.PAPERCLIP_WORKSPACE_REPO_URL = input.base.repoUrl ?? "";
-  env.PAPERCLIP_WORKSPACE_CREATED = input.created ? "true" : "false";
-  env.PAPERCLIP_PROJECT_ID = input.base.projectId ?? "";
-  env.PAPERCLIP_PROJECT_WORKSPACE_ID = input.base.workspaceId ?? "";
-  env.PAPERCLIP_AGENT_ID = input.agent.id ?? "";
-  env.PAPERCLIP_AGENT_NAME = input.agent.name;
-  env.PAPERCLIP_COMPANY_ID = input.agent.companyId;
-  env.PAPERCLIP_ISSUE_ID = input.issue?.id ?? "";
-  env.PAPERCLIP_ISSUE_IDENTIFIER = input.issue?.identifier ?? "";
-  env.PAPERCLIP_ISSUE_TITLE = input.issue?.title ?? "";
-  env.PAPERCLIP_ISSUE_WORK_MODE = input.issue?.workMode ?? "";
+  env.SENTINEL_WORKSPACE_CWD = input.worktreePath;
+  env.SENTINEL_WORKSPACE_PATH = input.worktreePath;
+  env.SENTINEL_WORKSPACE_WORKTREE_PATH = input.worktreePath;
+  env.SENTINEL_WORKSPACE_BRANCH = input.branchName;
+  env.SENTINEL_WORKSPACE_BASE_CWD = input.base.baseCwd;
+  env.SENTINEL_WORKSPACE_REPO_ROOT = input.repoRoot;
+  env.SENTINEL_WORKSPACE_SOURCE = input.base.source;
+  env.SENTINEL_WORKSPACE_REPO_REF = input.base.repoRef ?? "";
+  env.SENTINEL_WORKSPACE_REPO_URL = input.base.repoUrl ?? "";
+  env.SENTINEL_WORKSPACE_CREATED = input.created ? "true" : "false";
+  env.SENTINEL_PROJECT_ID = input.base.projectId ?? "";
+  env.SENTINEL_PROJECT_WORKSPACE_ID = input.base.workspaceId ?? "";
+  env.SENTINEL_AGENT_ID = input.agent.id ?? "";
+  env.SENTINEL_AGENT_NAME = input.agent.name;
+  env.SENTINEL_COMPANY_ID = input.agent.companyId;
+  env.SENTINEL_ISSUE_ID = input.issue?.id ?? "";
+  env.SENTINEL_ISSUE_IDENTIFIER = input.issue?.identifier ?? "";
+  env.SENTINEL_ISSUE_TITLE = input.issue?.title ?? "";
+  env.SENTINEL_ISSUE_WORK_MODE = input.issue?.workMode ?? "";
   return env;
 }
 
@@ -950,18 +950,18 @@ function buildExecutionWorkspaceCleanupEnv(input: {
   projectWorkspaceCwd?: string | null;
 }) {
   const env: NodeJS.ProcessEnv = sanitizeRuntimeServiceBaseEnv(process.env);
-  env.PAPERCLIP_WORKSPACE_CWD = input.workspace.cwd ?? "";
-  env.PAPERCLIP_WORKSPACE_PATH = input.workspace.cwd ?? "";
-  env.PAPERCLIP_WORKSPACE_WORKTREE_PATH =
+  env.SENTINEL_WORKSPACE_CWD = input.workspace.cwd ?? "";
+  env.SENTINEL_WORKSPACE_PATH = input.workspace.cwd ?? "";
+  env.SENTINEL_WORKSPACE_WORKTREE_PATH =
     input.workspace.providerRef ?? input.workspace.cwd ?? "";
-  env.PAPERCLIP_WORKSPACE_BRANCH = input.workspace.branchName ?? "";
-  env.PAPERCLIP_WORKSPACE_BASE_CWD = input.projectWorkspaceCwd ?? "";
-  env.PAPERCLIP_WORKSPACE_REPO_ROOT = input.projectWorkspaceCwd ?? "";
-  env.PAPERCLIP_WORKSPACE_REPO_URL = input.workspace.repoUrl ?? "";
-  env.PAPERCLIP_WORKSPACE_REPO_REF = input.workspace.baseRef ?? "";
-  env.PAPERCLIP_PROJECT_ID = input.workspace.projectId ?? "";
-  env.PAPERCLIP_PROJECT_WORKSPACE_ID = input.workspace.projectWorkspaceId ?? "";
-  env.PAPERCLIP_ISSUE_ID = input.workspace.sourceIssueId ?? "";
+  env.SENTINEL_WORKSPACE_BRANCH = input.workspace.branchName ?? "";
+  env.SENTINEL_WORKSPACE_BASE_CWD = input.projectWorkspaceCwd ?? "";
+  env.SENTINEL_WORKSPACE_REPO_ROOT = input.projectWorkspaceCwd ?? "";
+  env.SENTINEL_WORKSPACE_REPO_URL = input.workspace.repoUrl ?? "";
+  env.SENTINEL_WORKSPACE_REPO_REF = input.workspace.baseRef ?? "";
+  env.SENTINEL_PROJECT_ID = input.workspace.projectId ?? "";
+  env.SENTINEL_PROJECT_WORKSPACE_ID = input.workspace.projectWorkspaceId ?? "";
+  env.SENTINEL_ISSUE_ID = input.workspace.sourceIssueId ?? "";
   return env;
 }
 
@@ -1018,7 +1018,7 @@ export async function realizeExecutionWorkspace(input: {
   const configuredParentDir = asString(rawStrategy.worktreeParentDir, "");
   const worktreeParentDir = configuredParentDir
     ? resolveConfiguredPath(configuredParentDir, repoRoot)
-    : path.join(repoRoot, ".paperclip", "worktrees");
+    : path.join(repoRoot, ".sentinel", "worktrees");
   const worktreePath = path.join(worktreeParentDir, branchName);
   const configuredBaseRef = typeof rawStrategy.baseRef === "string" && rawStrategy.baseRef.length > 0
     ? rawStrategy.baseRef

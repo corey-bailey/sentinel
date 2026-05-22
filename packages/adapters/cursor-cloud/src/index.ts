@@ -29,6 +29,6 @@ Core fields:
 Notes:
 - Paperclip reuses the durable Cursor agent across heartbeats when the repo/runtime identity still matches.
 - Each Paperclip heartbeat maps to a Cursor run on that durable agent.
-- Paperclip injects PAPERCLIP_* runtime env vars into the cloud agent shell through Cursor SDK cloud envVars.
+- Paperclip injects SENTINEL_* runtime env vars into the cloud agent shell through Cursor SDK cloud envVars.
 - Paperclip remains the source of truth for issue/task state; Cursor provides the remote execution surface.
 `;

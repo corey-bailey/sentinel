@@ -2,7 +2,7 @@ import { Command } from "commander";
 import type { Agent } from "@sentinel/shared";
 import {
   removeMaintainerOnlySkillSymlinks,
-  resolvePaperclipSkillsDir,
+  resolveSentinelSkillsDir,
 } from "@sentinel/adapter-utils/server-utils";
 import fs from "node:fs/promises";
 import os from "node:os";
@@ -149,10 +149,10 @@ function buildAgentEnvExports(input: {
 }): string {
   const escaped = (value: string) => value.replace(/'/g, "'\"'\"'");
   return [
-    `export PAPERCLIP_API_URL='${escaped(input.apiBase)}'`,
-    `export PAPERCLIP_COMPANY_ID='${escaped(input.companyId)}'`,
-    `export PAPERCLIP_AGENT_ID='${escaped(input.agentId)}'`,
-    `export PAPERCLIP_API_KEY='${escaped(input.apiKey)}'`,
+    `export SENTINEL_API_URL='${escaped(input.apiBase)}'`,
+    `export SENTINEL_COMPANY_ID='${escaped(input.companyId)}'`,
+    `export SENTINEL_AGENT_ID='${escaped(input.agentId)}'`,
+    `export SENTINEL_API_KEY='${escaped(input.apiKey)}'`,
   ].join("\n");
 }
 
@@ -248,7 +248,7 @@ export function registerAgentCommands(program: Command): void {
 
           const installSummaries: SkillsInstallSummary[] = [];
           if (opts.installSkills !== false) {
-            const skillsDir = await resolvePaperclipSkillsDir(__moduleDir, [path.resolve(process.cwd(), "skills")]);
+            const skillsDir = await resolveSentinelSkillsDir(__moduleDir, [path.resolve(process.cwd(), "skills")]);
             if (!skillsDir) {
               throw new Error(
                 "Could not locate local Paperclip skills directory. Expected ./skills in the repo checkout.",

@@ -181,8 +181,8 @@ function makeAttachment(contentType: string, originalFilename: string) {
 
 describe("normalizeIssueAttachmentMaxBytes", () => {
   it("keeps the process-level attachment cap as the final cap", async () => {
-    const previous = process.env.PAPERCLIP_ATTACHMENT_MAX_BYTES;
-    process.env.PAPERCLIP_ATTACHMENT_MAX_BYTES = "5";
+    const previous = process.env.SENTINEL_ATTACHMENT_MAX_BYTES;
+    process.env.SENTINEL_ATTACHMENT_MAX_BYTES = "5";
     vi.resetModules();
     try {
       const { normalizeIssueAttachmentMaxBytes } = await import("../attachment-types.js");
@@ -191,9 +191,9 @@ describe("normalizeIssueAttachmentMaxBytes", () => {
       expect(normalizeIssueAttachmentMaxBytes(3)).toBe(3);
     } finally {
       if (previous === undefined) {
-        delete process.env.PAPERCLIP_ATTACHMENT_MAX_BYTES;
+        delete process.env.SENTINEL_ATTACHMENT_MAX_BYTES;
       } else {
-        process.env.PAPERCLIP_ATTACHMENT_MAX_BYTES = previous;
+        process.env.SENTINEL_ATTACHMENT_MAX_BYTES = previous;
       }
       vi.resetModules();
     }

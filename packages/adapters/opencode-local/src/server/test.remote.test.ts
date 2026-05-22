@@ -42,10 +42,10 @@ const {
     }),
     prepareAdapterExecutionTargetRuntime: vi.fn(async () => ({
       target: null,
-      workspaceRemoteDir: "/remote/workspace/.paperclip-runtime/runs/test/workspace",
-      runtimeRootDir: "/remote/workspace/.paperclip-runtime/runs/test/workspace/.paperclip-runtime/opencode",
+      workspaceRemoteDir: "/remote/workspace/.sentinel-runtime/runs/test/workspace",
+      runtimeRootDir: "/remote/workspace/.sentinel-runtime/runs/test/workspace/.sentinel-runtime/opencode",
       assetDirs: {
-        xdgConfig: "/remote/workspace/.paperclip-runtime/runs/test/workspace/.paperclip-runtime/opencode/xdgConfig",
+        xdgConfig: "/remote/workspace/.sentinel-runtime/runs/test/workspace/.sentinel-runtime/opencode/xdgConfig",
       },
       restoreWorkspace,
     })),
@@ -121,9 +121,9 @@ describe("opencode remote environment diagnostics", () => {
     const probeCall = runAdapterExecutionTargetProcess.mock.calls[0] as unknown as
       | [string, AdapterExecutionTarget, string, string[], { cwd: string; env: Record<string, string> }]
       | undefined;
-    expect(probeCall?.[4].cwd).toBe("/remote/workspace/.paperclip-runtime/runs/test/workspace");
+    expect(probeCall?.[4].cwd).toBe("/remote/workspace/.sentinel-runtime/runs/test/workspace");
     expect(probeCall?.[4].env.XDG_CONFIG_HOME).toBe(
-      "/remote/workspace/.paperclip-runtime/runs/test/workspace/.paperclip-runtime/opencode/xdgConfig",
+      "/remote/workspace/.sentinel-runtime/runs/test/workspace/.sentinel-runtime/opencode/xdgConfig",
     );
   });
 });

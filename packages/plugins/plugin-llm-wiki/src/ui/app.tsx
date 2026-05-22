@@ -70,7 +70,7 @@ const toneStyles: Record<Tone, CSSProperties> = {
 
 const fontStack = `ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
 const mobileMediaQuery = "(max-width: 767px)";
-const PLUGIN_ID = "paperclipai.plugin-llm-wiki";
+const PLUGIN_ID = "sentinelai.plugin-llm-wiki";
 const WIKI_SIDEBAR_NAV_STATE_KEY = "paperclipWikiSidebarTreePath";
 const ROUTE_SIDEBAR_EXPANDED_STORAGE_PREFIX = `${PLUGIN_ID}:route-sidebar-expanded:v2`;
 const WIKI_TOC_STICKY_TOP = 88;
@@ -6911,7 +6911,7 @@ function SpaceEditCard({
   );
 }
 
-function paperclipIngestionStateBadge(data: PaperclipIngestionProfileData | null): { tone: Tone; label: string } {
+function sentinelIngestionStateBadge(data: PaperclipIngestionProfileData | null): { tone: Tone; label: string } {
   if (!data) return { tone: "default", label: "Loading" };
   if (data.effectiveState === "policy_blocked") return { tone: "blocked", label: "Locked" };
   if (data.effectiveState === "pending_approval") return { tone: "queued", label: "Pending approval" };
@@ -6932,7 +6932,7 @@ function PaperclipIngestionSpaceCard({ companyId, space, refresh }: { companyId:
     setDraft(data?.profile ?? null);
   }, [data?.space.slug, data?.profile]);
 
-  const badge = paperclipIngestionStateBadge(data);
+  const badge = sentinelIngestionStateBadge(data);
   const locked = data?.effectiveState === "policy_blocked";
   const sourceScope = draft?.sourceScopes[0];
   const activeProjectLimit = sourceScope?.kind === "active_projects" ? sourceScope.limit : 3;

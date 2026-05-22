@@ -10,19 +10,19 @@ Paperclip CLI now supports both:
 Use repo script in development:
 
 ```sh
-pnpm paperclipai --help
+pnpm sentinelai --help
 ```
 
 First-time local bootstrap + run:
 
 ```sh
-pnpm paperclipai run
+pnpm sentinelai run
 ```
 
 Choose local instance:
 
 ```sh
-pnpm paperclipai run --instance dev
+pnpm sentinelai run --instance dev
 ```
 
 ## Deployment Modes
@@ -31,27 +31,27 @@ Mode taxonomy and design intent are documented in `doc/DEPLOYMENT-MODES.md`.
 
 Current CLI behavior:
 
-- `paperclipai onboard` and `paperclipai configure --section server` set deployment mode in config
+- `sentinelai onboard` and `sentinelai configure --section server` set deployment mode in config
 - server onboarding/configure ask for reachability intent and write `server.bind`
-- `paperclipai run --bind <loopback|lan|tailnet>` passes a quickstart bind preset into first-run onboarding when config is missing
+- `sentinelai run --bind <loopback|lan|tailnet>` passes a quickstart bind preset into first-run onboarding when config is missing
 - runtime can override mode with `PAPERCLIP_DEPLOYMENT_MODE`
-- `paperclipai run` and `paperclipai doctor` still do not expose a direct low-level `--mode` flag
+- `sentinelai run` and `sentinelai doctor` still do not expose a direct low-level `--mode` flag
 
 Canonical behavior is documented in `doc/DEPLOYMENT-MODES.md`.
 
 Allow an authenticated/private hostname (for example custom Tailscale DNS):
 
 ```sh
-pnpm paperclipai allowed-hostname dotta-macbook-pro
+pnpm sentinelai allowed-hostname dotta-macbook-pro
 ```
 
 Bring up the default local SSH fixture for environment testing:
 
 ```sh
-pnpm paperclipai env-lab up
-pnpm paperclipai env-lab doctor
-pnpm paperclipai env-lab status --json
-pnpm paperclipai env-lab down
+pnpm sentinelai env-lab up
+pnpm sentinelai env-lab doctor
+pnpm sentinelai env-lab status --json
+pnpm sentinelai env-lab down
 ```
 
 All client commands support:
@@ -65,44 +65,44 @@ All client commands support:
 
 Company-scoped commands also support `--company-id <id>`.
 
-Use `--data-dir` on any CLI command to isolate all default local state (config/context/db/logs/storage/secrets) away from `~/.paperclip`:
+Use `--data-dir` on any CLI command to isolate all default local state (config/context/db/logs/storage/secrets) away from `~/.sentinel`:
 
 ```sh
-pnpm paperclipai run --data-dir ./tmp/paperclip-dev
-pnpm paperclipai issue list --data-dir ./tmp/paperclip-dev
+pnpm sentinelai run --data-dir ./tmp/paperclip-dev
+pnpm sentinelai issue list --data-dir ./tmp/paperclip-dev
 ```
 
 ## Context Profiles
 
-Store local defaults in `~/.paperclip/context.json`:
+Store local defaults in `~/.sentinel/context.json`:
 
 ```sh
-pnpm paperclipai context set --api-base http://localhost:3100 --company-id <company-id>
-pnpm paperclipai context show
-pnpm paperclipai context list
-pnpm paperclipai context use default
+pnpm sentinelai context set --api-base http://localhost:3100 --company-id <company-id>
+pnpm sentinelai context show
+pnpm sentinelai context list
+pnpm sentinelai context use default
 ```
 
 To avoid storing secrets in context, set `apiKeyEnvVarName` and keep the key in env:
 
 ```sh
-pnpm paperclipai context set --api-key-env-var-name PAPERCLIP_API_KEY
+pnpm sentinelai context set --api-key-env-var-name PAPERCLIP_API_KEY
 export PAPERCLIP_API_KEY=...
 ```
 
 ## Company Commands
 
 ```sh
-pnpm paperclipai company list
-pnpm paperclipai company get <company-id>
-pnpm paperclipai company delete <company-id-or-prefix> --yes --confirm <same-id-or-prefix>
+pnpm sentinelai company list
+pnpm sentinelai company get <company-id>
+pnpm sentinelai company delete <company-id-or-prefix> --yes --confirm <same-id-or-prefix>
 ```
 
 Examples:
 
 ```sh
-pnpm paperclipai company delete PAP --yes --confirm PAP
-pnpm paperclipai company delete 5cbe79ee-acb3-4597-896e-7662742593cd --yes --confirm 5cbe79ee-acb3-4597-896e-7662742593cd
+pnpm sentinelai company delete PAP --yes --confirm PAP
+pnpm sentinelai company delete 5cbe79ee-acb3-4597-896e-7662742593cd --yes --confirm 5cbe79ee-acb3-4597-896e-7662742593cd
 ```
 
 Notes:
@@ -113,21 +113,21 @@ Notes:
 ## Issue Commands
 
 ```sh
-pnpm paperclipai issue list --company-id <company-id> [--status todo,in_progress] [--assignee-agent-id <agent-id>] [--match text]
-pnpm paperclipai issue get <issue-id-or-identifier>
-pnpm paperclipai issue create --company-id <company-id> --title "..." [--description "..."] [--status todo] [--priority high]
-pnpm paperclipai issue update <issue-id> [--status in_progress] [--comment "..."]
-pnpm paperclipai issue comment <issue-id> --body "..." [--reopen]
-pnpm paperclipai issue checkout <issue-id> --agent-id <agent-id> [--expected-statuses todo,backlog,blocked]
-pnpm paperclipai issue release <issue-id>
+pnpm sentinelai issue list --company-id <company-id> [--status todo,in_progress] [--assignee-agent-id <agent-id>] [--match text]
+pnpm sentinelai issue get <issue-id-or-identifier>
+pnpm sentinelai issue create --company-id <company-id> --title "..." [--description "..."] [--status todo] [--priority high]
+pnpm sentinelai issue update <issue-id> [--status in_progress] [--comment "..."]
+pnpm sentinelai issue comment <issue-id> --body "..." [--reopen]
+pnpm sentinelai issue checkout <issue-id> --agent-id <agent-id> [--expected-statuses todo,backlog,blocked]
+pnpm sentinelai issue release <issue-id>
 ```
 
 ## Agent Commands
 
 ```sh
-pnpm paperclipai agent list --company-id <company-id>
-pnpm paperclipai agent get <agent-id>
-pnpm paperclipai agent local-cli <agent-id-or-shortname> --company-id <company-id>
+pnpm sentinelai agent list --company-id <company-id>
+pnpm sentinelai agent get <agent-id>
+pnpm sentinelai agent local-cli <agent-id-or-shortname> --company-id <company-id>
 ```
 
 `agent local-cli` is the quickest way to run local Claude/Codex manually as a Paperclip agent:
@@ -139,19 +139,19 @@ pnpm paperclipai agent local-cli <agent-id-or-shortname> --company-id <company-i
 Example for shortname-based local setup:
 
 ```sh
-pnpm paperclipai agent local-cli codexcoder --company-id <company-id>
-pnpm paperclipai agent local-cli claudecoder --company-id <company-id>
+pnpm sentinelai agent local-cli codexcoder --company-id <company-id>
+pnpm sentinelai agent local-cli claudecoder --company-id <company-id>
 ```
 
 ## Secrets Commands
 
 ```sh
-pnpm paperclipai secrets list --company-id <company-id>
-pnpm paperclipai secrets declarations --company-id <company-id> [--include agents,projects] [--kind secret]
-pnpm paperclipai secrets create --company-id <company-id> --name anthropic-api-key --value-env ANTHROPIC_API_KEY
-pnpm paperclipai secrets link --company-id <company-id> --name prod-stripe-key --provider aws_secrets_manager --external-ref <provider-ref>
-pnpm paperclipai secrets doctor --company-id <company-id>
-pnpm paperclipai secrets migrate-inline-env --company-id <company-id> [--apply]
+pnpm sentinelai secrets list --company-id <company-id>
+pnpm sentinelai secrets declarations --company-id <company-id> [--include agents,projects] [--kind secret]
+pnpm sentinelai secrets create --company-id <company-id> --name anthropic-api-key --value-env ANTHROPIC_API_KEY
+pnpm sentinelai secrets link --company-id <company-id> --name prod-stripe-key --provider aws_secrets_manager --external-ref <provider-ref>
+pnpm sentinelai secrets doctor --company-id <company-id>
+pnpm sentinelai secrets migrate-inline-env --company-id <company-id> [--apply]
 ```
 
 Secret listing and declarations never print secret values. `create` accepts
@@ -172,26 +172,26 @@ for vault management today. See the
 ## Approval Commands
 
 ```sh
-pnpm paperclipai approval list --company-id <company-id> [--status pending]
-pnpm paperclipai approval get <approval-id>
-pnpm paperclipai approval create --company-id <company-id> --type hire_agent --payload '{"name":"..."}' [--issue-ids <id1,id2>]
-pnpm paperclipai approval approve <approval-id> [--decision-note "..."]
-pnpm paperclipai approval reject <approval-id> [--decision-note "..."]
-pnpm paperclipai approval request-revision <approval-id> [--decision-note "..."]
-pnpm paperclipai approval resubmit <approval-id> [--payload '{"...":"..."}']
-pnpm paperclipai approval comment <approval-id> --body "..."
+pnpm sentinelai approval list --company-id <company-id> [--status pending]
+pnpm sentinelai approval get <approval-id>
+pnpm sentinelai approval create --company-id <company-id> --type hire_agent --payload '{"name":"..."}' [--issue-ids <id1,id2>]
+pnpm sentinelai approval approve <approval-id> [--decision-note "..."]
+pnpm sentinelai approval reject <approval-id> [--decision-note "..."]
+pnpm sentinelai approval request-revision <approval-id> [--decision-note "..."]
+pnpm sentinelai approval resubmit <approval-id> [--payload '{"...":"..."}']
+pnpm sentinelai approval comment <approval-id> --body "..."
 ```
 
 ## Activity Commands
 
 ```sh
-pnpm paperclipai activity list --company-id <company-id> [--agent-id <agent-id>] [--entity-type issue] [--entity-id <id>]
+pnpm sentinelai activity list --company-id <company-id> [--agent-id <agent-id>] [--entity-type issue] [--entity-id <id>]
 ```
 
 ## Dashboard Commands
 
 ```sh
-pnpm paperclipai dashboard get --company-id <company-id>
+pnpm sentinelai dashboard get --company-id <company-id>
 ```
 
 ## Heartbeat Command
@@ -199,7 +199,7 @@ pnpm paperclipai dashboard get --company-id <company-id>
 `heartbeat run` now also supports context/api-key options and uses the shared client stack:
 
 ```sh
-pnpm paperclipai heartbeat run --agent-id <agent-id> [--api-base http://localhost:3100] [--api-key <token>]
+pnpm sentinelai heartbeat run --agent-id <agent-id> [--api-base http://localhost:3100] [--api-key <token>]
 ```
 
 ## Local Storage Defaults
@@ -207,7 +207,7 @@ pnpm paperclipai heartbeat run --agent-id <agent-id> [--api-base http://localhos
 Local Paperclip data lives under the selected instance root. `PAPERCLIP_HOME` chooses the home directory and `PAPERCLIP_INSTANCE_ID` chooses the instance.
 
 ```text
-~/.paperclip/                                     # PAPERCLIP_HOME
+~/.sentinel/                                     # PAPERCLIP_HOME
 └── instances/
     └── default/                                  # instance root (PAPERCLIP_INSTANCE_ID)
         ├── config.json                           # runtime config
@@ -227,16 +227,16 @@ Local Paperclip data lives under the selected instance root. `PAPERCLIP_HOME` ch
 
 Default paths for the canonical install:
 
-- config: `~/.paperclip/instances/default/config.json`
-- embedded db: `~/.paperclip/instances/default/db`
-- logs: `~/.paperclip/instances/default/logs`
-- storage: `~/.paperclip/instances/default/data/storage`
-- secrets key: `~/.paperclip/instances/default/secrets/master.key`
+- config: `~/.sentinel/instances/default/config.json`
+- embedded db: `~/.sentinel/instances/default/db`
+- logs: `~/.sentinel/instances/default/logs`
+- storage: `~/.sentinel/instances/default/data/storage`
+- secrets key: `~/.sentinel/instances/default/secrets/master.key`
 
 Override base home or instance with env vars:
 
 ```sh
-PAPERCLIP_HOME=/custom/home PAPERCLIP_INSTANCE_ID=dev pnpm paperclipai run
+PAPERCLIP_HOME=/custom/home PAPERCLIP_INSTANCE_ID=dev pnpm sentinelai run
 ```
 
 ## Storage Configuration
@@ -244,7 +244,7 @@ PAPERCLIP_HOME=/custom/home PAPERCLIP_INSTANCE_ID=dev pnpm paperclipai run
 Configure storage provider and settings:
 
 ```sh
-pnpm paperclipai configure --section storage
+pnpm sentinelai configure --section storage
 ```
 
 Supported providers:

@@ -8,7 +8,7 @@ import manifest, {
   CURSOR_WINDOW_ROUTINE_KEY,
   INDEX_REFRESH_ROUTINE_KEY,
   NIGHTLY_LINT_ROUTINE_KEY,
-  PAPERCLIP_DISTILL_SKILL_KEY,
+  SENTINEL_DISTILL_SKILL_KEY,
   WIKI_MAINTAINER_AGENT_KEY,
   WIKI_MAINTAINER_SKILL_CANONICAL_KEY,
   WIKI_MAINTAINER_SKILL_KEY,
@@ -34,10 +34,10 @@ import { OPERATION_ORIGIN_KIND, type WikiSkillResource } from "../src/wiki.js";
 
 const COMPANY_ID = "11111111-1111-4111-8111-111111111111";
 const OTHER_COMPANY_ID = "99999999-9999-4999-8999-999999999999";
-const ORIGINAL_DEPLOYMENT_MODE = process.env.PAPERCLIP_DEPLOYMENT_MODE;
-const ORIGINAL_DEPLOYMENT_EXPOSURE = process.env.PAPERCLIP_DEPLOYMENT_EXPOSURE;
+const ORIGINAL_DEPLOYMENT_MODE = process.env.SENTINEL_DEPLOYMENT_MODE;
+const ORIGINAL_DEPLOYMENT_EXPOSURE = process.env.SENTINEL_DEPLOYMENT_EXPOSURE;
 type TestBridgeGlobal = typeof globalThis & {
-  __paperclipPluginBridge__?: {
+  __sentinelPluginBridge__?: {
     sdkUi?: Record<string, unknown>;
   };
 };
@@ -101,14 +101,14 @@ let mockPageMetadataByPath: Record<string, {
 
 beforeEach(() => {
   if (ORIGINAL_DEPLOYMENT_MODE == null) {
-    delete process.env.PAPERCLIP_DEPLOYMENT_MODE;
+    delete process.env.SENTINEL_DEPLOYMENT_MODE;
   } else {
-    process.env.PAPERCLIP_DEPLOYMENT_MODE = ORIGINAL_DEPLOYMENT_MODE;
+    process.env.SENTINEL_DEPLOYMENT_MODE = ORIGINAL_DEPLOYMENT_MODE;
   }
   if (ORIGINAL_DEPLOYMENT_EXPOSURE == null) {
-    delete process.env.PAPERCLIP_DEPLOYMENT_EXPOSURE;
+    delete process.env.SENTINEL_DEPLOYMENT_EXPOSURE;
   } else {
-    process.env.PAPERCLIP_DEPLOYMENT_EXPOSURE = ORIGINAL_DEPLOYMENT_EXPOSURE;
+    process.env.SENTINEL_DEPLOYMENT_EXPOSURE = ORIGINAL_DEPLOYMENT_EXPOSURE;
   }
   mockPathname = "/PAP/wiki";
   mockSearch = "";
@@ -122,7 +122,7 @@ beforeEach(() => {
   mockDistillationOverviewData = null;
   mockPageContentsByPath = {};
   mockPageMetadataByPath = {};
-  (globalThis as TestBridgeGlobal).__paperclipPluginBridge__ = {
+  (globalThis as TestBridgeGlobal).__sentinelPluginBridge__ = {
     sdkUi: {
       usePluginData: (key: string, params?: Record<string, unknown>) => {
         if (key === "overview") {
@@ -460,16 +460,16 @@ beforeEach(() => {
 
 afterEach(() => {
   if (ORIGINAL_DEPLOYMENT_MODE == null) {
-    delete process.env.PAPERCLIP_DEPLOYMENT_MODE;
+    delete process.env.SENTINEL_DEPLOYMENT_MODE;
   } else {
-    process.env.PAPERCLIP_DEPLOYMENT_MODE = ORIGINAL_DEPLOYMENT_MODE;
+    process.env.SENTINEL_DEPLOYMENT_MODE = ORIGINAL_DEPLOYMENT_MODE;
   }
   if (ORIGINAL_DEPLOYMENT_EXPOSURE == null) {
-    delete process.env.PAPERCLIP_DEPLOYMENT_EXPOSURE;
+    delete process.env.SENTINEL_DEPLOYMENT_EXPOSURE;
   } else {
-    process.env.PAPERCLIP_DEPLOYMENT_EXPOSURE = ORIGINAL_DEPLOYMENT_EXPOSURE;
+    process.env.SENTINEL_DEPLOYMENT_EXPOSURE = ORIGINAL_DEPLOYMENT_EXPOSURE;
   }
-  delete (globalThis as TestBridgeGlobal).__paperclipPluginBridge__;
+  delete (globalThis as TestBridgeGlobal).__sentinelPluginBridge__;
 });
 
 function wikiMaintainerAgent(): Agent {
@@ -495,7 +495,7 @@ function wikiMaintainerAgent(): Agent {
     permissions: { canCreateAgents: false },
     lastHeartbeatAt: null,
     metadata: {
-      paperclipManagedResource: {
+      sentinelManagedResource: {
         pluginKey: manifest.id,
         resourceKind: "agent",
         resourceKey: "wiki-maintainer",
@@ -653,7 +653,7 @@ function mockPersistedWikiSpace(harness: ReturnType<typeof createTestHarness>, s
 
 describe("LLM Wiki plugin scaffold", () => {
   it("declares standalone plugin surfaces without core wiki coupling", () => {
-    expect(manifest.id).toBe("paperclipai.plugin-llm-wiki");
+    expect(manifest.id).toBe("sentinelai.plugin-llm-wiki");
     expect(manifest.entrypoints.worker).toBe("./dist/worker.js");
     expect(manifest.entrypoints.ui).toBe("./dist/ui");
     expect(manifest.database?.namespaceSlug).toBe("llm_wiki");
@@ -765,7 +765,7 @@ describe("LLM Wiki plugin scaffold", () => {
     expect(DEFAULT_AGENT_INSTRUCTIONS).not.toContain("skills/<name>/SKILL.md");
     expect(DEFAULT_AGENT_INSTRUCTION_FILES["skills/wiki-ingest/SKILL.md"]).toBeUndefined();
     expect(manifest.skills?.map((skill) => skill.skillKey)).toEqual([...WIKI_MANAGED_SKILL_KEYS]);
-    expect(manifest.agents?.[0]?.adapterConfig?.paperclipSkillSync).toEqual({
+    expect(manifest.agents?.[0]?.adapterConfig?.sentinelSkillSync).toEqual({
       desiredSkills: WIKI_MANAGED_SKILL_CANONICAL_KEYS,
     });
     expect(QUERY_PROMPT).toContain("wiki-query skill");
@@ -813,7 +813,7 @@ describe("LLM Wiki plugin scaffold", () => {
       context: { companyId: COMPANY_ID, companyPrefix: "PAP" },
     } as never));
 
-    expect(markup).toContain("Issues table · project-1 · plugin:paperclipai.plugin-llm-wiki:operation");
+    expect(markup).toContain("Issues table · project-1 · plugin:sentinelai.plugin-llm-wiki:operation");
     expect(markup).not.toContain("Recent runs");
     expect(markup).not.toContain(">Operations</h2>");
   });
@@ -1873,7 +1873,7 @@ Duplicate headings receive stable suffixes.
       spaceSlug: created.space.slug,
       profile: enabledProfile,
     });
-    mockPersistedWikiSpace(harness, { ...(created.space as unknown as Record<string, unknown>), settings: { paperclipIngestion: enabledProfile } });
+    mockPersistedWikiSpace(harness, { ...(created.space as unknown as Record<string, unknown>), settings: { sentinelIngestion: enabledProfile } });
 
     await harness.emit("issue.created", {}, {
       companyId: COMPANY_ID,
@@ -1914,7 +1914,7 @@ Duplicate headings receive stable suffixes.
       spaceSlug: created.space.slug,
       profile: enabledProfile,
     });
-    mockPersistedWikiSpace(harness, { ...(created.space as unknown as Record<string, unknown>), settings: { paperclipIngestion: enabledProfile } });
+    mockPersistedWikiSpace(harness, { ...(created.space as unknown as Record<string, unknown>), settings: { sentinelIngestion: enabledProfile } });
     await harness.emit("issue.created", {}, {
       companyId: COMPANY_ID,
       entityId: issue.id,
@@ -1926,7 +1926,7 @@ Duplicate headings receive stable suffixes.
       spaceSlug: created.space.slug,
       profile: { ...enabledProfile, enabled: false },
     });
-    mockPersistedWikiSpace(harness, { ...(created.space as unknown as Record<string, unknown>), settings: { paperclipIngestion: { ...enabledProfile, enabled: false } } });
+    mockPersistedWikiSpace(harness, { ...(created.space as unknown as Record<string, unknown>), settings: { sentinelIngestion: { ...enabledProfile, enabled: false } } });
     await harness.emit("issue.updated", {}, {
       companyId: COMPANY_ID,
       entityId: issue.id,
@@ -2216,7 +2216,7 @@ Duplicate headings receive stable suffixes.
         maxPaperclipRoutineRunCostCents: 1,
         maxPaperclipDistillationTaskCostCents: 1,
         maxPaperclipDistillationProjectCostCents: 1,
-        paperclipCostCentsPerThousandSourceCharacters: 100,
+        sentinelCostCentsPerThousandSourceCharacters: 100,
       },
     });
     const project = existingProject();
@@ -2290,7 +2290,7 @@ Duplicate headings receive stable suffixes.
     expect(result.operation.issue.assigneeAgentId).toBe(wikiMaintainerAgent().id);
     expect(result.operation.issue.assigneeAdapterOverrides).toEqual({ modelProfile: "cheap" });
     expect(result.operation.issue.description).toContain("Prompt source: LLM Wiki plugin action `distill-paperclip-now`");
-    expect(result.operation.issue.description).toContain(`Required skill: use the installed \`${PAPERCLIP_DISTILL_SKILL_KEY}\` skill`);
+    expect(result.operation.issue.description).toContain(`Required skill: use the installed \`${SENTINEL_DISTILL_SKILL_KEY}\` skill`);
     expect(result.operation.issue.description).toContain("Do not hardcode a single project");
     expect(result.operation.issue.description).not.toContain(`Source project ID: ${project.id}`);
     const workItemInsert = harness.dbExecutes.find((execute) =>
@@ -2639,8 +2639,8 @@ Duplicate headings receive stable suffixes.
   });
 
   it("refuses auto-apply Paperclip project page patches in authenticated/public deployments", async () => {
-    process.env.PAPERCLIP_DEPLOYMENT_MODE = "authenticated";
-    process.env.PAPERCLIP_DEPLOYMENT_EXPOSURE = "public";
+    process.env.SENTINEL_DEPLOYMENT_MODE = "authenticated";
+    process.env.SENTINEL_DEPLOYMENT_EXPOSURE = "public";
     const harness = createTestHarness({ manifest, config: { autoApplyIngestPatches: true } });
     const project = existingProject();
     const issue = paperclipIssue({

@@ -41,7 +41,7 @@ function writePluginPackage(pluginDir: string): void {
     path.join(pluginDir, "package.json"),
     JSON.stringify({
       name: "@acme/example",
-      paperclipPlugin: {
+      sentinelPlugin: {
         manifest: "./dist/manifest.js",
         worker: "./dist/worker.js",
         ui: "./dist/ui",

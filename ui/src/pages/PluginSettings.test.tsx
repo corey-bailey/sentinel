@@ -177,7 +177,7 @@ describe("PluginSettings", () => {
   it("renders unconfigured manifest local folders with required paths", async () => {
     const declaration = wikiFolderDeclaration();
     mockPluginsApi.get.mockResolvedValue(basePlugin({
-      pluginKey: "paperclipai.plugin-llm-wiki",
+      pluginKey: "sentinelai.plugin-llm-wiki",
       packageName: "@sentinel/plugin-llm-wiki",
       status: "ready",
       manifestJson: {

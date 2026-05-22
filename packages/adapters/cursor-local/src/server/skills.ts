@@ -9,9 +9,9 @@ import type {
 import {
   buildPersistentSkillSnapshot,
   ensurePaperclipSkillSymlink,
-  readPaperclipRuntimeSkillEntries,
+  readSentinelRuntimeSkillEntries,
   readInstalledSkillTargets,
-  resolvePaperclipDesiredSkillNames,
+  resolveSentinelDesiredSkillNames,
 } from "@sentinel/adapter-utils/server-utils";
 
 const __moduleDir = path.dirname(fileURLToPath(import.meta.url));
@@ -31,8 +31,8 @@ function resolveCursorSkillsHome(config: Record<string, unknown>) {
 }
 
 async function buildCursorSkillSnapshot(config: Record<string, unknown>): Promise<AdapterSkillSnapshot> {
-  const availableEntries = await readPaperclipRuntimeSkillEntries(config, __moduleDir);
-  const desiredSkills = resolvePaperclipDesiredSkillNames(config, availableEntries);
+  const availableEntries = await readSentinelRuntimeSkillEntries(config, __moduleDir);
+  const desiredSkills = resolveSentinelDesiredSkillNames(config, availableEntries);
   const skillsHome = resolveCursorSkillsHome(config);
   const installed = await readInstalledSkillTargets(skillsHome);
   return buildPersistentSkillSnapshot({
@@ -56,7 +56,7 @@ export async function syncCursorSkills(
   ctx: AdapterSkillContext,
   desiredSkills: string[],
 ): Promise<AdapterSkillSnapshot> {
-  const availableEntries = await readPaperclipRuntimeSkillEntries(ctx.config, __moduleDir);
+  const availableEntries = await readSentinelRuntimeSkillEntries(ctx.config, __moduleDir);
   const desiredSet = new Set([
     ...desiredSkills,
     ...availableEntries.filter((entry) => entry.required).map((entry) => entry.key),
@@ -87,5 +87,5 @@ export function resolveCursorDesiredSkillNames(
   config: Record<string, unknown>,
   availableEntries: Array<{ key: string; required?: boolean }>,
 ) {
-  return resolvePaperclipDesiredSkillNames(config, availableEntries);
+  return resolveSentinelDesiredSkillNames(config, availableEntries);
 }

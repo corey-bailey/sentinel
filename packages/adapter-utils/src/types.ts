@@ -421,7 +421,7 @@ export interface ServerAdapterModule {
   /**
    * Adapter needs runtime skill entries materialized (written to disk)
    * before being passed via config. Used by adapters that scan a directory
-   * rather than reading config.paperclipRuntimeSkills.
+   * rather than reading config.sentinelRuntimeSkills.
    */
   requiresMaterializedRuntimeSkills?: boolean;
   /**

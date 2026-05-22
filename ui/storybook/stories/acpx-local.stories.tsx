@@ -521,7 +521,7 @@ function buildAcpxAgent({
       agent: acpAgent,
       mode: "persistent",
       permissionMode: "approve-all",
-      paperclipSkillSync: {
+      sentinelSkillSync: {
         desiredSkills,
       },
     },

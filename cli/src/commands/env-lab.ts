@@ -9,12 +9,12 @@ import {
   startSshEnvLabFixture,
   stopSshEnvLabFixture,
 } from "@sentinel/adapter-utils/ssh";
-import { resolvePaperclipInstanceId, resolvePaperclipInstanceRoot } from "../config/home.js";
+import { resolveSentinelInstanceId, resolveSentinelInstanceRoot } from "../config/home.js";
 
 export function resolveEnvLabSshStatePath(instanceId?: string): string {
-  const resolvedInstanceId = resolvePaperclipInstanceId(instanceId);
+  const resolvedInstanceId = resolveSentinelInstanceId(instanceId);
   return path.resolve(
-    resolvePaperclipInstanceRoot(resolvedInstanceId),
+    resolveSentinelInstanceRoot(resolvedInstanceId),
     "env-lab",
     "ssh-fixture",
     "state.json",
@@ -138,7 +138,7 @@ export async function envLabDoctorCommand(opts: { instance?: string; json?: bool
     p.log.message(`State: ${pc.dim(status.statePath)}`);
   }
 
-  p.log.message(`Cleanup: ${pc.dim("pnpm paperclipai env-lab down")}`);
+  p.log.message(`Cleanup: ${pc.dim("pnpm sentinelai env-lab down")}`);
 }
 
 export function registerEnvLabCommands(program: Command) {

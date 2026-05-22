@@ -186,7 +186,7 @@ const BUNDLED_PLUGIN_EXAMPLES: AvailablePluginExample[] = [
   },
   {
     packageName: "@sentinel/plugin-orchestration-smoke-example",
-    pluginKey: "paperclipai.plugin-orchestration-smoke-example",
+    pluginKey: "sentinelai.plugin-orchestration-smoke-example",
     displayName: "Orchestration Smoke (Example)",
     description: "Acceptance fixture for scoped plugin routes, restricted database namespaces, issue orchestration, documents, wakeups, summaries, and UI status surfaces.",
     localPath: "packages/plugins/examples/plugin-orchestration-smoke-example",

@@ -1096,7 +1096,7 @@ export {
 } from "./routine-variables.js";
 
 export {
-  paperclipConfigSchema,
+  sentinelConfigSchema,
   configMetaSchema,
   llmConfigSchema,
   databaseBackupConfigSchema,

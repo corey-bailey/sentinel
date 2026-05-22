@@ -231,7 +231,7 @@ test("verifyPackageRegistryProblems marks canary latest drift as non-retriable",
 test("verifyPackageRegistryState allows intentional canary latest but still checks dependencies", () => {
   const packageDocsByName = new Map([
     [
-      "paperclipai",
+      "sentinelai",
       {
         "dist-tags": {
           latest: "2026.427.0-canary.3",
@@ -258,8 +258,8 @@ test("verifyPackageRegistryState allows intentional canary latest but still chec
 
   assert.deepEqual(
     verifyPackageRegistryState({
-      packageName: "paperclipai",
-      packageDoc: packageDocsByName.get("paperclipai"),
+      packageName: "sentinelai",
+      packageDoc: packageDocsByName.get("sentinelai"),
       packageDocsByName,
       channel: "canary",
       distTag: "canary",
@@ -354,7 +354,7 @@ test("fetchRegistryJson times out hung requests", async () => {
 
   try {
     await assert.rejects(
-      fetchRegistryJson(new URL("https://registry.npmjs.org/@paperclipai%2Fui"), { timeoutMs: 1 }),
+      fetchRegistryJson(new URL("https://registry.npmjs.org/@sentinelai%2Fui"), { timeoutMs: 1 }),
       /timed out/,
     );
   } finally {

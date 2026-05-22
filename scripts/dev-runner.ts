@@ -24,7 +24,7 @@ type BindMode = (typeof BIND_MODES)[number];
 const worktreeEnvBootstrap = bootstrapDevRunnerWorktreeEnv(repoRoot, process.env);
 if (worktreeEnvBootstrap.missingEnv) {
   console.error(
-    `[paperclip] linked git worktree at ${repoRoot} is missing ${path.relative(repoRoot, worktreeEnvBootstrap.envPath)}. Run \`paperclipai worktree init\` in this worktree before \`pnpm dev\`.`,
+    `[paperclip] linked git worktree at ${repoRoot} is missing ${path.relative(repoRoot, worktreeEnvBootstrap.envPath)}. Run \`sentinelai worktree init\` in this worktree before \`pnpm dev\`.`,
   );
   process.exit(1);
 }
@@ -35,8 +35,8 @@ const scanIntervalMs = 1500;
 const autoRestartPollIntervalMs = 2500;
 const gracefulShutdownTimeoutMs = 10_000;
 const changedPathSampleLimit = 5;
-const devServerStatusFilePath = path.join(repoRoot, ".paperclip", "dev-server-status.json");
-const devServerRestartRequestFilePath = path.join(repoRoot, ".paperclip", "dev-server-restart-request.json");
+const devServerStatusFilePath = path.join(repoRoot, ".sentinel", "dev-server-status.json");
+const devServerRestartRequestFilePath = path.join(repoRoot, ".sentinel", "dev-server-restart-request.json");
 const devServerStatusToken = mode === "dev" ? randomUUID() : null;
 const devServerStatusTokenHeader = "x-paperclip-dev-server-status-token";
 
@@ -71,8 +71,8 @@ const ignoredDirectoryNames = new Set([
 ]);
 
 const ignoredRelativePaths = new Set([
-  ".paperclip/dev-server-restart-request.json",
-  ".paperclip/dev-server-status.json",
+  ".sentinel/dev-server-restart-request.json",
+  ".sentinel/dev-server-status.json",
 ]);
 
 const tailscaleAuthFlagNames = new Set([
@@ -133,19 +133,19 @@ if (bindMode === "custom" && !bindHost) {
 
 const env: NodeJS.ProcessEnv = {
   ...process.env,
-  PAPERCLIP_UI_DEV_MIDDLEWARE: "true",
+  SENTINEL_UI_DEV_MIDDLEWARE: "true",
 };
 
 if (mode === "dev") {
-  env.PAPERCLIP_DEV_SERVER_STATUS_FILE = devServerStatusFilePath;
-  env.PAPERCLIP_DEV_SERVER_STATUS_TOKEN = devServerStatusToken ?? "";
-  env.PAPERCLIP_MIGRATION_AUTO_APPLY ??= "true";
+  env.SENTINEL_DEV_SERVER_STATUS_FILE = devServerStatusFilePath;
+  env.SENTINEL_DEV_SERVER_STATUS_TOKEN = devServerStatusToken ?? "";
+  env.SENTINEL_MIGRATION_AUTO_APPLY ??= "true";
 }
 
 if (mode === "watch") {
-  delete env.PAPERCLIP_DEV_SERVER_STATUS_TOKEN;
-  env.PAPERCLIP_MIGRATION_PROMPT ??= "never";
-  env.PAPERCLIP_MIGRATION_AUTO_APPLY ??= "true";
+  delete env.SENTINEL_DEV_SERVER_STATUS_TOKEN;
+  env.SENTINEL_MIGRATION_PROMPT ??= "never";
+  env.SENTINEL_MIGRATION_AUTO_APPLY ??= "true";
 }
 
 if (tailscaleAuth || bindMode) {
@@ -153,31 +153,31 @@ if (tailscaleAuth || bindMode) {
   if (tailscaleAuth) {
     console.log("[paperclip] note: --tailscale-auth/--authenticated-private are legacy aliases for --bind lan");
   }
-  env.PAPERCLIP_BIND = effectiveBind;
+  env.SENTINEL_BIND = effectiveBind;
   if (bindHost) {
-    env.PAPERCLIP_BIND_HOST = bindHost;
+    env.SENTINEL_BIND_HOST = bindHost;
   } else {
-    delete env.PAPERCLIP_BIND_HOST;
+    delete env.SENTINEL_BIND_HOST;
   }
   if (effectiveBind === "loopback" && !tailscaleAuth) {
-    delete env.PAPERCLIP_DEPLOYMENT_MODE;
-    delete env.PAPERCLIP_DEPLOYMENT_EXPOSURE;
-    delete env.PAPERCLIP_AUTH_BASE_URL_MODE;
+    delete env.SENTINEL_DEPLOYMENT_MODE;
+    delete env.SENTINEL_DEPLOYMENT_EXPOSURE;
+    delete env.SENTINEL_AUTH_BASE_URL_MODE;
     console.log("[paperclip] dev mode: local_trusted (bind=loopback)");
   } else {
-    env.PAPERCLIP_DEPLOYMENT_MODE = "authenticated";
-    env.PAPERCLIP_DEPLOYMENT_EXPOSURE = "private";
-    env.PAPERCLIP_AUTH_BASE_URL_MODE = "auto";
+    env.SENTINEL_DEPLOYMENT_MODE = "authenticated";
+    env.SENTINEL_DEPLOYMENT_EXPOSURE = "private";
+    env.SENTINEL_AUTH_BASE_URL_MODE = "auto";
     console.log(
       `[paperclip] dev mode: authenticated/private (bind=${effectiveBind}${bindHost ? `:${bindHost}` : ""})`,
     );
   }
 } else {
-  delete env.PAPERCLIP_BIND;
-  delete env.PAPERCLIP_BIND_HOST;
-  delete env.PAPERCLIP_DEPLOYMENT_MODE;
-  delete env.PAPERCLIP_DEPLOYMENT_EXPOSURE;
-  delete env.PAPERCLIP_AUTH_BASE_URL_MODE;
+  delete env.SENTINEL_BIND;
+  delete env.SENTINEL_BIND_HOST;
+  delete env.SENTINEL_DEPLOYMENT_MODE;
+  delete env.SENTINEL_DEPLOYMENT_EXPOSURE;
+  delete env.SENTINEL_AUTH_BASE_URL_MODE;
   console.log("[paperclip] dev mode: local_trusted (default)");
 }
 
@@ -466,7 +466,7 @@ async function refreshPendingMigrations() {
 
 async function maybePreflightMigrations(options: { interactive?: boolean; autoApply?: boolean; exitOnDecline?: boolean } = {}) {
   const interactive = options.interactive ?? mode === "watch";
-  const autoApply = options.autoApply ?? env.PAPERCLIP_MIGRATION_AUTO_APPLY === "true";
+  const autoApply = options.autoApply ?? env.SENTINEL_MIGRATION_AUTO_APPLY === "true";
   const exitOnDecline = options.exitOnDecline ?? mode === "watch";
 
   const payload = await refreshPendingMigrations();

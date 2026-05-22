@@ -129,11 +129,11 @@ describe("secrets CLI helpers", () => {
 
   beforeEach(() => {
     process.env = { ...originalEnv };
-    delete process.env.PAPERCLIP_SECRETS_AWS_REGION;
+    delete process.env.SENTINEL_SECRETS_AWS_REGION;
     delete process.env.AWS_REGION;
     delete process.env.AWS_DEFAULT_REGION;
-    delete process.env.PAPERCLIP_SECRETS_AWS_DEPLOYMENT_ID;
-    delete process.env.PAPERCLIP_SECRETS_AWS_KMS_KEY_ID;
+    delete process.env.SENTINEL_SECRETS_AWS_DEPLOYMENT_ID;
+    delete process.env.SENTINEL_SECRETS_AWS_KMS_KEY_ID;
   });
 
   afterEach(() => {
@@ -236,15 +236,15 @@ describe("secrets CLI helpers", () => {
     const result = secretsCheck(configWithSecretsProvider("aws_secrets_manager"));
 
     expect(result.status).toBe("fail");
-    expect(result.message).toContain("PAPERCLIP_SECRETS_AWS_DEPLOYMENT_ID");
+    expect(result.message).toContain("SENTINEL_SECRETS_AWS_DEPLOYMENT_ID");
     expect(result.repairHint).toContain("AWS SDK default credential chain");
     expect(result.repairHint).toContain("Do not store AWS root credentials");
   });
 
   it("passes AWS doctor checks when non-secret provider config is present", () => {
-    process.env.PAPERCLIP_SECRETS_AWS_REGION = "us-east-1";
-    process.env.PAPERCLIP_SECRETS_AWS_DEPLOYMENT_ID = "prod-us-1";
-    process.env.PAPERCLIP_SECRETS_AWS_KMS_KEY_ID =
+    process.env.SENTINEL_SECRETS_AWS_REGION = "us-east-1";
+    process.env.SENTINEL_SECRETS_AWS_DEPLOYMENT_ID = "prod-us-1";
+    process.env.SENTINEL_SECRETS_AWS_KMS_KEY_ID =
       "arn:aws:kms:us-east-1:123456789012:key/test";
     process.env.AWS_PROFILE = "paperclip-prod";
 

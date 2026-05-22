@@ -124,15 +124,15 @@ function resolveHostForUrl(rawHost: string): string {
 
 function resolveDefaultPaperclipApiUrl(): string {
   const runtimeHost = resolveHostForUrl(
-    process.env.PAPERCLIP_LISTEN_HOST ?? process.env.HOST ?? "localhost",
+    process.env.SENTINEL_LISTEN_HOST ?? process.env.HOST ?? "localhost",
   );
   // 3100 matches the default Paperclip dev server port when the runtime does not provide one.
-  const runtimePort = process.env.PAPERCLIP_LISTEN_PORT ?? process.env.PORT ?? "3100";
+  const runtimePort = process.env.SENTINEL_LISTEN_PORT ?? process.env.PORT ?? "3100";
   return `http://${runtimeHost}:${runtimePort}`;
 }
 
 function isBridgeDebugEnabled(env: NodeJS.ProcessEnv): boolean {
-  const value = env.PAPERCLIP_BRIDGE_DEBUG?.trim().toLowerCase();
+  const value = env.SENTINEL_BRIDGE_DEBUG?.trim().toLowerCase();
   return value === "1" || value === "true" || value === "yes";
 }
 
@@ -995,7 +995,7 @@ export function runtimeAssetDir(
   key: string,
   fallbackRemoteCwd: string,
 ): string {
-  return prepared.assetDirs[key] ?? path.posix.join(fallbackRemoteCwd, ".paperclip-runtime", key);
+  return prepared.assetDirs[key] ?? path.posix.join(fallbackRemoteCwd, ".sentinel-runtime", key);
 }
 
 function buildBridgeResponseHeaders(response: Response): Record<string, string> {
@@ -1076,7 +1076,7 @@ export async function startAdapterExecutionTargetPaperclipBridge(input: {
   const runtimeRootDir =
     input.runtimeRootDir?.trim().length
       ? input.runtimeRootDir.trim()
-      : path.posix.join(target.remoteCwd, ".paperclip-runtime", input.adapterKey);
+      : path.posix.join(target.remoteCwd, ".sentinel-runtime", input.adapterKey);
   const bridgeRuntimeDir = path.posix.join(runtimeRootDir, "paperclip-bridge");
   const queueDir = path.posix.join(bridgeRuntimeDir, "queue");
   const assetRemoteDir = path.posix.join(bridgeRuntimeDir, "server");
@@ -1087,8 +1087,8 @@ export async function startAdapterExecutionTargetPaperclipBridge(input: {
       : DEFAULT_SANDBOX_CALLBACK_BRIDGE_MAX_BODY_BYTES;
   const hostApiUrl =
     input.hostApiUrl?.trim() ||
-    process.env.PAPERCLIP_RUNTIME_API_URL?.trim() ||
-    process.env.PAPERCLIP_API_URL?.trim() ||
+    process.env.SENTINEL_RUNTIME_API_URL?.trim() ||
+    process.env.SENTINEL_API_URL?.trim() ||
     resolveDefaultPaperclipApiUrl();
   const shellCommand = adapterExecutionTargetShellCommand(target);
   const runner = adapterExecutionTargetCommandRunner(target);
@@ -1112,7 +1112,7 @@ export async function startAdapterExecutionTargetPaperclipBridge(input: {
       timeoutMs: bridgeTimeoutMs,
       shellCommand,
     });
-    // PAPERCLIP_BRIDGE_DEBUG opts into verbose stdout logs of every bridge
+    // SENTINEL_BRIDGE_DEBUG opts into verbose stdout logs of every bridge
     // proxy request/response. The query string is logged verbatim, so callers
     // who pass auth tokens or other sensitive values as query parameters
     // should be aware those values appear in the host process's stdout when
@@ -1179,9 +1179,9 @@ export async function startAdapterExecutionTargetPaperclipBridge(input: {
 
   return {
     env: {
-      PAPERCLIP_API_URL: server.baseUrl,
-      PAPERCLIP_API_KEY: bridgeToken,
-      PAPERCLIP_API_BRIDGE_MODE: "queue_v1",
+      SENTINEL_API_URL: server.baseUrl,
+      SENTINEL_API_KEY: bridgeToken,
+      SENTINEL_API_BRIDGE_MODE: "queue_v1",
     },
     stop: async () => {
       await Promise.allSettled([

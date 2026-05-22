@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import type { AdapterExecutionContext } from "@sentinel/adapter-utils";
-import { resolvePaperclipInstanceRootForAdapter } from "@sentinel/adapter-utils/server-utils";
+import { resolveSentinelInstanceRootForAdapter } from "@sentinel/adapter-utils/server-utils";
 
 const SEEDED_SHARED_FILES = [
   ".credentials.json",
@@ -92,9 +92,9 @@ export function resolveManagedClaudeConfigSeedDir(
   env: NodeJS.ProcessEnv,
   companyId?: string,
 ): string {
-  const instanceRoot = resolvePaperclipInstanceRootForAdapter({
-    homeDir: nonEmpty(env.PAPERCLIP_HOME) ?? undefined,
-    instanceId: nonEmpty(env.PAPERCLIP_INSTANCE_ID) ?? undefined,
+  const instanceRoot = resolveSentinelInstanceRootForAdapter({
+    homeDir: nonEmpty(env.SENTINEL_HOME) ?? undefined,
+    instanceId: nonEmpty(env.SENTINEL_INSTANCE_ID) ?? undefined,
     env,
   });
   return companyId

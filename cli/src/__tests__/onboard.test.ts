@@ -11,7 +11,7 @@ const ORIGINAL_CWD = process.cwd();
 function createExistingConfigFixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-onboard-"));
   const runtimeRoot = path.join(root, "runtime");
-  const configPath = path.join(root, ".paperclip", "config.json");
+  const configPath = path.join(root, ".sentinel", "config.json");
   const config: PaperclipConfig = {
     $meta: {
       version: 1,
@@ -77,21 +77,21 @@ function createExistingConfigFixture() {
 
 function createFreshConfigPath() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-onboard-fresh-"));
-  return path.join(root, ".paperclip", "config.json");
+  return path.join(root, ".sentinel", "config.json");
 }
 
 describe("onboard", () => {
   beforeEach(() => {
     process.env = { ...ORIGINAL_ENV };
-    delete process.env.PAPERCLIP_AGENT_JWT_SECRET;
-    delete process.env.PAPERCLIP_SECRETS_MASTER_KEY;
-    delete process.env.PAPERCLIP_SECRETS_MASTER_KEY_FILE;
-    delete process.env.PAPERCLIP_HOME;
-    delete process.env.PAPERCLIP_CONFIG;
-    delete process.env.PAPERCLIP_INSTANCE_ID;
-    delete process.env.PAPERCLIP_BIND;
-    delete process.env.PAPERCLIP_BIND_HOST;
-    delete process.env.PAPERCLIP_TAILNET_BIND_HOST;
+    delete process.env.SENTINEL_AGENT_JWT_SECRET;
+    delete process.env.SENTINEL_SECRETS_MASTER_KEY;
+    delete process.env.SENTINEL_SECRETS_MASTER_KEY_FILE;
+    delete process.env.SENTINEL_HOME;
+    delete process.env.SENTINEL_CONFIG;
+    delete process.env.SENTINEL_INSTANCE_ID;
+    delete process.env.SENTINEL_BIND;
+    delete process.env.SENTINEL_BIND_HOST;
+    delete process.env.SENTINEL_TAILNET_BIND_HOST;
     delete process.env.HOST;
   });
 
@@ -123,7 +123,7 @@ describe("onboard", () => {
   it("keeps --yes onboarding on local trusted loopback defaults", async () => {
     const configPath = createFreshConfigPath();
     process.env.HOST = "0.0.0.0";
-    process.env.PAPERCLIP_BIND = "lan";
+    process.env.SENTINEL_BIND = "lan";
 
     await onboard({ config: configPath, yes: true, invokedByRun: true });
 
@@ -134,11 +134,11 @@ describe("onboard", () => {
     expect(raw.server.host).toBe("127.0.0.1");
   });
 
-  it("creates instance-root config and data paths for a fresh PAPERCLIP_HOME", async () => {
+  it("creates instance-root config and data paths for a fresh SENTINEL_HOME", async () => {
     const home = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-onboard-home-"));
     const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "paperclip-onboard-cwd-"));
     process.chdir(cwd);
-    process.env.PAPERCLIP_HOME = home;
+    process.env.SENTINEL_HOME = home;
 
     await onboard({ yes: true, invokedByRun: true });
 
@@ -157,7 +157,7 @@ describe("onboard", () => {
 
   it("supports authenticated/private quickstart bind presets", async () => {
     const configPath = createFreshConfigPath();
-    process.env.PAPERCLIP_TAILNET_BIND_HOST = "100.64.0.8";
+    process.env.SENTINEL_TAILNET_BIND_HOST = "100.64.0.8";
 
     await onboard({ config: configPath, yes: true, invokedByRun: true, bind: "tailnet" });
 
@@ -170,7 +170,7 @@ describe("onboard", () => {
 
   it("keeps tailnet quickstart on loopback until tailscale is available", async () => {
     const configPath = createFreshConfigPath();
-    delete process.env.PAPERCLIP_TAILNET_BIND_HOST;
+    delete process.env.SENTINEL_TAILNET_BIND_HOST;
 
     await onboard({ config: configPath, yes: true, invokedByRun: true, bind: "tailnet" });
 
@@ -183,7 +183,7 @@ describe("onboard", () => {
 
   it("ignores deployment env overrides during --yes quickstart", async () => {
     const configPath = createFreshConfigPath();
-    process.env.PAPERCLIP_DEPLOYMENT_MODE = "authenticated";
+    process.env.SENTINEL_DEPLOYMENT_MODE = "authenticated";
 
     await onboard({ config: configPath, yes: true, invokedByRun: true });
 

@@ -49,8 +49,8 @@ describe("sandbox callback bridge", () => {
           (args[0] === "-c" || args[0] === "-lc") &&
           typeof args[1] === "string"
         ) {
-          env.PAPERCLIP_TEST_STDIN = input.stdin;
-          args[1] = `printf '%s' \"$PAPERCLIP_TEST_STDIN\" | (${args[1]})`;
+          env.SENTINEL_TEST_STDIN = input.stdin;
+          args[1] = `printf '%s' \"$SENTINEL_TEST_STDIN\" | (${args[1]})`;
         }
         try {
           const result = await execFile(command, args, {
@@ -439,7 +439,7 @@ describe("sandbox callback bridge", () => {
           makeDir: async () => {},
           listJsonFiles: async () => {
             throw new Error(
-              "list /remote/.paperclip-runtime/gemini/paperclip-bridge/queue/requests failed with exit code 255: kex_exchange_identification: read: Connection reset by peer",
+              "list /remote/.sentinel-runtime/gemini/paperclip-bridge/queue/requests failed with exit code 255: kex_exchange_identification: read: Connection reset by peer",
             );
           },
           readTextFile: async () => {
@@ -763,7 +763,7 @@ describe("sandbox callback bridge", () => {
     const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
     const remoteAssetDir = path.posix.join(
       remoteWorkspaceDir,
-      ".paperclip-runtime",
+      ".sentinel-runtime",
       "codex",
       "paperclip-bridge",
       "server",
@@ -815,7 +815,7 @@ describe("sandbox callback bridge", () => {
     const remoteWorkspaceDir = path.join(rootDir, "remote-workspace");
     const remoteAssetDir = path.posix.join(
       remoteWorkspaceDir,
-      ".paperclip-runtime",
+      ".sentinel-runtime",
       "codex",
       "paperclip-bridge",
       "server",
@@ -972,11 +972,11 @@ describe("sandbox callback bridge", () => {
       timeoutMs: 30_000,
     });
 
-    await client.makeDir("/workspace/.paperclip-runtime/codex/paperclip-bridge/queue");
+    await client.makeDir("/workspace/.sentinel-runtime/codex/paperclip-bridge/queue");
 
     expect(runner.execute).toHaveBeenCalledWith(expect.objectContaining({
       env: {
-        PAPERCLIP_SANDBOX_EXEC_CHANNEL: "bridge",
+        SENTINEL_SANDBOX_EXEC_CHANNEL: "bridge",
       },
     }));
   });

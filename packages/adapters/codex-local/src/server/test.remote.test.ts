@@ -42,10 +42,10 @@ const {
     }),
     prepareAdapterExecutionTargetRuntime: vi.fn(async () => ({
       target: null,
-      workspaceRemoteDir: "/remote/workspace/.paperclip-runtime/runs/test/workspace",
-      runtimeRootDir: "/remote/workspace/.paperclip-runtime/runs/test/workspace/.paperclip-runtime/codex",
+      workspaceRemoteDir: "/remote/workspace/.sentinel-runtime/runs/test/workspace",
+      runtimeRootDir: "/remote/workspace/.sentinel-runtime/runs/test/workspace/.sentinel-runtime/codex",
       assetDirs: {
-        home: "/remote/workspace/.paperclip-runtime/runs/test/workspace/.paperclip-runtime/codex/home",
+        home: "/remote/workspace/.sentinel-runtime/runs/test/workspace/.sentinel-runtime/codex/home",
       },
       restoreWorkspace,
     })),
@@ -145,7 +145,7 @@ describe("codex remote environment diagnostics", () => {
     expect(probeCall?.[4]).toMatchObject({
       cwd: "/remote/workspace",
       env: expect.objectContaining({
-        CODEX_HOME: "/remote/workspace/.paperclip-runtime/runs/test/workspace/.paperclip-runtime/codex/home",
+        CODEX_HOME: "/remote/workspace/.sentinel-runtime/runs/test/workspace/.sentinel-runtime/codex/home",
       }),
     });
     expect(restoreWorkspace).toHaveBeenCalledTimes(1);
@@ -187,7 +187,7 @@ describe("codex remote environment diagnostics", () => {
     const probeCall = runAdapterExecutionTargetProcess.mock.calls[0] as unknown as
       | [string, AdapterExecutionTarget, string, string[], { cwd: string; env: Record<string, string> }]
       | undefined;
-    expect(probeCall?.[4].env.CODEX_HOME).toContain("/remote/workspace/.paperclip-runtime/codex/probe-home-codex-envtest-");
+    expect(probeCall?.[4].env.CODEX_HOME).toContain("/remote/workspace/.sentinel-runtime/codex/probe-home-codex-envtest-");
     expect(probeCall?.[4].env.CODEX_HOME?.startsWith("/tmp/")).toBe(false);
     expect(probeCall?.[3]).toContain("--skip-git-repo-check");
   });

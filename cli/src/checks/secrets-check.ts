@@ -59,20 +59,20 @@ export function secretsCheck(config: PaperclipConfig, configPath?: string): Chec
       status: "fail",
       message: `${provider} is configured, but this build only supports local_encrypted and aws_secrets_manager`,
       canRepair: false,
-      repairHint: "Run `paperclipai configure --section secrets` and choose local_encrypted or aws_secrets_manager",
+      repairHint: "Run `sentinelai configure --section secrets` and choose local_encrypted or aws_secrets_manager",
     };
   }
 
-  const envMasterKey = process.env.PAPERCLIP_SECRETS_MASTER_KEY;
+  const envMasterKey = process.env.SENTINEL_SECRETS_MASTER_KEY;
   if (envMasterKey && envMasterKey.trim().length > 0) {
     if (!decodeMasterKey(envMasterKey)) {
       return {
         name: "Secrets adapter",
         status: "fail",
         message:
-          "PAPERCLIP_SECRETS_MASTER_KEY is invalid (expected 32-byte base64, 64-char hex, or raw 32-char string)",
+          "SENTINEL_SECRETS_MASTER_KEY is invalid (expected 32-byte base64, 64-char hex, or raw 32-char string)",
         canRepair: false,
-        repairHint: "Set PAPERCLIP_SECRETS_MASTER_KEY to a valid key or unset it to use a key file",
+        repairHint: "Set SENTINEL_SECRETS_MASTER_KEY to a valid key or unset it to use a key file",
       };
     }
 
@@ -80,13 +80,13 @@ export function secretsCheck(config: PaperclipConfig, configPath?: string): Chec
       {
         name: "Secrets adapter",
         status: "pass",
-        message: "Local encrypted provider configured via PAPERCLIP_SECRETS_MASTER_KEY",
+        message: "Local encrypted provider configured via SENTINEL_SECRETS_MASTER_KEY",
       },
       config,
     );
   }
 
-  const keyFileOverride = process.env.PAPERCLIP_SECRETS_MASTER_KEY_FILE;
+  const keyFileOverride = process.env.SENTINEL_SECRETS_MASTER_KEY_FILE;
   const configuredPath =
     keyFileOverride && keyFileOverride.trim().length > 0
       ? keyFileOverride.trim()
@@ -127,7 +127,7 @@ export function secretsCheck(config: PaperclipConfig, configPath?: string): Chec
       status: "fail",
       message: `Could not read secrets key file: ${err instanceof Error ? err.message : String(err)}`,
       canRepair: false,
-      repairHint: "Check file permissions or set PAPERCLIP_SECRETS_MASTER_KEY",
+      repairHint: "Check file permissions or set SENTINEL_SECRETS_MASTER_KEY",
     };
   }
 
@@ -177,7 +177,7 @@ function awsSecretsManagerCheck(): CheckResult {
     process.env.AWS_ACCESS_KEY_ID?.trim() && process.env.AWS_SECRET_ACCESS_KEY?.trim();
   const credentialSource = detectedAwsCredentialSources().join(", ");
   const message =
-    `AWS Secrets Manager provider configured for deployment ${process.env.PAPERCLIP_SECRETS_AWS_DEPLOYMENT_ID}; ` +
+    `AWS Secrets Manager provider configured for deployment ${process.env.SENTINEL_SECRETS_AWS_DEPLOYMENT_ID}; ` +
     `runtime credentials source: ${credentialSource || "AWS SDK default credential chain"}`;
 
   if (staticEnvCredentials) {
@@ -202,18 +202,18 @@ function missingAwsSecretsManagerConfig(): string[] {
   const missing: string[] = [];
   if (
     !(
-      process.env.PAPERCLIP_SECRETS_AWS_REGION?.trim() ||
+      process.env.SENTINEL_SECRETS_AWS_REGION?.trim() ||
       process.env.AWS_REGION?.trim() ||
       process.env.AWS_DEFAULT_REGION?.trim()
     )
   ) {
-    missing.push("PAPERCLIP_SECRETS_AWS_REGION or AWS_REGION/AWS_DEFAULT_REGION");
+    missing.push("SENTINEL_SECRETS_AWS_REGION or AWS_REGION/AWS_DEFAULT_REGION");
   }
-  if (!process.env.PAPERCLIP_SECRETS_AWS_DEPLOYMENT_ID?.trim()) {
-    missing.push("PAPERCLIP_SECRETS_AWS_DEPLOYMENT_ID");
+  if (!process.env.SENTINEL_SECRETS_AWS_DEPLOYMENT_ID?.trim()) {
+    missing.push("SENTINEL_SECRETS_AWS_DEPLOYMENT_ID");
   }
-  if (!process.env.PAPERCLIP_SECRETS_AWS_KMS_KEY_ID?.trim()) {
-    missing.push("PAPERCLIP_SECRETS_AWS_KMS_KEY_ID");
+  if (!process.env.SENTINEL_SECRETS_AWS_KMS_KEY_ID?.trim()) {
+    missing.push("SENTINEL_SECRETS_AWS_KMS_KEY_ID");
   }
   return missing;
 }

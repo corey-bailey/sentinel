@@ -25,8 +25,8 @@ describe("compactRunLogChunk", () => {
   it("redacts Paperclip credential shapes before persisting run-log chunks", () => {
     const chunk = [
       "Authorization: Bearer live-bearer-token-value",
-      `export PAPERCLIP_API_KEY='paperclip-shell-secret'`,
-      `payload {"PAPERCLIP_API_KEY":"paperclip-json-secret"}`,
+      `export SENTINEL_API_KEY='paperclip-shell-secret'`,
+      `payload {"SENTINEL_API_KEY":"paperclip-json-secret"}`,
       "--paperclip-api-key=paperclip-flag-secret",
     ].join("\n");
 
