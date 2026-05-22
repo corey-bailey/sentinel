@@ -367,7 +367,7 @@ export async function createApp(
           .end(indexHtml);
       });
     } else {
-      console.warn("[paperclip] UI dist not found; running in API-only mode");
+      console.warn("[sentinel] UI dist not found; running in API-only mode");
     }
   }
 

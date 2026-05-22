@@ -155,7 +155,7 @@ function writeConfigFile(configPath: string, config: PaperclipConfig): void {
 
 function resolveRepoManagedWorktreesRoot(worktreeRoot: string): string | null {
   const normalized = path.resolve(worktreeRoot);
-  const marker = `${path.sep}.paperclip${path.sep}worktrees${path.sep}`;
+  const marker = `${path.sep}.sentinel${path.sep}worktrees${path.sep}`;
   const index = normalized.indexOf(marker);
   if (index === -1) return null;
   const repoRoot = normalized.slice(0, index);
