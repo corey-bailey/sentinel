@@ -77,3 +77,36 @@ export function evaluateAllTargets(
     evaluations,
   };
 }
+
+export type ClassifyTarget = {
+  id: string; source: string; metric: string;
+  operator: 'lt' | 'lte' | 'gt' | 'gte'; threshold: number; required: boolean;
+  workflowScope?: string;
+};
+export type ClassifyInput = {
+  value: number | null | undefined;
+  sampleCount: number | null | undefined;
+  minSampleCount: number;
+  runHealthy: boolean; // false if executionRun aborted/failed/exitCode!=0
+};
+export type Verdict = { status: 'pass' | 'fail' | 'inconclusive' | 'skipped'; actualValue?: number };
+
+function breaches(op: ClassifyTarget['operator'], value: number, threshold: number): boolean {
+  switch (op) {
+    case 'lt': return !(value < threshold);
+    case 'lte': return !(value <= threshold);
+    case 'gt': return !(value > threshold);
+    case 'gte': return !(value >= threshold);
+  }
+}
+
+// Decision #7 / Stage 6: a REQUIRED target never false-greens — missing/under-sampled/unhealthy => inconclusive.
+// fail is reserved for measured + breached. An OPTIONAL unmeasured target is 'skipped' (recorded, non-blocking).
+export function classifyVerdict(t: ClassifyTarget, input: ClassifyInput): Verdict {
+  const measured = input.value !== null && input.value !== undefined && !Number.isNaN(input.value);
+  if (!measured) return { status: t.required ? 'inconclusive' : 'skipped' };
+  if (!input.runHealthy) return { status: t.required ? 'inconclusive' : 'skipped', actualValue: input.value! };
+  const n = input.sampleCount ?? 0;
+  if (n < input.minSampleCount) return { status: t.required ? 'inconclusive' : 'skipped', actualValue: input.value! };
+  return { status: breaches(t.operator, input.value!, t.threshold) ? 'fail' : 'pass', actualValue: input.value! };
+}
