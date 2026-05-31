@@ -85,3 +85,13 @@ export { testRunIssues } from "./test_run_issues.js";
 export { metricSeries } from "./metric_series.js";
 export { baselines } from "./baselines.js";
 export { regressions } from "./regressions.js";
+export {
+  pipelineRequests,
+  type PipelineRequestArtifacts,
+  type PipelineRequestExtractedContext,
+} from "./pipeline_requests.js";
+export {
+  requirementsDocuments,
+  type SlaTarget,
+  type LoadModel,
+} from "./requirements_documents.js";
