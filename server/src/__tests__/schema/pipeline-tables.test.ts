@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pipelineRequests, requirementsDocuments, pipelineRuns } from '@sentinel/db';
+import { pipelineRequests, requirementsDocuments, pipelineRuns, executionRuns, slaVerdicts, gateResolutions, testRunArtifacts } from '@sentinel/db';
 import type { SlaTarget, StageRecordMap, PipelineTrigger } from '@sentinel/db';
 import { embeddedPostgresSupport, withPipelineSchema } from '../helpers/pipeline-schema-fixture.js';
 
@@ -79,5 +79,71 @@ d('pipeline_runs', () => {
     expect(row.ciSignal).toBe('pending');
     expect(row.trigger).toEqual(trigger);
     expect(Object.keys(row.stages ?? {})).toHaveLength(8);
+  });
+});
+
+d('execution_runs', () => {
+  const ctx = withPipelineSchema([executionRuns, pipelineRuns]);
+
+  it('requires pipelineRunId, defaults status=queued', async () => {
+    const [pr] = await ctx.db.insert(pipelineRuns)
+      .values({ companyId: ctx.companyId, trigger: { type: 'ci', source: 'gha' }, stages: {} as never })
+      .returning();
+    const [row] = await ctx.db.insert(executionRuns)
+      .values({ companyId: ctx.companyId, pipelineRunId: pr.id, engine: 'k6', binaryProfile: 'k6' })
+      .returning();
+    expect(row.status).toBe('queued');
+    expect(row.pipelineRunId).toBe(pr.id);
+  });
+});
+
+d('sla_verdicts', () => {
+  const ctx = withPipelineSchema([slaVerdicts, pipelineRuns]);
+
+  it('stores a windowed verdict joined to a stable slaTargetId', async () => {
+    const [pr] = await ctx.db.insert(pipelineRuns)
+      .values({ companyId: ctx.companyId, trigger: { type: 'ci', source: 'gha' }, stages: {} as never })
+      .returning();
+    const [row] = await ctx.db.insert(slaVerdicts).values({
+      companyId: ctx.companyId, pipelineRunId: pr.id, slaTargetId: 't1',
+      metric: 'p95_ms', operator: 'lt', threshold: 200, actualValue: 180,
+      evaluationWindow: { startMs: 120_000, endMs: 720_000 },
+      source: 'k6', status: 'pass', evaluatedOnSuccessOnly: true,
+    }).returning();
+    expect(row.status).toBe('pass');
+    expect(row.evaluationWindow).toEqual({ startMs: 120_000, endMs: 720_000 });
+    expect(row.evaluatedOnSuccessOnly).toBe(true);
+  });
+});
+
+d('gate_resolutions', () => {
+  const ctx = withPipelineSchema([gateResolutions, pipelineRuns]);
+
+  it('stores outcome + total ciSignal', async () => {
+    const [pr] = await ctx.db.insert(pipelineRuns)
+      .values({ companyId: ctx.companyId, trigger: { type: 'ci', source: 'gha' }, stages: {} as never })
+      .returning();
+    const [row] = await ctx.db.insert(gateResolutions).values({
+      companyId: ctx.companyId, pipelineRunId: pr.id,
+      outcome: 'characterization', ciSignal: 'pass', resolvedBy: 'auto',
+    }).returning();
+    expect(row.outcome).toBe('characterization');
+    expect(row.ciSignal).toBe('pass');
+  });
+});
+
+d('test_run_artifacts', () => {
+  const ctx = withPipelineSchema([testRunArtifacts, pipelineRuns]);
+
+  it('stores an artifact with default publishStatus=stored', async () => {
+    const [pr] = await ctx.db.insert(pipelineRuns)
+      .values({ companyId: ctx.companyId, trigger: { type: 'ci', source: 'gha' }, stages: {} as never })
+      .returning();
+    const [row] = await ctx.db.insert(testRunArtifacts).values({
+      companyId: ctx.companyId, pipelineRunId: pr.id,
+      artifactType: 'k6_html_summary', storageRef: 's3://bucket/summary.html',
+    }).returning();
+    expect(row.artifactType).toBe('k6_html_summary');
+    expect(row.publishStatus).toBe('stored');
   });
 });

@@ -652,6 +652,13 @@
       "when": 1780238309407,
       "tag": "0092_early_tarot",
       "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1780239040912,
+      "tag": "0093_complete_spot",
+      "breakpoints": true
     }
   ]
 }

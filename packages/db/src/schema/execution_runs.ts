@@ -1,4 +1,4 @@
-import { integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { type AnyPgColumn, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { companies } from "./companies.js";
 import { pipelineRuns } from "./pipeline_runs.js";
 import { testRuns } from "./test_runs.js";
@@ -25,7 +25,7 @@ export const executionRuns = pgTable("execution_runs", {
   peakVus: integer("peak_vus"),
   totalIterations: integer("total_iterations"),
   totalRequests: integer("total_requests"),
-  stdoutRef: uuid("stdout_ref").references(() => testRunArtifacts.id, { onDelete: "set null" }),
+  stdoutRef: uuid("stdout_ref").references((): AnyPgColumn => testRunArtifacts.id, { onDelete: "set null" }),
   liveMetricFeed: text("live_metric_feed"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

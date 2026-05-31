@@ -106,3 +106,4 @@ export {
 export { executionRuns } from "./execution_runs.js";
 export { slaVerdicts } from "./sla_verdicts.js";
 export { gateResolutions } from "./gate_resolutions.js";
+export { testRunArtifacts } from "./test_run_artifacts.js";
