@@ -104,3 +104,4 @@ export {
   type ResolvedExecution,
 } from "./pipeline_runs.js";
 export { executionRuns } from "./execution_runs.js";
+export { slaVerdicts } from "./sla_verdicts.js";
