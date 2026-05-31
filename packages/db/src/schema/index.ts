@@ -105,3 +105,4 @@ export {
 } from "./pipeline_runs.js";
 export { executionRuns } from "./execution_runs.js";
 export { slaVerdicts } from "./sla_verdicts.js";
+export { gateResolutions } from "./gate_resolutions.js";
