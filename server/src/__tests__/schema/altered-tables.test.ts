@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { testRuns, pipelineRuns, testPlans, metricSeries, testAssets } from '@sentinel/db';
+import { testRuns, pipelineRuns, testPlans, metricSeries, testAssets, requirementsDocuments } from '@sentinel/db';
 import { embeddedPostgresSupport, withPipelineSchema } from '../helpers/pipeline-schema-fixture.js';
 
 const d = embeddedPostgresSupport.supported ? describe : describe.skip;
@@ -62,5 +62,16 @@ d('test_assets provenance columns', () => {
     expect(row.generatedFrom).toBe('existing_k6');
     expect(row.protocol).toBe('http');
     expect((row.sourceRef as { path?: string })?.path).toBe('a.js');
+  });
+});
+
+d('test_plans references requirements + executionModel', () => {
+  const ctx = withPipelineSchema([testPlans, requirementsDocuments]);
+  it('links requirementsDocumentId and stores executionModel', async () => {
+    const [rd] = await ctx.db.insert(requirementsDocuments).values({ companyId: ctx.companyId }).returning();
+    const [row] = await ctx.db.insert(testPlans)
+      .values({ companyId: ctx.companyId, name: 'p', requirementsDocumentId: rd.id, executionModel: 'per-scenario' }).returning();
+    expect(row.requirementsDocumentId).toBe(rd.id);
+    expect(row.executionModel).toBe('per-scenario');
   });
 });
