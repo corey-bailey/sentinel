@@ -645,6 +645,13 @@
       "when": 1780237754653,
       "tag": "0091_bent_cloak",
       "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1780238309407,
+      "tag": "0092_early_tarot",
+      "breakpoints": true
     }
   ]
 }

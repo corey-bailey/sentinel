@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { pipelineRequests, requirementsDocuments } from '@sentinel/db';
-import type { SlaTarget } from '@sentinel/db';
+import { pipelineRequests, requirementsDocuments, pipelineRuns } from '@sentinel/db';
+import type { SlaTarget, StageRecordMap, PipelineTrigger } from '@sentinel/db';
 import { embeddedPostgresSupport, withPipelineSchema } from '../helpers/pipeline-schema-fixture.js';
 
 const d = embeddedPostgresSupport.supported ? describe : describe.skip;
@@ -52,5 +52,32 @@ d('requirements_documents', () => {
     expect(row.testIntent).toBe('conformance'); // default
     expect(row.status).toBe('in_progress'); // default
     expect(row.slaTargets).toEqual(targets);
+  });
+});
+
+d('pipeline_runs', () => {
+  const ctx = withPipelineSchema([pipelineRuns]);
+
+  it('defaults verdict=pending, ciSignal=pending; stores trigger + stages jsonb', async () => {
+    const trigger: PipelineTrigger = { type: 'manual_intake', source: 'ui' };
+    const stages: StageRecordMap = {
+      intake: { status: 'pending' },
+      discovery: { status: 'pending' },
+      plan: { status: 'pending' },
+      generate: { status: 'pending' },
+      validate: { status: 'pending' },
+      execute: { status: 'pending' },
+      analysis: { status: 'pending' },
+      report: { status: 'pending' },
+    };
+    const [row] = await ctx.db
+      .insert(pipelineRuns)
+      .values({ companyId: ctx.companyId, trigger, stages })
+      .returning();
+
+    expect(row.verdict).toBe('pending');
+    expect(row.ciSignal).toBe('pending');
+    expect(row.trigger).toEqual(trigger);
+    expect(Object.keys(row.stages ?? {})).toHaveLength(8);
   });
 });
