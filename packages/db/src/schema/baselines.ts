@@ -8,6 +8,8 @@ export const baselines = pgTable("baselines", {
   companyId: uuid("company_id").notNull().references(() => companies.id),
   testPlanId: uuid("test_plan_id").notNull().references(() => testPlans.id),
   sourceRunId: uuid("source_run_id").references(() => testRuns.id),
+  // groups the baseline rows produced by one characterization run (one set per metric family)
+  baselineSetId: uuid("baseline_set_id"),
   metric: text("metric").notNull(),
   baselineValue: real("baseline_value").notNull(),
   // % tolerance before a deviation counts as regression (default 10)

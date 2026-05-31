@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { testRuns, pipelineRuns, testPlans, metricSeries, testAssets, requirementsDocuments } from '@sentinel/db';
+import { testRuns, pipelineRuns, testPlans, metricSeries, testAssets, requirementsDocuments, baselines, regressions } from '@sentinel/db';
 import { embeddedPostgresSupport, withPipelineSchema } from '../helpers/pipeline-schema-fixture.js';
 
 const d = embeddedPostgresSupport.supported ? describe : describe.skip;
@@ -73,5 +73,38 @@ d('test_plans references requirements + executionModel', () => {
       .values({ companyId: ctx.companyId, name: 'p', requirementsDocumentId: rd.id, executionModel: 'per-scenario' }).returning();
     expect(row.requirementsDocumentId).toBe(rd.id);
     expect(row.executionModel).toBe('per-scenario');
+  });
+});
+
+d('baselines.baselineSetId + regressions direction', () => {
+  // regressions.testRunId → test_runs; baselines.testPlanId → test_plans.
+  const ctx = withPipelineSchema([regressions, baselines, testRuns, pipelineRuns, testPlans]);
+  it('groups baseline rows and stores regression direction', async () => {
+    const [plan] = await ctx.db.insert(testPlans)
+      .values({ companyId: ctx.companyId, name: 'p' }).returning();
+    const setId = '00000000-0000-0000-0000-000000000001';
+    const [b] = await ctx.db.insert(baselines).values({
+      companyId: ctx.companyId,
+      testPlanId: plan.id,
+      metric: 'p95_ms',
+      baselineValue: 180,
+      baselineSetId: setId,
+    }).returning();
+    expect(b.baselineSetId).toBe(setId);
+
+    const [run] = await ctx.db.insert(testRuns)
+      .values({ companyId: ctx.companyId, testPlanId: plan.id }).returning();
+    const [pr] = await ctx.db.insert(pipelineRuns)
+      .values({ companyId: ctx.companyId, trigger: { type: 'ci', source: 'gha' }, stages: {} as never }).returning();
+    const [r] = await ctx.db.insert(regressions).values({
+      companyId: ctx.companyId,
+      testRunId: run.id,
+      metric: 'p95_ms',
+      actualValue: 240,
+      pipelineRunId: pr.id,
+      direction: 'higher_is_worse',
+    }).returning();
+    expect(r.direction).toBe('higher_is_worse');
+    expect(r.pipelineRunId).toBe(pr.id);
   });
 });
