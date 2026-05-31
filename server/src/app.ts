@@ -24,6 +24,7 @@ import { requirementRoutes } from "./routes/requirements.js";
 import { testPlanRoutes } from "./routes/test-plans.js";
 import { triggerRoutes } from "./routes/triggers.js";
 import { testRunRoutes } from "./routes/test-runs.js";
+import { metricSeriesRoutes } from "./routes/metric-series.js";
 import { baselineRoutes } from "./routes/baselines.js";
 import { regressionRoutes } from "./routes/regressions.js";
 import { testAssetRoutes } from "./routes/test-assets.js";
@@ -212,6 +213,7 @@ export async function createApp(
   api.use(testPlanRoutes(db));
   api.use(triggerRoutes(db));
   api.use(testRunRoutes(db));
+  api.use(metricSeriesRoutes(db));
   api.use(baselineRoutes(db));
   api.use(regressionRoutes(db));
   api.use(testAssetRoutes(db));
