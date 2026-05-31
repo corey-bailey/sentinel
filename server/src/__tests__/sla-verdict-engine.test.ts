@@ -138,4 +138,26 @@ d('slaVerdictEngine.evaluate', () => {
     expect(res.inconclusiveCount).toBe(1);
     expect(res.passCount).toBe(0);
   });
+
+  // --- Task 6: end-to-end ingest → evaluate → sla_verdicts ---
+
+  it('end-to-end: ingest tagged steady rows then evaluate to passing verdicts', async () => {
+    const targets = [
+      { id: 'lat', source: 'k6', metric: 'p95_ms', operator: 'lt' as const, threshold: 200, required: true, workflowScope: 'checkout' },
+      { id: 'err', source: 'k6', metric: 'error_rate', operator: 'lt' as const, threshold: 0.01, required: true, workflowScope: 'checkout' },
+    ];
+    const { pr, er, run } = await seed(targets);
+    await metricSeriesService(ctx.db).ingest(ctx.companyId, {
+      testRunId: run.id, executionRunId: er.id, source: 'k6',
+      series: [
+        { metric: 'p95_ms', workflowName: 'checkout', phase: 'steady', value: 180, sampleCount: 1000 },
+        { metric: 'error_rate', workflowName: 'checkout', phase: 'steady', value: 0.004, sampleCount: 1000 },
+      ],
+    });
+    const res = await slaVerdictEngine(ctx.db).evaluate({ companyId: ctx.companyId, pipelineRunId: pr.id, executionRunId: er.id });
+    expect(res).toMatchObject({ passCount: 2, failCount: 0, inconclusiveCount: 0 });
+    const rows = await ctx.db.select().from(slaVerdicts).where(eq(slaVerdicts.pipelineRunId, pr.id));
+    expect(rows).toHaveLength(2);
+    expect(rows.every((r) => r.status === 'pass')).toBe(true);
+  });
 });
