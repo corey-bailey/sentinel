@@ -28,9 +28,14 @@ export function slaVerdictEngine(db: Db) {
 
     const [rd] = await db.select().from(requirementsDocuments).where(eq(requirementsDocuments.id, run.requirementsDocumentId));
     const [er] = await db.select().from(executionRuns).where(eq(executionRuns.id, input.executionRunId));
+    // Tenant + pipeline scoping: er is fetched by id alone, so verify it belongs to this
+    // company-scoped pipeline run before computing runHealthy or joining its metric_series.
+    if (!er || er.companyId !== input.companyId || er.pipelineRunId !== input.pipelineRunId) {
+      throw new Error('execution_run not found for pipeline_run');
+    }
     const targets = (rd?.slaTargets ?? []) as SlaTarget[];
     const minSampleCount = rd?.minSampleCount ?? 200;
-    const runHealthy = !!er && er.status === 'completed' && (er.exitCode === 0 || er.exitCode === null);
+    const runHealthy = er.status === 'completed' && (er.exitCode === 0 || er.exitCode === null);
 
     const verdictRows = [];
     let optionalSkippedCount = 0;
@@ -40,6 +45,7 @@ export function slaVerdictEngine(db: Db) {
         ? eq(metricSeries.workflowName, t.workflowScope)
         : isNull(metricSeries.workflowName);
       const matches = await db.select().from(metricSeries).where(and(
+        eq(metricSeries.companyId, input.companyId),
         eq(metricSeries.executionRunId, input.executionRunId),
         eq(metricSeries.metric, t.metric),
         eq(metricSeries.source, t.source),
