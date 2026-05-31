@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { testRuns, pipelineRuns, testPlans, metricSeries } from '@sentinel/db';
+import { testRuns, pipelineRuns, testPlans, metricSeries, testAssets } from '@sentinel/db';
 import { embeddedPostgresSupport, withPipelineSchema } from '../helpers/pipeline-schema-fixture.js';
 
 const d = embeddedPostgresSupport.supported ? describe : describe.skip;
@@ -39,5 +39,28 @@ d('metric_series digest columns', () => {
     expect(row.phase).toBe('steady');
     expect(row.sampleCount).toBe(1234);
     expect(row.digest).toEqual({ centroids: [] });
+  });
+});
+
+d('test_assets provenance columns', () => {
+  const ctx = withPipelineSchema([testAssets, testPlans]);
+  it('stores sourceRef provenance + generatedFrom', async () => {
+    const [plan] = await ctx.db.insert(testPlans)
+      .values({ companyId: ctx.companyId, name: 'p' }).returning();
+    const [row] = await ctx.db.insert(testAssets).values({
+      companyId: ctx.companyId,
+      testPlanId: plan.id,
+      name: 'checkout-load',
+      engine: 'k6',
+      protocol: 'http',
+      generatedFrom: 'existing_k6',
+      sourceRef: { repoUrl: 'git@x', path: 'a.js', ref: 'main', importedSha: 'abc' },
+      dataFiles: [],
+      setupScript: null,
+      teardownScript: null,
+    }).returning();
+    expect(row.generatedFrom).toBe('existing_k6');
+    expect(row.protocol).toBe('http');
+    expect((row.sourceRef as { path?: string })?.path).toBe('a.js');
   });
 });
