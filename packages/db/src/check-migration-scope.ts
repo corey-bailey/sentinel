@@ -1,5 +1,5 @@
 import { readdir, readFile, unlink } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const migrationsDir = fileURLToPath(new URL("./migrations", import.meta.url));
 const scopePath = fileURLToPath(new URL("./migrations/.next-scope.txt", import.meta.url));
@@ -72,6 +72,6 @@ async function main() {
   console.log(`✓ migration scope ok (${[...touched].sort().join(", ")})`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   await main();
 }
