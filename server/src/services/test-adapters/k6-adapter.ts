@@ -1,117 +1,82 @@
-export type SpawnResult = {
-  exitCode: number;
-  stdout: string;
-  stderr: string;
-};
+import fs from "node:fs/promises";
+import path from "node:path";
+import type { K6RawSummary } from "../k6-generator/summary-mapping.js"; // type-only: the raw k6 summary shape
 
+export type SpawnResult = { exitCode: number; stdout: string; stderr: string };
 export type SpawnFn = (
   cmd: string,
   args: string[],
-  opts: { env: Record<string, string> },
+  opts: { env: Record<string, string>; cwd?: string },
 ) => Promise<SpawnResult>;
 
-export type LoadProfile = {
-  vus: number;
-  stages: Array<{ duration: string; target: number }>;
-};
+export type K6Window = { warmupEndS: number; rampUpEndS: number; steadyEndS: number };
 
 export type K6RunOptions = {
-  scriptPath: string;
+  scriptPath: string;            // path RELATIVE to cwd (k6 reads ./reusable.json etc. from cwd)
+  cwd: string;                   // the per-run ExecutionWorkspace working directory
+  testRunId: string;             // -> TEST_RUN_ID env, names summary-<id>.json
   baseUrl: string;
-  loadProfile: LoadProfile;
+  window: K6Window;
+  executionRunId?: string;
+  authToken?: string;
   spawnFn: SpawnFn;
   extraEnv?: Record<string, string>;
-};
-
-export type K6Metrics = {
-  p50Ms: number | null;
-  p95Ms: number | null;
-  p99Ms: number | null;
-  errorRate: number;
-  totalRequests: number;
-  requestRate: number | null;
-  peakVus: number | null;
+  binary?: string;               // default 'k6'
 };
 
 export type K6RunResult = {
   exitCode: number;
-  failed: boolean;
-  metrics: K6Metrics;
-  source: "k6";
+  failed: boolean;               // true when k6 exits non-zero (e.g. threshold breach or script error)
+  summaryFileName: string;       // summary-<testRunId>.json — read via readK6Summary
+  stdout: string;
+  stderr: string;
 };
-
-type K6Summary = {
-  metrics: Record<string, {
-    type: string;
-    values: Record<string, number>;
-  }>;
-};
-
-export function parseK6Summary(summary: K6Summary): K6Metrics {
-  const m = summary.metrics ?? {};
-
-  const duration = m["http_req_duration"];
-  const reqs = m["http_reqs"];
-  const failed = m["http_req_failed"];
-  const vusMax = m["vus_max"];
-
-  return {
-    p50Ms: duration?.values?.med ?? null,
-    p95Ms: duration?.values?.p95 ?? null,
-    p99Ms: duration?.values?.p99 ?? null,
-    errorRate: failed?.values?.rate ?? 0,
-    totalRequests: reqs?.values?.count ?? 0,
-    requestRate: reqs?.values?.rate ?? null,
-    peakVus: vusMax?.values?.value ?? null,
-  };
-}
 
 export async function runK6(opts: K6RunOptions): Promise<K6RunResult> {
-  const { scriptPath, baseUrl, loadProfile, spawnFn, extraEnv = {} } = opts;
+  const { scriptPath, cwd, testRunId, baseUrl, window, executionRunId, authToken, spawnFn, extraEnv = {}, binary = "k6" } = opts;
 
-  const args = [
-    "run",
-    "--out", "json=-", // write summary JSON to stdout
-    "--vus", String(loadProfile.vus),
-    ...loadProfile.stages.flatMap((s) => ["--stage", `${s.duration}:${s.target}`]),
-    scriptPath,
-  ];
+  // Scenarios come from the script's options block (locked decision), NOT --vus/--stage CLI flags.
+  const args = ["run", scriptPath];
 
   const env: Record<string, string> = {
-    ...process.env as Record<string, string>,
+    ...(process.env as Record<string, string>),
     BASE_URL: baseUrl,
+    TEST_RUN_ID: testRunId,
+    WARMUP_END_S: String(window.warmupEndS),
+    RAMP_UP_END_S: String(window.rampUpEndS),
+    STEADY_END_S: String(window.steadyEndS),
+    ...(executionRunId ? { EXECUTION_RUN_ID: executionRunId } : {}),
+    ...(authToken ? { AUTH_TOKEN: authToken } : {}),
     ...extraEnv,
   };
 
   let result: SpawnResult;
   try {
-    result = await spawnFn("k6", args, { env });
+    result = await spawnFn(binary, args, { env, cwd });
   } catch (err: unknown) {
     const e = err as NodeJS.ErrnoException;
-    if (e.code === "ENOENT") {
-      throw new Error(`k6 not found: install k6 and ensure it is in PATH`);
-    }
+    if (e.code === "ENOENT") throw new Error(`k6 not found: install k6 and ensure it is in PATH`);
     throw err;
-  }
-
-  let metrics: K6Metrics = {
-    p50Ms: null, p95Ms: null, p99Ms: null,
-    errorRate: 0, totalRequests: 0, requestRate: null, peakVus: null,
-  };
-
-  if (result.stdout) {
-    try {
-      const summary = JSON.parse(result.stdout) as K6Summary;
-      metrics = parseK6Summary(summary);
-    } catch {
-      // stdout may contain non-JSON lines; ignore parse errors
-    }
   }
 
   return {
     exitCode: result.exitCode,
     failed: result.exitCode !== 0,
-    metrics,
-    source: "k6",
+    summaryFileName: `summary-${testRunId}.json`,
+    stdout: result.stdout,
+    stderr: result.stderr,
   };
+}
+
+// Reads the RAW k6 end-of-test summary (what the generated handleSummary wrote via JSON.stringify(data)).
+// The harness/executor applies mapK6Summary to turn this into metric_series rows — the adapter stays generic.
+export async function readK6Summary(cwd: string, testRunId: string): Promise<K6RawSummary> {
+  const file = path.join(cwd, `summary-${testRunId}.json`);
+  let raw: string;
+  try {
+    raw = await fs.readFile(file, "utf8");
+  } catch {
+    throw new Error(`k6 summary not found: expected summary-${testRunId}.json in ${cwd} (did handleSummary run?)`);
+  }
+  return JSON.parse(raw) as K6RawSummary;
 }
