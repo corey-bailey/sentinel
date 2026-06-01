@@ -2,12 +2,13 @@ import { Router } from "express";
 import type { Db } from "@sentinel/db";
 import { z } from "zod";
 import { metricSeriesService } from "../services/metric-series.js";
+import { METRIC_PHASES } from "../services/metric-phases.js";
 import { assertCompanyAccess } from "./authz.js";
 
 const seriesEntrySchema = z.object({
   metric: z.string().min(1),
   workflowName: z.string().nullish(),
-  phase: z.enum(["warmup", "ramp_up", "steady", "ramp_down"]).nullish(),
+  phase: z.enum(METRIC_PHASES).nullish(),
   value: z.number(),
   sampleCount: z.number().int().nonnegative().nullish(),
   rawValues: z.array(z.number()).nullish(),

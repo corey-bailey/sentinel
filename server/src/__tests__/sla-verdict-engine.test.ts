@@ -37,7 +37,11 @@ const d = embeddedPostgresSupport.supported ? describe : describe.skip;
 d('slaVerdictEngine.evaluate', () => {
   const ctx = withPipelineSchema([slaVerdicts, metricSeries, executionRuns, pipelineRuns, testRuns, requirementsDocuments, testPlans]);
 
-  async function seed(targets: SlaTarget[], minSampleCount = 200) {
+  async function seed(
+    targets: SlaTarget[],
+    { minSampleCount = 200, execStatus = 'completed', exitCode = 0 }:
+      { minSampleCount?: number; execStatus?: string; exitCode?: number } = {},
+  ) {
     // metric_series.testRunId is NOT NULL (pre-existing CASCADE column) → seed a real test run.
     const [plan] = await ctx.db.insert(testPlans).values({ companyId: ctx.companyId, name: 'p' }).returning();
     const [run] = await ctx.db.insert(testRuns).values({ companyId: ctx.companyId, testPlanId: plan.id }).returning();
@@ -46,7 +50,7 @@ d('slaVerdictEngine.evaluate', () => {
     const [pr] = await ctx.db.insert(pipelineRuns)
       .values({ companyId: ctx.companyId, requirementsDocumentId: rd.id, trigger: { type: 'ci', source: 'gha' }, stages: {} as never }).returning();
     const [er] = await ctx.db.insert(executionRuns)
-      .values({ companyId: ctx.companyId, pipelineRunId: pr.id, testRunId: run.id, engine: 'k6', status: 'completed', exitCode: 0 }).returning();
+      .values({ companyId: ctx.companyId, pipelineRunId: pr.id, testRunId: run.id, engine: 'k6', status: execStatus, exitCode }).returning();
     return { rd, pr, er, run };
   }
 
@@ -62,7 +66,7 @@ d('slaVerdictEngine.evaluate', () => {
   });
 
   it('inconclusive when sampleCount below minSampleCount (never false-green)', async () => {
-    const { pr, er, run } = await seed([{ id: 't1', source: 'k6', metric: 'p95_ms', operator: 'lt', threshold: 200, required: true }], 200);
+    const { pr, er, run } = await seed([{ id: 't1', source: 'k6', metric: 'p95_ms', operator: 'lt', threshold: 200, required: true }], { minSampleCount: 200 });
     await ctx.db.insert(metricSeries).values({ companyId: ctx.companyId, testRunId: run.id, executionRunId: er.id, metric: 'p95_ms', source: 'k6', workflowName: null, phase: 'steady', value: 180, sampleCount: 50 });
     const res = await slaVerdictEngine(ctx.db).evaluate({ companyId: ctx.companyId, pipelineRunId: pr.id, executionRunId: er.id });
     expect(res.inconclusiveCount).toBe(1);
@@ -98,14 +102,10 @@ d('slaVerdictEngine.evaluate', () => {
 
   it('run-unhealthy — an aborted execution_run with an in-threshold metric is inconclusive (never false-greens)', async () => {
     // Seed an aborted run (runHealthy=false) but with a metric that would otherwise PASS.
-    const [rd] = await ctx.db.insert(requirementsDocuments)
-      .values({ companyId: ctx.companyId, slaTargets: [{ id: 't1', source: 'k6', metric: 'p95_ms', operator: 'lt', threshold: 200, required: true }] as SlaTarget[], minSampleCount: 200 }).returning();
-    const [pr] = await ctx.db.insert(pipelineRuns)
-      .values({ companyId: ctx.companyId, requirementsDocumentId: rd.id, trigger: { type: 'ci', source: 'gha' }, stages: {} as never }).returning();
-    const [plan] = await ctx.db.insert(testPlans).values({ companyId: ctx.companyId, name: 'p' }).returning();
-    const [run] = await ctx.db.insert(testRuns).values({ companyId: ctx.companyId, testPlanId: plan.id }).returning();
-    const [er] = await ctx.db.insert(executionRuns)
-      .values({ companyId: ctx.companyId, pipelineRunId: pr.id, testRunId: run.id, engine: 'k6', status: 'aborted', exitCode: 1 }).returning();
+    const { pr, er, run } = await seed(
+      [{ id: 't1', source: 'k6', metric: 'p95_ms', operator: 'lt', threshold: 200, required: true }],
+      { execStatus: 'aborted', exitCode: 1 },
+    );
     await ctx.db.insert(metricSeries).values({ companyId: ctx.companyId, testRunId: run.id, executionRunId: er.id, metric: 'p95_ms', source: 'k6', workflowName: null, phase: 'steady', value: 180, sampleCount: 1000 });
     const res = await slaVerdictEngine(ctx.db).evaluate({ companyId: ctx.companyId, pipelineRunId: pr.id, executionRunId: er.id });
     expect(res.inconclusiveCount).toBe(1);

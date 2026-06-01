@@ -2,8 +2,9 @@ import {
   requirementsDocuments, pipelineRuns, executionRuns, metricSeries, slaVerdicts,
   type Db, type SlaTarget,
 } from '@sentinel/db';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { classifyVerdict } from './sla-evaluator.js';
+import { SLA_EVALUATION_PHASE } from './metric-phases.js';
 
 export type EvaluateInput = { companyId: string; pipelineRunId: string; executionRunId: string };
 export type EvaluateResult = {
@@ -26,8 +27,11 @@ export function slaVerdictEngine(db: Db) {
       return { verdictCount: 0, passCount: 0, failCount: 0, inconclusiveCount: 0, optionalSkippedCount: 0 };
     }
 
-    const [rd] = await db.select().from(requirementsDocuments).where(eq(requirementsDocuments.id, run.requirementsDocumentId));
-    const [er] = await db.select().from(executionRuns).where(eq(executionRuns.id, input.executionRunId));
+    // rd and er are independent once run is loaded → fetch concurrently.
+    const [[rd], [er]] = await Promise.all([
+      db.select().from(requirementsDocuments).where(eq(requirementsDocuments.id, run.requirementsDocumentId)),
+      db.select().from(executionRuns).where(eq(executionRuns.id, input.executionRunId)),
+    ]);
     // Tenant + pipeline scoping: er is fetched by id alone, so verify it belongs to this
     // company-scoped pipeline run before computing runHealthy or joining its metric_series.
     if (!er || er.companyId !== input.companyId || er.pipelineRunId !== input.pipelineRunId) {
@@ -37,39 +41,46 @@ export function slaVerdictEngine(db: Db) {
     const minSampleCount = rd?.minSampleCount ?? 200;
     const runHealthy = er.status === 'completed' && (er.exitCode === 0 || er.exitCode === null);
 
+    // Fetch this run's steady-phase series ONCE (tenant-scoped) and match per target in memory —
+    // avoids an N+1 round-trip per SLA target. Key = metric|source|workflowName (first row wins,
+    // matching the prior single-row select).
+    const steadyRows = await db.select().from(metricSeries).where(and(
+      eq(metricSeries.companyId, input.companyId),
+      eq(metricSeries.executionRunId, input.executionRunId),
+      eq(metricSeries.phase, SLA_EVALUATION_PHASE),
+    ));
+    const rowKey = (metric: string, source: string, workflowName: string | null) =>
+      `${metric}|${source}|${workflowName ?? ''}`;
+    const byKey = new Map<string, (typeof steadyRows)[number]>();
+    for (const r of steadyRows) {
+      const k = rowKey(r.metric, r.source, r.workflowName);
+      if (!byKey.has(k)) byKey.set(k, r);
+    }
+
     const verdictRows = [];
-    let optionalSkippedCount = 0;
+    let passCount = 0, failCount = 0, inconclusiveCount = 0, optionalSkippedCount = 0;
     for (const t of targets) {
-      // windowed, workflow-scoped, source-matched, steady-phase row
-      const scope = t.workflowScope
-        ? eq(metricSeries.workflowName, t.workflowScope)
-        : isNull(metricSeries.workflowName);
-      const matches = await db.select().from(metricSeries).where(and(
-        eq(metricSeries.companyId, input.companyId),
-        eq(metricSeries.executionRunId, input.executionRunId),
-        eq(metricSeries.metric, t.metric),
-        eq(metricSeries.source, t.source),
-        eq(metricSeries.phase, 'steady'),
-        scope,
-      ));
-      const row = matches[0];
+      const row = byKey.get(rowKey(t.metric, t.source, t.workflowScope ?? null));
       const v = classifyVerdict(t, {
         value: row?.value ?? null,
         sampleCount: row?.sampleCount ?? null,
         minSampleCount,
         runHealthy,
       });
-      // OPTIONAL unmeasured ('skipped') is NON-blocking (spec Stage 6): record the count, persist NO
-      // verdict row. Only REQUIRED targets (and any measured pass/fail) produce a persisted verdict,
-      // so inconclusiveCount is the BLOCKING (required-inconclusive) count the gate reads.
+      // OPTIONAL unmeasured ('skipped') is NON-blocking (spec Stage 6): count it, persist no verdict row.
+      // Only REQUIRED targets (and any measured pass/fail) produce a persisted verdict, so
+      // inconclusiveCount is the BLOCKING (required-inconclusive) count the gate reads.
       if (v.status === 'skipped') { optionalSkippedCount++; continue; }
+      if (v.status === 'pass') passCount++;
+      else if (v.status === 'fail') failCount++;
+      else inconclusiveCount++;
       verdictRows.push({
         companyId: input.companyId,
         pipelineRunId: input.pipelineRunId,
         executionRunId: input.executionRunId,
         slaTargetId: t.id,
         workflowName: t.workflowScope ?? null,
-        phase: 'steady',
+        phase: SLA_EVALUATION_PHASE,
         metric: t.metric,
         operator: t.operator,
         threshold: t.threshold,
@@ -82,9 +93,6 @@ export function slaVerdictEngine(db: Db) {
     }
     if (verdictRows.length) await db.insert(slaVerdicts).values(verdictRows);
 
-    const passCount = verdictRows.filter((r) => r.status === 'pass').length;
-    const failCount = verdictRows.filter((r) => r.status === 'fail').length;
-    const inconclusiveCount = verdictRows.filter((r) => r.status === 'inconclusive').length;
     return { verdictCount: verdictRows.length, passCount, failCount, inconclusiveCount, optionalSkippedCount };
   }
   return { evaluate };

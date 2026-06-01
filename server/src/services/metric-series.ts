@@ -1,9 +1,10 @@
 import { metricSeries, type Db } from '@sentinel/db';
+import type { MetricPhase } from './metric-phases.js';
 
 export type IngestSeriesEntry = {
   metric: string; // SLA-metric key: p95_ms | p99_ms | error_rate | tps | ...
   workflowName?: string | null;
-  phase?: 'warmup' | 'ramp_up' | 'steady' | 'ramp_down' | null;
+  phase?: MetricPhase | null;
   value: number;
   sampleCount?: number | null;
   rawValues?: number[] | null;

@@ -1,3 +1,5 @@
+import type { SlaTarget } from "@sentinel/db";
+
 export type SLAOperator = "lt" | "lte" | "gt" | "gte";
 export type SLASource = "k6" | "playwright" | "pytest" | "mocha" | "apm:dynatrace" | string;
 
@@ -44,13 +46,7 @@ export function evaluateSLATarget(
     return { ...base, status: "skipped", reason };
   }
 
-  let pass: boolean;
-  switch (target.operator) {
-    case "lt":  pass = value < target.threshold; break;
-    case "lte": pass = value <= target.threshold; break;
-    case "gt":  pass = value > target.threshold; break;
-    case "gte": pass = value >= target.threshold; break;
-  }
+  const pass = passesThreshold(target.operator, value, target.threshold);
 
   if (pass) {
     return { ...base, status: "pass", actualValue: value, threshold: target.threshold };
@@ -78,35 +74,38 @@ export function evaluateAllTargets(
   };
 }
 
-export type ClassifyTarget = {
-  id: string; source: string; metric: string;
-  operator: 'lt' | 'lte' | 'gt' | 'gte'; threshold: number; required: boolean;
-  workflowScope?: string;
-};
 export type ClassifyInput = {
   value: number | null | undefined;
   sampleCount: number | null | undefined;
   minSampleCount: number;
   runHealthy: boolean; // false if executionRun aborted/failed/exitCode!=0
 };
-export type Verdict = { status: 'pass' | 'fail' | 'inconclusive' | 'skipped'; actualValue?: number };
+export type Verdict = { status: "pass" | "fail" | "inconclusive" | "skipped"; actualValue?: number };
 
-function breaches(op: ClassifyTarget['operator'], value: number, threshold: number): boolean {
+// Single source of truth for the SLA operator comparison — shared by evaluateSLATarget and classifyVerdict.
+export function passesThreshold(op: SLAOperator, value: number, threshold: number): boolean {
   switch (op) {
-    case 'lt': return !(value < threshold);
-    case 'lte': return !(value <= threshold);
-    case 'gt': return !(value > threshold);
-    case 'gte': return !(value >= threshold);
+    case "lt":  return value < threshold;
+    case "lte": return value <= threshold;
+    case "gt":  return value > threshold;
+    case "gte": return value >= threshold;
   }
 }
 
 // Decision #7 / Stage 6: a REQUIRED target never false-greens — missing/under-sampled/unhealthy => inconclusive.
 // fail is reserved for measured + breached. An OPTIONAL unmeasured target is 'skipped' (recorded, non-blocking).
-export function classifyVerdict(t: ClassifyTarget, input: ClassifyInput): Verdict {
+export function classifyVerdict(
+  t: Pick<SlaTarget, "operator" | "threshold" | "required">,
+  input: ClassifyInput,
+): Verdict {
   const measured = input.value !== null && input.value !== undefined && !Number.isNaN(input.value);
-  if (!measured) return { status: t.required ? 'inconclusive' : 'skipped' };
-  if (!input.runHealthy) return { status: t.required ? 'inconclusive' : 'skipped', actualValue: input.value! };
-  const n = input.sampleCount ?? 0;
-  if (n < input.minSampleCount) return { status: t.required ? 'inconclusive' : 'skipped', actualValue: input.value! };
-  return { status: breaches(t.operator, input.value!, t.threshold) ? 'fail' : 'pass', actualValue: input.value! };
+  // required → inconclusive, optional → skipped; carry actualValue only when a value was measured.
+  const notGreen = (): Verdict => ({
+    status: t.required ? "inconclusive" : "skipped",
+    ...(measured ? { actualValue: input.value! } : {}),
+  });
+  if (!measured) return notGreen();
+  if (!input.runHealthy) return notGreen();
+  if ((input.sampleCount ?? 0) < input.minSampleCount) return notGreen();
+  return { status: passesThreshold(t.operator, input.value!, t.threshold) ? "pass" : "fail", actualValue: input.value! };
 }
