@@ -5,6 +5,8 @@ import { testAssets } from "@sentinel/db";
 export type AssetType = "human_authored" | "generated" | "approved_generated";
 export type Engine = "k6" | "playwright" | "pytest" | "mocha";
 
+export type DataFile = { name: string; content: string; type: string; strategy: string };
+
 export type CreateTestAssetInput = {
   testPlanId: string;
   name?: string;
@@ -12,6 +14,11 @@ export type CreateTestAssetInput = {
   scriptContent?: string;
   scriptPath?: string;
   assetType?: AssetType;
+  protocol?: string;
+  generatedFrom?: string;
+  dataFiles?: DataFile[];
+  setupScript?: string | null;
+  teardownScript?: string | null;
 };
 
 export type CoverageEntry = {
@@ -50,6 +57,11 @@ export function testAssetService(db: Db) {
           scriptContent: data.scriptContent ?? null,
           scriptPath: data.scriptPath ?? null,
           assetType: data.assetType ?? "human_authored",
+          protocol: data.protocol ?? null,
+          generatedFrom: data.generatedFrom ?? null,
+          dataFiles: data.dataFiles ?? null,
+          setupScript: data.setupScript ?? null,
+          teardownScript: data.teardownScript ?? null,
           version,
         })
         .returning();
