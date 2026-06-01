@@ -1,10 +1,8 @@
 // server/src/services/k6-generator/thresholds.ts
 import type { SlaTarget } from '@sentinel/db';
+import { LATENCY_STAT_BY_METRIC } from './types.js';
 
 const K6_OP: Record<SlaTarget['operator'], string> = { lt: '<', lte: '<=', gt: '>', gte: '>=' };
-
-// SLA-vocab latency metric → the k6 Trend values stat key (only used to render the threshold expression).
-const LATENCY_STAT: Record<string, string> = { p50_ms: 'med', p95_ms: 'p(95)', p99_ms: 'p(99)' };
 
 function latencyKey(workflowScope?: string): string {
   return workflowScope
@@ -24,7 +22,7 @@ export function buildThresholds(targets: SlaTarget[]): Record<string, string[]> 
   for (const target of targets) {
     if (target.source !== 'k6') continue;
 
-    const latencyStat = LATENCY_STAT[target.metric];
+    const latencyStat = LATENCY_STAT_BY_METRIC[target.metric];
     if (latencyStat) {
       push(latencyKey(target.workflowScope), `${latencyStat}${K6_OP[target.operator]}${target.threshold}`);
       continue;

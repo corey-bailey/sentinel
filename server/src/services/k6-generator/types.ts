@@ -52,6 +52,16 @@ export type GenerateK6Input = {
   data?: { reusable?: unknown[]; consumable?: unknown[] };
 };
 
+// SLA-vocab latency metric → the k6 Trend `values` stat key. SINGLE SOURCE shared by the write side
+// (thresholds.ts declares the sub-metric) and the read side (summary-mapping.ts reads it back); they
+// MUST agree or windowed percentiles silently stop being ingested. render-script.ts also derives
+// summaryTrendStats from this so every declared percentile is materialized by k6.
+export const LATENCY_STAT_BY_METRIC: Record<string, string> = {
+  p50_ms: 'med',
+  p95_ms: 'p(95)',
+  p99_ms: 'p(99)',
+};
+
 export type GeneratedDataFile = { name: string; content: string; type: 'json'; strategy: 'reusable' | 'consumable' };
 
 export type GeneratedK6Asset = {

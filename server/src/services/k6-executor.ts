@@ -32,11 +32,11 @@ export function k6Executor(deps: K6ExecutorDeps) {
   const runs = executionRunService(deps.db);
 
   async function run(input: K6ExecutionInput): Promise<K6ExecutionResult> {
-    // 1. Materialize the asset into the per-run workspace cwd.
-    await fs.writeFile(path.join(input.cwd, SCRIPT_FILENAME), input.asset.scriptContent);
-    for (const f of input.asset.dataFiles) {
-      await fs.writeFile(path.join(input.cwd, f.name), f.content);
-    }
+    // 1. Materialize the asset into the per-run workspace cwd (script + data files written concurrently).
+    await Promise.all([
+      fs.writeFile(path.join(input.cwd, SCRIPT_FILENAME), input.asset.scriptContent),
+      ...input.asset.dataFiles.map((f) => fs.writeFile(path.join(input.cwd, f.name), f.content)),
+    ]);
 
     // 2. Run k6 for real.
     await runs.markRunning(input.executionRunId);

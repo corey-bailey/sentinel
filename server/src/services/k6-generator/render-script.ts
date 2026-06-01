@@ -1,5 +1,6 @@
 // server/src/services/k6-generator/render-script.ts
 import { K6_IMPORTS, fixedHelpers, handleSummarySource } from './template.js';
+import { LATENCY_STAT_BY_METRIC } from './types.js';
 import type { SteadyWindow } from './window.js';
 import type { K6Scenario } from './scenarios.js';
 
@@ -13,7 +14,10 @@ export type AssembleParts = {
   hasConsumable: boolean;
 };
 
-const SUMMARY_TREND_STATS = ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)', 'count'];
+// Superset of the SLA latency stats (so every declared percentile is materialized) plus extras for
+// diagnosis. Deriving the percentile stats from LATENCY_STAT_BY_METRIC keeps this in lockstep with the
+// threshold/ingestion contract — adding a new percentile metric there auto-includes it here.
+const SUMMARY_TREND_STATS = [...new Set(['avg', 'min', 'max', 'p(90)', 'count', ...Object.values(LATENCY_STAT_BY_METRIC)])];
 
 export function assembleScript(p: AssembleParts): string {
   const options = {

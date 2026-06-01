@@ -12,8 +12,8 @@ export function buildDataFiles(
   workflows: Workflow[],
   data: { reusable?: unknown[]; consumable?: unknown[] } = {},
 ): DataFilePlan {
-  const hasReusable = workflows.some((w) => w.dataStrategy === 'reusable' || w.dataStrategy === 'mixed' as never);
-  const hasConsumable = workflows.some((w) => w.dataStrategy === 'consumable' || w.dataStrategy === 'mixed' as never);
+  const hasReusable = workflows.some((w) => w.dataStrategy === 'reusable');
+  const hasConsumable = workflows.some((w) => w.dataStrategy === 'consumable');
 
   const dataFiles: GeneratedDataFile[] = [];
   if (hasReusable) {

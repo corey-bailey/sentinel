@@ -5,7 +5,6 @@ import type { LoadProfile, Workflow } from './types.js';
 export type K6Scenario = Record<string, unknown>;
 export type ScenarioPlan = {
   scenarios: Record<string, K6Scenario>;
-  execFns: string[];                 // exec function names the script must define: ['router'] or per-workflow names
   execModel: 'weighted-loop' | 'per-scenario';
 };
 export type ScenarioOpts = { p95EstimateMs: number };
@@ -33,7 +32,6 @@ export function buildScenarios(
           exec: 'router',
         },
       },
-      execFns: ['router'],
       execModel: 'weighted-loop',
     };
   }
@@ -43,7 +41,6 @@ export function buildScenarios(
       scenarios: {
         baseline: { executor: 'constant-vus', vus: lp.vus, duration: lp.duration, exec: 'router' },
       },
-      execFns: ['router'],
       execModel: 'weighted-loop',
     };
   }
@@ -51,7 +48,6 @@ export function buildScenarios(
   // constant-arrival-rate → per-scenario, one named scenario per workflow.
   const p95s = Math.max(opts.p95EstimateMs / 1000, 0.001);
   const scenarios: Record<string, K6Scenario> = {};
-  const execFns: string[] = [];
   for (const wf of workflows) {
     const rate = Math.max(1, Math.round(lp.rate * wf.weight));
     const preAllocatedVUs = lp.preAllocatedVUs ?? Math.max(1, Math.ceil(rate * p95s));
@@ -67,7 +63,6 @@ export function buildScenarios(
       exec: fn,
       tags: { workflow: wf.name },
     };
-    execFns.push(fn);
   }
-  return { scenarios, execFns, execModel: 'per-scenario' };
+  return { scenarios, execModel: 'per-scenario' };
 }

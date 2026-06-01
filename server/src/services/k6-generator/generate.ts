@@ -19,11 +19,8 @@ function requestSource(wf: Workflow): string {
     ? `BASE + ${JSON.stringify(wf.request.path)} + "?${wf.request.queryFromData}=" + encodeURIComponent(String(rec.${wf.request.queryFromData}))`
     : `BASE + ${JSON.stringify(wf.request.path)}`;
   const tag = JSON.stringify(wf.name);
-  if (wf.request.method === 'GET' || wf.request.method === 'DELETE') {
-    const method = wf.request.method.toLowerCase();
-    return `http.${method}(${url}, params(${tag}));`;
-  }
   const method = wf.request.method.toLowerCase();
+  if (method === 'get' || method === 'delete') return `http.${method}(${url}, params(${tag}));`;
   const body = wf.request.bodyFromData ? 'JSON.stringify(claimConsumable())' : '"{}"';
   return `http.${method}(${url}, ${body}, params(${tag}));`;
 }

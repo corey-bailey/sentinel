@@ -1,5 +1,5 @@
 // server/src/services/k6-generator/window.ts
-import { parseDurationToSeconds, sumDurationsSeconds } from './duration.js';
+import { parseDurationToSeconds } from './duration.js';
 import type { LoadProfile } from './types.js';
 
 export type SteadyWindow = {
@@ -48,5 +48,3 @@ export function resolveSteadyWindow(lp: LoadProfile): SteadyWindow {
   const total = parseDurationToSeconds(lp.duration);
   return { warmupEndS: guard, rampUpEndS: guard, steadyEndS: total, totalDurationS: total };
 }
-
-export { sumDurationsSeconds };
