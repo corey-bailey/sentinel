@@ -49,5 +49,48 @@ export function pipelineRunService(db: Db) {
     return row!;
   }
 
-  return { create };
+  // --- internal: immutable read-modify-write of one stage's record ---
+  async function patchStage(id: string, stage: StageName, patch: Partial<StageRecord>) {
+    const [row] = await db.select().from(pipelineRuns).where(eq(pipelineRuns.id, id));
+    if (!row) throw new Error(`pipeline_run not found: ${id}`);
+    const stages = row.stages as StageRecordMap;
+    const next: StageRecordMap = { ...stages, [stage]: { ...stages[stage], ...patch } };
+    const [updated] = await db.update(pipelineRuns).set({ stages: next, updatedAt: new Date() }).where(eq(pipelineRuns.id, id)).returning();
+    return updated!;
+  }
+
+  async function markStageRunning(id: string, stage: StageName) {
+    return patchStage(id, stage, { status: "running", startedAt: new Date().toISOString() });
+  }
+  async function markStageComplete(id: string, stage: StageName, patch: Partial<StageRecord> = {}) {
+    return patchStage(id, stage, { status: "complete", completedAt: new Date().toISOString(), ...patch });
+  }
+  async function markStageSkipped(id: string, stage: StageName, skippedReason: string) {
+    return patchStage(id, stage, { status: "skipped", skippedReason });
+  }
+  async function markStageFailed(id: string, stage: StageName, error: string) {
+    return patchStage(id, stage, { status: "failed", completedAt: new Date().toISOString(), error });
+  }
+  async function setVerdict(id: string, verdict: string) {
+    const [r] = await db.update(pipelineRuns).set({ verdict, updatedAt: new Date() }).where(eq(pipelineRuns.id, id)).returning();
+    return r!;
+  }
+  async function setCiSignal(id: string, ciSignal: string) {
+    const [r] = await db.update(pipelineRuns).set({ ciSignal, updatedAt: new Date() }).where(eq(pipelineRuns.id, id)).returning();
+    return r!;
+  }
+  async function setResolvedExecution(id: string, resolvedExecution: unknown) {
+    const [r] = await db.update(pipelineRuns).set({ resolvedExecution: resolvedExecution as never, updatedAt: new Date() }).where(eq(pipelineRuns.id, id)).returning();
+    return r!;
+  }
+  async function markStarted(id: string) {
+    const [r] = await db.update(pipelineRuns).set({ verdict: "running", startedAt: new Date(), updatedAt: new Date() }).where(eq(pipelineRuns.id, id)).returning();
+    return r!;
+  }
+  async function markCompleted(id: string) {
+    const [r] = await db.update(pipelineRuns).set({ completedAt: new Date(), updatedAt: new Date() }).where(eq(pipelineRuns.id, id)).returning();
+    return r!;
+  }
+
+  return { create, markStageRunning, markStageComplete, markStageSkipped, markStageFailed, setVerdict, setCiSignal, setResolvedExecution, markStarted, markCompleted };
 }
