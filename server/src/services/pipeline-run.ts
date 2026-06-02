@@ -1,9 +1,47 @@
 // server/src/services/pipeline-run.ts
 import { pipelineRuns, type Db, type PipelineTrigger, type StageRecordMap, type StageRecord } from "@sentinel/db";
-import { eq } from "drizzle-orm";
+import { testAssets, testPlans, requirementsDocuments } from "@sentinel/db";
+import { and, eq } from "drizzle-orm";
+import { resolveSteadyWindow, type SteadyWindow } from "./k6-generator/window.js";
 
 export class UnsupportedTriggerPathError extends Error {
   constructor(path: string) { super(`Unsupported pipeline trigger path (v1 = execution-trigger only): ${path}`); this.name = "UnsupportedTriggerPathError"; }
+}
+
+export class ExecutePrerequisiteError extends Error {
+  constructor(detail: string) { super(`Cannot execute: ${detail}`); this.name = "ExecutePrerequisiteError"; }
+}
+
+export type ExecuteInputs = {
+  testPlan: typeof testPlans.$inferSelect;
+  asset: typeof testAssets.$inferSelect;
+  baseUrl: string;
+  window: SteadyWindow;
+};
+
+// Resolves what the mechanical EXECUTE stage needs. v1: the first k6 asset for the plan, the baseUrl
+// from requirements_documents.targetEnvironment, and the steady window derived from the plan's
+// loadProfile (same derivation the generated script baked in — see Plan 3 window.ts).
+export async function resolveExecuteInputs(
+  db: Db, companyId: string, input: { testPlanId: string; requirementsDocumentId: string },
+): Promise<ExecuteInputs> {
+  const [testPlan] = await db.select().from(testPlans).where(and(eq(testPlans.id, input.testPlanId), eq(testPlans.companyId, companyId)));
+  if (!testPlan) throw new ExecutePrerequisiteError(`test_plan ${input.testPlanId} not found`);
+
+  const assets = await db.select().from(testAssets).where(and(eq(testAssets.companyId, companyId), eq(testAssets.testPlanId, input.testPlanId), eq(testAssets.engine, "k6")));
+  const asset = assets.find((a) => a.scriptContent && a.scriptContent.length > 0);
+  if (!asset) throw new ExecutePrerequisiteError(`no k6 asset with scriptContent for test_plan ${input.testPlanId}`);
+
+  const [rd] = await db.select().from(requirementsDocuments).where(and(eq(requirementsDocuments.id, input.requirementsDocumentId), eq(requirementsDocuments.companyId, companyId)));
+  const targetEnv = (rd?.targetEnvironment ?? {}) as { baseUrl?: unknown };
+  const baseUrl = typeof targetEnv.baseUrl === "string" ? targetEnv.baseUrl : "";
+  if (!baseUrl) throw new ExecutePrerequisiteError(`requirements_documents.targetEnvironment.baseUrl is missing`);
+
+  // resolveSteadyWindow reads only executor/stages/evaluationWindow/duration/warmupGuard — the test_plans
+  // LoadProfile is structurally compatible for those fields (the startVus/startVUs casing difference is
+  // not read). Cast across the two LoadProfile types.
+  const window = resolveSteadyWindow(testPlan.loadProfile as never);
+  return { testPlan, asset, baseUrl, window };
 }
 
 const STAGE_ORDER = ["intake", "discovery", "plan", "generate", "validate", "execute", "analysis", "report"] as const;
