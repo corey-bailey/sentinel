@@ -1,6 +1,6 @@
 // server/src/services/pipeline-run.ts
 import { pipelineRuns, type Db, type PipelineTrigger, type StageRecordMap, type StageRecord } from "@sentinel/db";
-import { testAssets, testPlans, requirementsDocuments } from "@sentinel/db";
+import { testAssets, testPlans, requirementsDocuments, slaVerdicts, type SlaTarget } from "@sentinel/db";
 import { and, eq } from "drizzle-orm";
 import { resolveSteadyWindow, type SteadyWindow } from "./k6-generator/window.js";
 
@@ -42,6 +42,27 @@ export async function resolveExecuteInputs(
   // not read). Cast across the two LoadProfile types.
   const window = resolveSteadyWindow(testPlan.loadProfile as never);
   return { testPlan, asset, baseUrl, window };
+}
+
+export type RequiredVerdictCounts = { requiredTargetCount: number; requiredFailCount: number; requiredInconclusiveCount: number };
+
+// Scopes the gate to REQUIRED SLA targets (the engine's aggregate counts mix in optional breaches).
+export async function countRequiredVerdicts(
+  db: Db, companyId: string, input: { pipelineRunId: string; executionRunId: string; requirementsDocumentId: string },
+): Promise<RequiredVerdictCounts> {
+  const [rd] = await db.select().from(requirementsDocuments).where(and(eq(requirementsDocuments.id, input.requirementsDocumentId), eq(requirementsDocuments.companyId, companyId)));
+  const targets = (rd?.slaTargets ?? []) as SlaTarget[];
+  const requiredIds = new Set(targets.filter((t) => t.required).map((t) => t.id));
+
+  const rows = await db.select().from(slaVerdicts).where(and(eq(slaVerdicts.companyId, companyId), eq(slaVerdicts.pipelineRunId, input.pipelineRunId), eq(slaVerdicts.executionRunId, input.executionRunId)));
+  let requiredFailCount = 0;
+  let requiredInconclusiveCount = 0;
+  for (const r of rows) {
+    if (!requiredIds.has(r.slaTargetId)) continue;
+    if (r.status === "fail") requiredFailCount++;
+    else if (r.status === "inconclusive") requiredInconclusiveCount++;
+  }
+  return { requiredTargetCount: requiredIds.size, requiredFailCount, requiredInconclusiveCount };
 }
 
 const STAGE_ORDER = ["intake", "discovery", "plan", "generate", "validate", "execute", "analysis", "report"] as const;
