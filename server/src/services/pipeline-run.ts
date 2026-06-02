@@ -1,8 +1,19 @@
 // server/src/services/pipeline-run.ts
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { pipelineRuns, type Db, type PipelineTrigger, type StageRecordMap, type StageRecord } from "@sentinel/db";
 import { testAssets, testPlans, requirementsDocuments, slaVerdicts, type SlaTarget } from "@sentinel/db";
+import { gateResolutions, testRuns, executionRuns } from "@sentinel/db";
 import { and, eq } from "drizzle-orm";
 import { resolveSteadyWindow, type SteadyWindow } from "./k6-generator/window.js";
+import { k6Executor } from "./k6-executor.js";
+import { executionRunService } from "./execution-runs.js";
+import { slaVerdictEngine } from "./sla-verdict-engine.js";
+import { testRunArtifactsService } from "./test-run-artifacts.js";
+import { buildResolvedExecution } from "./pipeline-resolved-execution.js";
+import { resolveGate, verdictForOutcome } from "./gate-resolver.js";
+import type { SpawnFn } from "./test-adapters/k6-adapter.js";
 
 export class UnsupportedTriggerPathError extends Error {
   constructor(path: string) { super(`Unsupported pipeline trigger path (v1 = execution-trigger only): ${path}`); this.name = "UnsupportedTriggerPathError"; }
@@ -151,5 +162,101 @@ export function pipelineRunService(db: Db) {
     return r!;
   }
 
-  return { create, markStageRunning, markStageComplete, markStageSkipped, markStageFailed, setVerdict, setCiSignal, setResolvedExecution, markStarted, markCompleted };
+  async function runExecutionTrigger(
+    pipelineRunId: string,
+    deps: { spawnFn: SpawnFn; reachabilityProbe?: (baseUrl: string) => Promise<boolean> },
+  ): Promise<{ verdict: string; ciSignal: string }> {
+    await markStarted(pipelineRunId); // verdict='running'
+    const [run] = await db.select().from(pipelineRuns).where(eq(pipelineRuns.id, pipelineRunId));
+    if (!run) throw new Error(`pipeline_run not found: ${pipelineRunId}`);
+    if (!run.testPlanId || !run.requirementsDocumentId) {
+      await markStageFailed(pipelineRunId, "execute", "pipeline_run missing testPlanId/requirementsDocumentId");
+      await setVerdict(pipelineRunId, "error");
+      await setCiSignal(pipelineRunId, "fail");
+      await markCompleted(pipelineRunId);
+      return { verdict: "error", ciSignal: "fail" };
+    }
+    const companyId = run.companyId;
+    const testPlanId = run.testPlanId;
+    const requirementsDocumentId = run.requirementsDocumentId;
+
+    try {
+      // ---- VALIDATE (thin: reachability probe; full Stage-4 validation deferred) ----
+      await markStageRunning(pipelineRunId, "validate");
+      const inputs = await resolveExecuteInputs(db, companyId, { testPlanId, requirementsDocumentId });
+      const reachable = deps.reachabilityProbe ? await deps.reachabilityProbe(inputs.baseUrl) : true;
+      if (!reachable) {
+        await markStageFailed(pipelineRunId, "validate", `target not reachable: ${inputs.baseUrl}`);
+        await setVerdict(pipelineRunId, "error"); await setCiSignal(pipelineRunId, "fail"); await markCompleted(pipelineRunId);
+        return { verdict: "error", ciSignal: "fail" };
+      }
+      await markStageComplete(pipelineRunId, "validate");
+
+      // ---- EXECUTE (server-side, mechanical) ----
+      await markStageRunning(pipelineRunId, "execute");
+      const [testRun] = await db.insert(testRuns).values({ companyId, testPlanId, pipelineRunId }).returning();
+      const runs = executionRunService(db);
+      const er = await runs.create(companyId, { pipelineRunId, testRunId: testRun!.id, testAssetId: inputs.asset.id, engine: "k6", binaryProfile: "k6" });
+      const cwd = await fs.mkdtemp(path.join(os.tmpdir(), "sentinel-run-"));
+      await db.update(executionRuns).set({ workspaceRef: cwd }).where(eq(executionRuns.id, er.id));
+
+      const execResult = await k6Executor({ db, spawnFn: deps.spawnFn }).run({
+        companyId,
+        executionRunId: er.id,
+        testRunId: testRun!.id,
+        cwd,
+        asset: { scriptContent: inputs.asset.scriptContent ?? "", dataFiles: (inputs.asset.dataFiles ?? []).map((f) => ({ name: f.name, content: f.content })) },
+        baseUrl: inputs.baseUrl,
+        window: inputs.window,
+      });
+
+      // snapshot what actually executed
+      await setResolvedExecution(pipelineRunId, buildResolvedExecution({
+        loadProfile: (inputs.testPlan.loadProfile ?? null) as Record<string, unknown> | null,
+        executionModel: inputs.testPlan.executionModel ?? null,
+        asset: { id: inputs.asset.id, workflowName: "all", engine: "k6", version: inputs.asset.version, dataFiles: (inputs.asset.dataFiles ?? []).map((f) => ({ name: f.name, content: f.content })) },
+        window: inputs.window,
+      }));
+
+      if (execResult.status === "failed") {
+        await markStageFailed(pipelineRunId, "execute", `k6 exited ${execResult.exitCode}`);
+        await setVerdict(pipelineRunId, "error"); await setCiSignal(pipelineRunId, "fail"); await markCompleted(pipelineRunId);
+        return { verdict: "error", ciSignal: "fail" };
+      }
+      // persist the k6 HTML artifact (no-op if absent)
+      await testRunArtifactsService(db).persistK6HtmlSummary(companyId, { pipelineRunId, executionRunId: er.id, testRunId: testRun!.id, cwd, testRunId2: testRun!.id });
+      await markStageComplete(pipelineRunId, "execute", { executionRunIds: [er.id] });
+
+      // ---- ANALYSIS (metrics already ingested by k6Executor) → SLA → gate ----
+      await markStageRunning(pipelineRunId, "analysis");
+      await slaVerdictEngine(db).evaluate({ companyId, pipelineRunId, executionRunId: er.id });
+      const [rd] = await db.select().from(requirementsDocuments).where(eq(requirementsDocuments.id, requirementsDocumentId));
+      const counts = await countRequiredVerdicts(db, companyId, { pipelineRunId, executionRunId: er.id, requirementsDocumentId });
+      const gate = resolveGate({ testIntent: rd?.testIntent ?? "conformance", ...counts });
+      await db.insert(gateResolutions).values({ companyId, pipelineRunId, testRunId: testRun!.id, outcome: gate.outcome, ciSignal: gate.ciSignal, resolvedBy: "auto", resolvedAt: new Date() });
+      const verdict = verdictForOutcome(gate.outcome);
+      await setVerdict(pipelineRunId, verdict);
+      await setCiSignal(pipelineRunId, gate.ciSignal);
+      await markStageComplete(pipelineRunId, "analysis");
+
+      // ---- REPORT (thin: sentinel_summary artifact) ----
+      await markStageRunning(pipelineRunId, "report");
+      const summary = { pipelineRunId, verdict, ciSignal: gate.ciSignal, outcome: gate.outcome, requiredVerdicts: counts };
+      const summaryPath = path.join(cwd, "sentinel-summary.json");
+      await fs.writeFile(summaryPath, JSON.stringify(summary, null, 2));
+      await testRunArtifactsService(db).create(companyId, { pipelineRunId, executionRunId: er.id, testRunId: testRun!.id, artifactType: "sentinel_summary", storageRef: summaryPath, contentType: "application/json", sizeBytes: Buffer.byteLength(JSON.stringify(summary)) });
+      await markStageComplete(pipelineRunId, "report");
+
+      await markCompleted(pipelineRunId);
+      return { verdict, ciSignal: gate.ciSignal };
+    } catch (err) {
+      // any unexpected error → mark the running stage failed where possible, verdict error
+      await setVerdict(pipelineRunId, "error");
+      await setCiSignal(pipelineRunId, "fail");
+      await markCompleted(pipelineRunId);
+      throw err instanceof Error ? err : new Error(String(err));
+    }
+  }
+
+  return { create, markStageRunning, markStageComplete, markStageSkipped, markStageFailed, setVerdict, setCiSignal, setResolvedExecution, markStarted, markCompleted, runExecutionTrigger };
 }
