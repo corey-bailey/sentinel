@@ -499,22 +499,6 @@ importers:
         specifier: ^5.7.3
         version: 5.9.3
 
-  packages/plugins/paperclip-plugin-fake-sandbox:
-    dependencies:
-      '@sentinel/plugin-sdk':
-        specifier: workspace:*
-        version: link:../sdk
-    devDependencies:
-      '@types/node':
-        specifier: ^24.6.0
-        version: 24.12.0
-      typescript:
-        specifier: ^5.7.3
-        version: 5.9.3
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.12.0)(jiti@2.6.1)(jsdom@28.1.0(@noble/hashes@1.8.0))(lightningcss@1.30.2)(tsx@4.21.0)
-
   packages/plugins/plugin-llm-wiki:
     dependencies:
       react:
@@ -613,6 +597,22 @@ importers:
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
+
+  packages/plugins/sentinel-plugin-fake-sandbox:
+    dependencies:
+      '@sentinel/plugin-sdk':
+        specifier: workspace:*
+        version: link:../sdk
+    devDependencies:
+      '@types/node':
+        specifier: ^24.6.0
+        version: 24.12.0
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.12.0)(jiti@2.6.1)(jsdom@28.1.0(@noble/hashes@1.8.0))(lightningcss@1.30.2)(tsx@4.21.0)
 
   packages/shared:
     dependencies:
@@ -2494,8 +2494,8 @@ packages:
   '@open-draft/deferred-promise@2.2.0':
     resolution: {integrity: sha512-CecwLWx3rhxVQF6V4bAgPS5t+So2sTbPgAzafKkVizyi7tlwpcFpdFqq+wqF2OwNBmqFuu6tOyouTuxgpMfzmA==}
 
-  '@sentinelai/adapter-utils@2026.325.0':
-    resolution: {integrity: sha512-YDVSAgjkeJ0PvxXDJVN9MZDX7oYRzidLtGHmGgRGd6gSk/bF2ygAKvND4FI1YxDc/cRLQjqAFCpCYaC/9wqIEA==}
+  '@paperclipai/adapter-utils@2026.529.0':
+    resolution: {integrity: sha512-Y8sbhZTHyb9nYYAURkGZ7oxFiU5ypew1fDuFB59qjRLt7FyIJXP6HbdEVRNylSV3jlXksCxokw2LqpwIID7asQ==}
 
   '@paralleldrive/cuid2@2.3.1':
     resolution: {integrity: sha512-XO7cAxhnTZl0Yggq6jOgjiOHhbgcO4NqFqwSmQpjK3b6TEE6Uj/jfSk6wzYyemh3+I0sHirKSetjQwn5cZktFw==}
@@ -9385,7 +9385,7 @@ snapshots:
 
   '@open-draft/deferred-promise@2.2.0': {}
 
-  '@sentinelai/adapter-utils@2026.325.0': {}
+  '@paperclipai/adapter-utils@2026.529.0': {}
 
   '@paralleldrive/cuid2@2.3.1':
     dependencies:
@@ -12518,7 +12518,7 @@ snapshots:
 
   hermes-paperclip-adapter@0.2.0:
     dependencies:
-      '@sentinelai/adapter-utils': 2026.325.0
+      '@paperclipai/adapter-utils': 2026.529.0
       picocolors: 1.1.1
 
   hono@4.12.12: {}
