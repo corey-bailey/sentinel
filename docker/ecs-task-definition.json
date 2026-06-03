@@ -28,7 +28,7 @@
         { "name": "PAPERCLIP_DEPLOYMENT_MODE", "value": "authenticated" },
         { "name": "PAPERCLIP_DEPLOYMENT_EXPOSURE", "value": "public" },
         { "name": "PAPERCLIP_PUBLIC_URL", "value": "https://<DOMAIN>" },
-        { "name": "PAPERCLIP_MIGRATION_AUTO_APPLY", "value": "true" },
+        { "name": "SENTINEL_MIGRATION_AUTO_APPLY", "value": "true" },
         { "name": "HEARTBEAT_SCHEDULER_ENABLED", "value": "true" }
       ],
       "secrets": [
