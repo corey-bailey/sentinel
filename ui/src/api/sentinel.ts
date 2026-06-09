@@ -153,6 +153,7 @@ export const baselinesApi = {
   create: (companyId: string, data: Record<string, unknown>) =>
     api.post<Baseline>(`/companies/${companyId}/baselines`, data),
   approve: (id: string) => api.post<Baseline>(`/baselines/${id}/approve`, {}),
+  reject: (id: string) => api.post<Baseline>(`/baselines/${id}/reject`, {}),
 };
 
 export const regressionsApi = {
@@ -163,6 +164,130 @@ export const regressionsApi = {
   reject: (id: string) =>
     api.patch<Regression>(`/regressions/${id}`, { action: "reject" }),
 };
+
+export type StageRecord = {
+  status: "pending" | "running" | "complete" | "failed" | "skipped";
+  skippedReason?: string;
+  error?: string;
+  startedAt?: string;
+  completedAt?: string;
+  executionRunIds?: string[];
+};
+
+export type PipelineTrigger = {
+  type: "manual_intake" | "jira" | "ci" | "scheduled" | "manual_rerun";
+  source: string;
+  ref?: string;
+};
+
+export type PipelineRun = {
+  id: string;
+  companyId: string;
+  testPlanId?: string | null;
+  requirementsDocumentId?: string | null;
+  trigger: PipelineTrigger;
+  stages: Record<string, StageRecord>;
+  verdict: string;
+  ciSignal: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ExecutionRun = {
+  id: string;
+  engine?: string | null;
+  status: string;
+  exitCode?: number | null;
+  peakVus?: number | null;
+  totalIterations?: number | null;
+  totalRequests?: number | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+};
+
+export type SlaVerdictTarget = {
+  id: string;
+  source: string;
+  metric: string;
+  operator: "lt" | "lte" | "gt" | "gte";
+  threshold: number;
+  required: boolean;
+  workflowScope?: string;
+};
+
+export type SlaVerdict = {
+  id: string;
+  slaTargetId: string;
+  workflowName?: string | null;
+  phase?: string | null;
+  metric?: string | null;
+  operator?: string | null;
+  threshold?: number | null;
+  actualValue?: number | null;
+  source?: string | null;
+  status: "pass" | "fail" | "inconclusive";
+  target: SlaVerdictTarget | null;
+};
+
+export type GateResolution = {
+  id: string;
+  outcome: string;
+  ciSignal: string;
+  resolvedBy: string;
+  resolvedAt?: string | null;
+};
+
+export type PipelineArtifact = {
+  id: string;
+  artifactType: string;
+  contentType?: string | null;
+  sizeBytes?: number | null;
+  createdAt: string;
+};
+
+export type RequirementsDocumentSummary = {
+  id: string;
+  appName: string | null;
+  status: string;
+  testIntent: string;
+  baseUrl: string | null;
+  slaTargetCount: number;
+  createdAt: string;
+};
+
+export type PipelineRunDetail = PipelineRun & {
+  executionRuns: ExecutionRun[];
+  slaVerdicts: SlaVerdict[];
+  gateResolutions: GateResolution[];
+  artifacts: PipelineArtifact[];
+  requirementsDocument: { id: string; appName: string | null; testIntent: string; status: string } | null;
+};
+
+export const pipelineRunsApi = {
+  list: (companyId: string, testPlanId?: string) =>
+    api.get<PipelineRun[]>(
+      `/companies/${companyId}/pipeline-runs${testPlanId ? `?testPlanId=${testPlanId}` : ""}`,
+    ),
+  get: (id: string) => api.get<PipelineRunDetail>(`/pipeline-runs/${id}`),
+  trigger: (
+    companyId: string,
+    data: { testPlanId: string; requirementsDocumentId: string; trigger: PipelineTrigger },
+  ) =>
+    api.post<{ pipelineRunId: string; verdict: string; ciSignal: string | null }>(
+      `/companies/${companyId}/pipeline-runs`,
+      data,
+    ),
+};
+
+export const requirementsDocumentsApi = {
+  list: (companyId: string) =>
+    api.get<RequirementsDocumentSummary[]>(`/companies/${companyId}/requirements-documents`),
+};
+
+// Plain href for new-tab artifact viewing (same-origin; session cookie rides along).
+export const artifactContentUrl = (artifactId: string) => `/api/artifacts/${artifactId}/content`;
 
 export const triggersApi = {
   deploy: (

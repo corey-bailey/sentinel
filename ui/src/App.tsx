@@ -60,6 +60,8 @@ import { TestPlans } from "./pages/TestPlans";
 import { TestAssets } from "./pages/TestAssets";
 import { TestRunList } from "./pages/TestRunList";
 import { TestRunDetail } from "./pages/TestRunDetail";
+import { PipelineRuns } from "./pages/PipelineRuns";
+import { PipelineRunDetail } from "./pages/PipelineRunDetail";
 import { Baselines } from "./pages/Baselines";
 import { Regressions } from "./pages/Regressions";
 import { useCompany } from "./context/CompanyContext";
@@ -153,6 +155,8 @@ function boardRoutes() {
       <Route path="sentinel/test-assets" element={<TestAssets />} />
       <Route path="sentinel/test-runs" element={<TestRunList />} />
       <Route path="sentinel/test-runs/:runId" element={<TestRunDetail />} />
+      <Route path="sentinel/pipeline-runs" element={<PipelineRuns />} />
+      <Route path="sentinel/pipeline-runs/:runId" element={<PipelineRunDetail />} />
       <Route path="sentinel/baselines" element={<Baselines />} />
       <Route path="sentinel/regressions" element={<Regressions />} />
       <Route path="*" element={<NotFoundPage scope="board" />} />

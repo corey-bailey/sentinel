@@ -38,6 +38,13 @@ export function Baselines() {
     },
   });
 
+  const rejectMutation = useMutation({
+    mutationFn: (id: string) => baselinesApi.reject(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.baselines.list(selectedCompanyId!) });
+    },
+  });
+
   if (!selectedCompanyId) {
     return <EmptyState icon={BarChart3} message="Select a company to view baselines." />;
   }
@@ -108,13 +115,23 @@ export function Baselines() {
                           <span>{timeAgo(b.createdAt)}</span>
                         </div>
                       </div>
-                      <Button
-                        size="sm"
-                        onClick={() => approveMutation.mutate(b.id)}
-                        disabled={approveMutation.isPending}
-                      >
-                        Approve
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => approveMutation.mutate(b.id)}
+                          disabled={approveMutation.isPending || rejectMutation.isPending}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => rejectMutation.mutate(b.id)}
+                          disabled={approveMutation.isPending || rejectMutation.isPending}
+                        >
+                          Reject
+                        </Button>
+                      </div>
                     </div>
                   );
                 })}

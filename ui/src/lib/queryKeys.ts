@@ -221,4 +221,12 @@ export const queryKeys = {
   regressions: {
     list: (companyId: string) => ["regressions", companyId] as const,
   },
+  pipelineRuns: {
+    list: (companyId: string, testPlanId?: string) =>
+      ["pipeline-runs", companyId, testPlanId ?? "all"] as const,
+    detail: (id: string) => ["pipeline-runs", "detail", id] as const,
+  },
+  requirementsDocuments: {
+    list: (companyId: string) => ["requirements-documents", companyId] as const,
+  },
 };
