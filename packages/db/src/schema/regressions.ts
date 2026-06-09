@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, real, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, real, boolean, timestamp } from "drizzle-orm/pg-core";
 import { testRuns } from "./test_runs.js";
 import { baselines } from "./baselines.js";
 import { companies } from "./companies.js";
@@ -12,6 +12,8 @@ export const regressions = pgTable("regressions", {
   // pipeline_runs FK — links the regression to its pipeline run (nullable)
   pipelineRunId: uuid("pipeline_run_id").references(() => pipelineRuns.id, { onDelete: "set null" }),
   baselineId: uuid("baseline_id").references(() => baselines.id),
+  // the baseline set this comparison ran against (0095)
+  baselineSetId: uuid("baseline_set_id"),
   // null baselineId means this is a baseline_proposal (first run)
   // NOTE: regressionType stays free-text in this plan; the closed-enum conversion is deferred to 0095.
   regressionType: text("regression_type").notNull().default("regression"),
@@ -21,6 +23,12 @@ export const regressions = pgTable("regressions", {
   baselineValue: real("baseline_value"),
   actualValue: real("actual_value").notNull(),
   deviationPct: real("deviation_pct"),
+  // Stage-7 dual-threshold comparison (0095): tolerance% (deltaPct) AND z-score gates
+  deltaPct: real("delta_pct"),
+  zScore: real("z_score"),
+  flagged: boolean("flagged"),
+  // "high" (sampleN >= K, z-gate applied) | "low" (cold-start, tolerance-only)
+  confidence: text("confidence"),
   // "open" | "approved" | "rejected"
   status: text("status").notNull().default("open"),
   executionIssueId: uuid("execution_issue_id").references(() => issues.id),

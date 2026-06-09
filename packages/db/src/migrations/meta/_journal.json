@@ -666,6 +666,13 @@
       "when": 1780239884240,
       "tag": "0094_left_zarek",
       "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1781035988828,
+      "tag": "0095_mighty_lord_hawal",
+      "breakpoints": true
     }
   ]
 }
