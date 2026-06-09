@@ -54,5 +54,26 @@ export function baselineRoutes(db: Db) {
     res.json(updated);
   });
 
+  // Rejecting a proposal retires the whole pending set (validUntil stamp) — the next
+  // characterization run proposes a fresh set.
+  router.post("/baselines/:id/reject", async (req, res) => {
+    assertAuthenticated(req);
+    const { id } = req.params as { id: string };
+    const existing = await svc.getById(id);
+    if (!existing) {
+      res.status(404).json({ error: "Baseline not found" });
+      return;
+    }
+    assertCompanyAccess(req, existing.companyId);
+    if (existing.isActive) {
+      res.status(409).json({ error: "Cannot reject an active baseline" });
+      return;
+    }
+
+    const actor = getActorInfo(req);
+    const updated = await svc.reject(id, actor.actorId);
+    res.json(updated);
+  });
+
   return router;
 }

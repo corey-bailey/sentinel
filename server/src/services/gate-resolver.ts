@@ -27,3 +27,13 @@ export function verdictForOutcome(outcome: GateOutcome): 'pass' | 'fail' | 'inco
   if (outcome === 'inconclusive') return 'inconclusive';
   return 'pass'; // auto_pass | characterization
 }
+
+// Stage-7 human resolutions: approving a baseline proposal or waiving a flagged regression
+// terminalizes a blocked_on_human run; rejecting fails it.
+export type HumanGateAction = 'baseline_approved' | 'baseline_rejected' | 'regression_approved' | 'regression_rejected';
+export type HumanGateResult = { outcome: HumanGateAction; ciSignal: 'pass' | 'fail'; verdict: 'pass' | 'fail' };
+
+export function resolveHumanGate(action: HumanGateAction): HumanGateResult {
+  const approved = action === 'baseline_approved' || action === 'regression_approved';
+  return { outcome: action, ciSignal: approved ? 'pass' : 'fail', verdict: approved ? 'pass' : 'fail' };
+}

@@ -1,6 +1,6 @@
 // server/src/__tests__/gate-resolver.test.ts
 import { describe, expect, it } from 'vitest';
-import { resolveGate } from '../services/gate-resolver.js';
+import { resolveGate, resolveHumanGate } from '../services/gate-resolver.js';
 
 describe('resolveGate', () => {
   it('all required pass → auto_pass / pass', () => {
@@ -28,5 +28,16 @@ describe('resolveGate', () => {
   it('conformance with no required targets → characterization / pass', () => {
     expect(resolveGate({ testIntent: 'conformance', requiredTargetCount: 0, requiredFailCount: 0, requiredInconclusiveCount: 0 }))
       .toEqual({ outcome: 'characterization', ciSignal: 'pass' });
+  });
+});
+
+describe('resolveHumanGate (Stage-7 resolutions)', () => {
+  it('approvals pass: baseline_approved and regression_approved (waived) → pass/pass', () => {
+    expect(resolveHumanGate('baseline_approved')).toEqual({ outcome: 'baseline_approved', ciSignal: 'pass', verdict: 'pass' });
+    expect(resolveHumanGate('regression_approved')).toEqual({ outcome: 'regression_approved', ciSignal: 'pass', verdict: 'pass' });
+  });
+  it('rejections fail: baseline_rejected and regression_rejected (confirmed) → fail/fail', () => {
+    expect(resolveHumanGate('baseline_rejected')).toEqual({ outcome: 'baseline_rejected', ciSignal: 'fail', verdict: 'fail' });
+    expect(resolveHumanGate('regression_rejected')).toEqual({ outcome: 'regression_rejected', ciSignal: 'fail', verdict: 'fail' });
   });
 });

@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { Db } from "@sentinel/db";
 import { z } from "zod";
 import { regressionService } from "../services/regressions.js";
+import { pipelineRunService } from "../services/pipeline-run.js";
 import { assertAuthenticated, assertCompanyAccess, getActorInfo } from "./authz.js";
 
 const patchRegressionSchema = z.object({
@@ -48,6 +49,13 @@ export function regressionRoutes(db: Db) {
       parsed.data.action === "approve"
         ? await svc.approve(id, actor.actorId)
         : await svc.reject(id, actor.actorId);
+
+    // Stage-7 gate: approving waives the regression (run passes); rejecting confirms it (run
+    // fails). Terminalizes the blocked_on_human pipeline run with a human gate_resolutions row.
+    if (existing.pipelineRunId) {
+      const action = parsed.data.action === "approve" ? "regression_approved" : "regression_rejected";
+      await pipelineRunService(db).applyHumanResolution(existing.pipelineRunId, action, actor.actorId);
+    }
 
     res.json(updated);
   });
