@@ -5,14 +5,9 @@ import { buildThresholds } from './thresholds.js';
 import { buildDataFiles } from './data-files.js';
 import { assembleScript } from './render-script.js';
 import { UnsupportedProtocolError, type GenerateK6Input, type GeneratedK6Asset, type Workflow } from './types.js';
+import { p95EstimateMs } from './estimate.js';
 
 const SUPPORTED_EXECUTORS = new Set(['ramping-vus', 'constant-arrival-rate', 'constant-vus']);
-
-// Estimate the p95 latency (ms) used for arrival-rate VU allocation: the lowest p95 SLA ceiling if present, else 500.
-function p95EstimateMs(input: GenerateK6Input): number {
-  const p95s = input.slaTargets.filter((t) => t.source === 'k6' && t.metric === 'p95_ms').map((t) => t.threshold);
-  return p95s.length ? Math.min(...p95s) : 500;
-}
 
 function requestSource(wf: Workflow): string {
   const url = wf.request.queryFromData
@@ -67,7 +62,7 @@ export function generateK6Script(input: GenerateK6Input): GeneratedK6Asset {
   }
 
   const window = resolveSteadyWindow(lp);
-  const scenarioPlan = buildScenarios(lp, input.workflows, input.executionModel, { p95EstimateMs: p95EstimateMs(input) });
+  const scenarioPlan = buildScenarios(lp, input.workflows, input.executionModel, { p95EstimateMs: p95EstimateMs(input.slaTargets) });
   const thresholds = buildThresholds(input.slaTargets);
   const dataPlan = buildDataFiles(input.workflows, input.data);
 

@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import type { Db } from "@sentinel/db";
 import { testPlans, type LoadProfile } from "@sentinel/db";
+import type { DerivedTestPlan } from "./test-plan-generator.js";
 
 // The v1 CRUD create API accepts the legacy simple load profile only (validated
 // by the route's Zod schema). The protocol-tagged discriminated `LoadProfile`
@@ -39,6 +40,23 @@ export function testPlanService(db: Db) {
           apmProvider: data.apmProvider ?? null,
           apmServiceId: data.apmServiceId ?? null,
           schedule: data.schedule ?? null,
+        })
+        .returning();
+      return row!;
+    },
+
+    // Persists a Stage-2 derived plan (union LoadProfile + executionModel + the
+    // requirements_documents FK that SLA targets are read through).
+    async createDerived(companyId: string, derived: DerivedTestPlan) {
+      const [row] = await db
+        .insert(testPlans)
+        .values({
+          companyId,
+          name: derived.name,
+          requirementsDocumentId: derived.requirementsDocumentId,
+          engines: derived.engines,
+          executionModel: derived.executionModel,
+          loadProfile: derived.loadProfile as LoadProfile,
         })
         .returning();
       return row!;

@@ -1,3 +1,7 @@
+// DEPRECATED: serves the legacy `requirements` table, kept only because the Requirements UI
+// page and test_plans.requirementId still reference it. New work targets the spec-aligned
+// `requirements_documents` table via routes/requirements-documents.ts (Stage 1). Do not add
+// capabilities here.
 import { Router } from "express";
 import type { Db } from "@sentinel/db";
 import { z } from "zod";

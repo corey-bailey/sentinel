@@ -1,5 +1,6 @@
 // server/src/services/k6-generator/scenarios.ts
 import type { LoadProfile, Workflow } from './types.js';
+import { allocateArrivalRateVUs } from './estimate.js';
 
 // k6 scenario objects are JSON-serializable; we model them loosely (k6 validates at runtime).
 export type K6Scenario = Record<string, unknown>;
@@ -46,12 +47,12 @@ export function buildScenarios(
   }
 
   // constant-arrival-rate → per-scenario, one named scenario per workflow.
-  const p95s = Math.max(opts.p95EstimateMs / 1000, 0.001);
   const scenarios: Record<string, K6Scenario> = {};
   for (const wf of workflows) {
     const rate = Math.max(1, Math.round(lp.rate * wf.weight));
-    const preAllocatedVUs = lp.preAllocatedVUs ?? Math.max(1, Math.ceil(rate * p95s));
-    const maxVUs = lp.maxVUs ?? preAllocatedVUs * 4;
+    const allocated = allocateArrivalRateVUs(rate, opts.p95EstimateMs);
+    const preAllocatedVUs = lp.preAllocatedVUs ?? allocated.preAllocatedVUs;
+    const maxVUs = lp.maxVUs ?? (lp.preAllocatedVUs ? lp.preAllocatedVUs * 4 : allocated.maxVUs);
     const fn = execName(wf.name);
     scenarios[wf.name] = {
       executor: 'constant-arrival-rate',
