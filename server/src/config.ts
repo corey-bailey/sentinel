@@ -89,6 +89,12 @@ export interface Config {
   telemetryEnabled: boolean;
 }
 
+// SENTINEL_PUBLIC_URL is canonical; PAPERCLIP_PUBLIC_URL is accepted as an alias because the
+// docker/ECS deploy configs predate the rebrand and only set the PAPERCLIP_ name.
+export function resolvePublicUrlEnv(): string | undefined {
+  return process.env.SENTINEL_PUBLIC_URL ?? process.env.PAPERCLIP_PUBLIC_URL;
+}
+
 function detectTailnetBindHost(): string | undefined {
   const explicit = process.env.SENTINEL_TAILNET_BIND_HOST?.trim();
   if (explicit) return explicit;
@@ -196,7 +202,7 @@ export function loadConfig(): Config {
     AUTH_BASE_URL_MODES.includes(authBaseUrlModeFromEnvRaw as AuthBaseUrlMode)
       ? (authBaseUrlModeFromEnvRaw as AuthBaseUrlMode)
       : null;
-  const publicUrlFromEnv = process.env.SENTINEL_PUBLIC_URL;
+  const publicUrlFromEnv = resolvePublicUrlEnv();
   const authPublicBaseUrlRaw =
     process.env.SENTINEL_AUTH_PUBLIC_BASE_URL ??
     process.env.BETTER_AUTH_URL ??

@@ -10,7 +10,7 @@ import {
   authUsers,
   authVerifications,
 } from "@sentinel/db";
-import type { Config } from "../config.js";
+import { resolvePublicUrlEnv, type Config } from "../config.js";
 import { resolveSentinelInstanceId } from "../home-paths.js";
 
 export type BetterAuthSessionUser = {
@@ -99,7 +99,7 @@ export function createBetterAuthInstance(db: Db, config: Config, trustedOrigins:
       "For local development, set BETTER_AUTH_SECRET=paperclip-dev-secret in your .env file.",
     );
   }
-  const publicUrl = process.env.SENTINEL_PUBLIC_URL ?? baseUrl;
+  const publicUrl = resolvePublicUrlEnv() ?? baseUrl;
   const isHttpOnly = publicUrl ? publicUrl.startsWith("http://") : false;
 
   const authConfig = {

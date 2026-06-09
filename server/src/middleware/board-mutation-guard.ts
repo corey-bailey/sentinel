@@ -1,4 +1,5 @@
 import type { Request, RequestHandler } from "express";
+import { resolvePublicUrlEnv } from "../config.js";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const DEFAULT_DEV_ORIGINS = [
@@ -27,8 +28,9 @@ function trustedOriginsForRequest(req: Request) {
   // Behind some reverse proxies the Host / X-Forwarded-Host header may
   // not match the public URL (for example when TLS terminates at the
   // edge and the inbound Host is an internal service name). Trust the
-  // explicitly-configured SENTINEL_PUBLIC_URL when it's set.
-  const publicUrl = parseOrigin(process.env.SENTINEL_PUBLIC_URL?.trim());
+  // explicitly-configured public URL when it's set (SENTINEL_PUBLIC_URL,
+  // with PAPERCLIP_PUBLIC_URL accepted as a deploy-config alias).
+  const publicUrl = parseOrigin(resolvePublicUrlEnv()?.trim());
   if (publicUrl) origins.add(publicUrl);
   return origins;
 }
