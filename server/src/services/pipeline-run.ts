@@ -4,16 +4,18 @@ import os from "node:os";
 import path from "node:path";
 import { pipelineRuns, type Db, type PipelineTrigger, type StageRecordMap, type StageRecord } from "@sentinel/db";
 import { testAssets, testPlans, requirementsDocuments, slaVerdicts, type SlaTarget } from "@sentinel/db";
-import { gateResolutions, testRuns, executionRuns } from "@sentinel/db";
-import { and, eq } from "drizzle-orm";
+import { gateResolutions, testRuns, executionRuns, testRunArtifacts } from "@sentinel/db";
+import { and, desc, eq } from "drizzle-orm";
 import { resolveSteadyWindow, type SteadyWindow } from "./k6-generator/window.js";
 import { k6Executor } from "./k6-executor.js";
 import { executionRunService } from "./execution-runs.js";
 import { slaVerdictEngine } from "./sla-verdict-engine.js";
 import { testRunArtifactsService } from "./test-run-artifacts.js";
 import { buildResolvedExecution } from "./pipeline-resolved-execution.js";
-import { resolveGate, verdictForOutcome } from "./gate-resolver.js";
+import { resolveGate, verdictForOutcome, resolveHumanGate, type HumanGateAction } from "./gate-resolver.js";
+import { baselineComparatorRunner } from "./baseline-comparator-runner.js";
 import type { SpawnFn } from "./test-adapters/k6-adapter.js";
+import type { StorageService } from "../storage/types.js";
 
 export class UnsupportedTriggerPathError extends Error {
   constructor(path: string) { super(`Unsupported pipeline trigger path (v1 = execution-trigger only): ${path}`); this.name = "UnsupportedTriggerPathError"; }
@@ -119,6 +121,57 @@ export function pipelineRunService(db: Db) {
     return row!;
   }
 
+  async function list(companyId: string, filters: { testPlanId?: string; limit?: number } = {}) {
+    const conditions = [eq(pipelineRuns.companyId, companyId)];
+    if (filters.testPlanId) conditions.push(eq(pipelineRuns.testPlanId, filters.testPlanId));
+    return db
+      .select()
+      .from(pipelineRuns)
+      .where(and(...conditions))
+      .orderBy(desc(pipelineRuns.createdAt))
+      .limit(filters.limit ?? 50);
+  }
+
+  async function getById(id: string) {
+    const [row] = await db.select().from(pipelineRuns).where(eq(pipelineRuns.id, id));
+    return row ?? null;
+  }
+
+  // Assembles everything PipelineRunDetail renders: stage records, execution runs, SLA verdicts
+  // joined with their target definition (live from requirements_documents — never copied), gate
+  // resolutions, and artifacts. storageRef is internal (objectKey/path) and is omitted.
+  async function getDetail(id: string) {
+    const run = await getById(id);
+    if (!run) return null;
+
+    const [execRows, verdictRows, gateRows, artifactRows] = await Promise.all([
+      db.select().from(executionRuns).where(eq(executionRuns.pipelineRunId, id)),
+      db.select().from(slaVerdicts).where(eq(slaVerdicts.pipelineRunId, id)),
+      db.select().from(gateResolutions).where(eq(gateResolutions.pipelineRunId, id)),
+      db.select().from(testRunArtifacts).where(eq(testRunArtifacts.pipelineRunId, id)),
+    ]);
+
+    let requirementsDocument: { id: string; appName: string | null; testIntent: string; status: string } | null = null;
+    let targets: SlaTarget[] = [];
+    if (run.requirementsDocumentId) {
+      const [rd] = await db.select().from(requirementsDocuments).where(eq(requirementsDocuments.id, run.requirementsDocumentId));
+      if (rd) {
+        requirementsDocument = { id: rd.id, appName: rd.appName, testIntent: rd.testIntent, status: rd.status };
+        targets = (rd.slaTargets ?? []) as SlaTarget[];
+      }
+    }
+    const targetById = new Map(targets.map((t) => [t.id, t]));
+
+    return {
+      ...run,
+      executionRuns: execRows,
+      slaVerdicts: verdictRows.map((v) => ({ ...v, target: targetById.get(v.slaTargetId) ?? null })),
+      gateResolutions: gateRows,
+      artifacts: artifactRows.map(({ storageRef: _storageRef, ...rest }) => rest),
+      requirementsDocument,
+    };
+  }
+
   // --- internal: immutable read-modify-write of one stage's record ---
   async function patchStage(id: string, stage: StageName, patch: Partial<StageRecord>) {
     const [row] = await db.select().from(pipelineRuns).where(eq(pipelineRuns.id, id));
@@ -162,9 +215,25 @@ export function pipelineRunService(db: Db) {
     return r!;
   }
 
+  // Terminalizes a blocked_on_human run after a baseline/regression decision: records the
+  // human gate_resolutions row and stamps the final verdict/ciSignal/completedAt.
+  async function applyHumanResolution(pipelineRunId: string, action: HumanGateAction, resolvedBy: string) {
+    const run = await getById(pipelineRunId);
+    if (!run) return null;
+    const result = resolveHumanGate(action);
+    await db.insert(gateResolutions).values({
+      companyId: run.companyId, pipelineRunId, testRunId: null,
+      outcome: result.outcome, ciSignal: result.ciSignal, resolvedBy, resolvedAt: new Date(),
+    });
+    await setVerdict(pipelineRunId, result.verdict);
+    await setCiSignal(pipelineRunId, result.ciSignal);
+    if (!run.completedAt) await markCompleted(pipelineRunId);
+    return result;
+  }
+
   async function runExecutionTrigger(
     pipelineRunId: string,
-    deps: { spawnFn: SpawnFn; reachabilityProbe?: (baseUrl: string) => Promise<boolean> },
+    deps: { spawnFn: SpawnFn; reachabilityProbe?: (baseUrl: string) => Promise<boolean>; storage?: StorageService },
   ): Promise<{ verdict: string; ciSignal: string }> {
     await markStarted(pipelineRunId); // verdict='running'
     const [run] = await db.select().from(pipelineRuns).where(eq(pipelineRuns.id, pipelineRunId));
@@ -224,31 +293,65 @@ export function pipelineRunService(db: Db) {
         return { verdict: "error", ciSignal: "fail" };
       }
       // persist the k6 HTML artifact (no-op if absent)
-      await testRunArtifactsService(db).persistK6HtmlSummary(companyId, { pipelineRunId, executionRunId: er.id, testRunId: testRun!.id, cwd, testRunId2: testRun!.id });
+      const artifacts = testRunArtifactsService(db, deps.storage);
+      await artifacts.persistK6HtmlSummary(companyId, { pipelineRunId, executionRunId: er.id, testRunId: testRun!.id, cwd, testRunId2: testRun!.id });
       await markStageComplete(pipelineRunId, "execute", { executionRunIds: [er.id] });
 
-      // ---- ANALYSIS (metrics already ingested by k6Executor) → SLA → gate ----
+      // ---- ANALYSIS (metrics already ingested by k6Executor) → SLA → baseline comparison → gate ----
       await markStageRunning(pipelineRunId, "analysis");
       await slaVerdictEngine(db).evaluate({ companyId, pipelineRunId, executionRunId: er.id });
       const [rd] = await db.select().from(requirementsDocuments).where(eq(requirementsDocuments.id, requirementsDocumentId));
       const counts = await countRequiredVerdicts(db, companyId, { pipelineRunId, executionRunId: er.id, requirementsDocumentId });
+      const comparison = await baselineComparatorRunner(db).run({
+        companyId, pipelineRunId, executionRunId: er.id, testRunId: testRun!.id, testPlanId,
+        slaTargets: (rd?.slaTargets ?? []) as SlaTarget[],
+      });
       const gate = resolveGate({ testIntent: rd?.testIntent ?? "conformance", ...counts });
-      await db.insert(gateResolutions).values({ companyId, pipelineRunId, testRunId: testRun!.id, outcome: gate.outcome, ciSignal: gate.ciSignal, resolvedBy: "auto", resolvedAt: new Date() });
-      const verdict = verdictForOutcome(gate.outcome);
-      await setVerdict(pipelineRunId, verdict);
-      await setCiSignal(pipelineRunId, gate.ciSignal);
+
+      // Flagged regressions block the run for human decision — unless the SLA gate already
+      // failed it (a hard breach trumps a distribution drift). The human resolution route
+      // inserts the gate_resolutions row and terminalizes verdict/ciSignal.
+      const blockedOnRegression = gate.outcome !== "auto_fail" && comparison.mode === "compared" && comparison.flaggedCount > 0;
+      let verdict: string;
+      let ciSignal: string;
+      if (blockedOnRegression) {
+        verdict = "blocked_on_human";
+        ciSignal = "fail"; // safe pre-resolution signal; approval flips it
+        await setVerdict(pipelineRunId, verdict);
+        await setCiSignal(pipelineRunId, ciSignal);
+      } else {
+        await db.insert(gateResolutions).values({ companyId, pipelineRunId, testRunId: testRun!.id, outcome: gate.outcome, ciSignal: gate.ciSignal, resolvedBy: "auto", resolvedAt: new Date() });
+        verdict = verdictForOutcome(gate.outcome);
+        ciSignal = gate.ciSignal;
+        await setVerdict(pipelineRunId, verdict);
+        await setCiSignal(pipelineRunId, ciSignal);
+      }
       await markStageComplete(pipelineRunId, "analysis");
 
       // ---- REPORT (thin: sentinel_summary artifact) ----
       await markStageRunning(pipelineRunId, "report");
-      const summary = { pipelineRunId, verdict, ciSignal: gate.ciSignal, outcome: gate.outcome, requiredVerdicts: counts };
+      const summary = {
+        pipelineRunId, verdict, ciSignal,
+        outcome: blockedOnRegression ? "blocked_on_human" : gate.outcome,
+        requiredVerdicts: counts,
+        baselineComparison: comparison,
+      };
+      const summaryBody = Buffer.from(JSON.stringify(summary, null, 2));
       const summaryPath = path.join(cwd, "sentinel-summary.json");
-      await fs.writeFile(summaryPath, JSON.stringify(summary, null, 2));
-      await testRunArtifactsService(db).create(companyId, { pipelineRunId, executionRunId: er.id, testRunId: testRun!.id, artifactType: "sentinel_summary", storageRef: summaryPath, contentType: "application/json", sizeBytes: Buffer.byteLength(JSON.stringify(summary)) });
+      await fs.writeFile(summaryPath, summaryBody);
+      await artifacts.persistBuffer(companyId, {
+        pipelineRunId, executionRunId: er.id, testRunId: testRun!.id,
+        artifactType: "sentinel_summary", filename: "sentinel-summary.json",
+        contentType: "application/json", body: summaryBody, fallbackPath: summaryPath,
+      });
       await markStageComplete(pipelineRunId, "report");
 
-      await markCompleted(pipelineRunId);
-      return { verdict, ciSignal: gate.ciSignal };
+      // artifacts are durable in storage; the temp workspace is safe to drop
+      if (deps.storage) await fs.rm(cwd, { recursive: true, force: true });
+
+      // a blocked run stays open (no completedAt) until the human resolution terminalizes it
+      if (!blockedOnRegression) await markCompleted(pipelineRunId);
+      return { verdict, ciSignal };
     } catch (err) {
       // any unexpected error → mark the running stage failed where possible, verdict error
       await setVerdict(pipelineRunId, "error");
@@ -258,5 +361,5 @@ export function pipelineRunService(db: Db) {
     }
   }
 
-  return { create, markStageRunning, markStageComplete, markStageSkipped, markStageFailed, setVerdict, setCiSignal, setResolvedExecution, markStarted, markCompleted, runExecutionTrigger };
+  return { create, list, getById, getDetail, markStageRunning, markStageComplete, markStageSkipped, markStageFailed, setVerdict, setCiSignal, setResolvedExecution, markStarted, markCompleted, applyHumanResolution, runExecutionTrigger };
 }
